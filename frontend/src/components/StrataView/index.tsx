@@ -177,7 +177,7 @@ export function StrataView() {
     <div className="h-full flex flex-col">
       <div className="px-8 pt-8 pb-0">
         <div className="flex items-baseline gap-4 mb-6">
-          <h1 className="text-xl font-light tracking-widest" style={{ color: 'var(--strata-2022)' }}>
+          <h1 className="font-serif tracking-widest" style={{ color: 'var(--strata-2022)', fontSize: 'var(--text-title)', fontWeight: 500, letterSpacing: '0.12em' }}>
             显影 · Unearth
           </h1>
           <span className="text-xs tracking-widest" style={{ color: 'var(--color-text-muted)' }}>

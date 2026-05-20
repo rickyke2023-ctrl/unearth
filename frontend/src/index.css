@@ -2,39 +2,60 @@
 
 @layer base {
   :root {
-    --color-void: #0A0A0F;
-    --color-deep: #12141E;
-    --color-surface: #1C1F2E;
+    /* ── Surfaces ──────────────────────────────────────── */
+    --color-void: #080810;
+    --color-deep: #0F1018;
+    --color-surface: #1A1C28;
+    --color-surface-raised: #22253A;
     --color-glass: rgba(255, 255, 255, 0.06);
-    --color-glass-border: rgba(255, 255, 255, 0.12);
+    --color-glass-border: rgba(255, 255, 255, 0.10);
+    --color-glass-blur: 16px;
 
+    /* ── Strata year colours ───────────────────────────── */
     --strata-2024: #A8C5E8;
     --strata-2023: #8FADC4;
     --strata-2022: #C4A882;
     --strata-2021: #D4956A;
     --strata-2020: #C47840;
 
-    --color-keep: #7EB8A4;
+    /* ── Action colours ────────────────────────────────── */
+    --color-keep:  #7EB8A4;
     --color-leave: #8B7355;
-    --color-star: #E8C878;
-    --color-text-primary: rgba(255, 255, 255, 0.92);
-    --color-text-secondary: rgba(255, 255, 255, 0.5);
-    --color-text-muted: rgba(255, 255, 255, 0.28);
+    --color-star:  #E8C878;
+
+    /* ── Text colours (DESIGN_LANGUAGE §二) ────────────── */
+    --color-text-primary:   rgba(255, 255, 255, 0.92);
+    --color-text-secondary: rgba(255, 255, 255, 0.60);  /* was 0.5 */
+    --color-text-muted:     rgba(255, 255, 255, 0.35);  /* was 0.28 */
+
+    /* ── Type scale (DESIGN_LANGUAGE §一) ─────────────── */
+    --text-display:  32px;
+    --text-title:    22px;
+    --text-nav:      16px;
+    --text-body:     15px;
+    --text-meta:     13px;
+    --text-caption:  11px;
+
+    /* ── Font families ─────────────────────────────────── */
+    --font-sans:   "DM Sans", "PingFang SC", "Noto Sans SC", sans-serif;
+    --font-serif:  "Cormorant Garamond", "Noto Serif SC", serif;
+    --font-mono:   "DM Mono", "Courier New", monospace;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  html, body, #root {
-    height: 100%;
-  }
+  html, body, #root { height: 100%; }
 
   body {
     background-color: var(--color-void);
     color: var(--color-text-primary);
-    font-family: 'DM Mono', 'Courier New', monospace;
+    /* 正文用无衬线体，不是等宽体 */
+    font-family: var(--font-sans);
+    font-size: var(--text-body);   /* 15px */
+    line-height: 1.6;
+    font-weight: 400;
     -webkit-font-smoothing: antialiased;
     overflow: hidden;
-    font-size: 14px;
   }
 
   ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -46,11 +67,19 @@
   .glass {
     background: var(--color-glass);
     border: 1px solid var(--color-glass-border);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(var(--color-glass-blur));
+    -webkit-backdrop-filter: blur(var(--color-glass-blur));
   }
-  .text-primary { color: var(--color-text-primary); }
+  /* Ceremonial / ritual text — Cormorant Garamond */
+  .font-serif {
+    font-family: var(--font-serif);
+  }
+  /* Monospace — numbers, code, keyboard shortcuts */
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+  .text-primary   { color: var(--color-text-primary); }
   .text-secondary { color: var(--color-text-secondary); }
-  .text-muted { color: var(--color-text-muted); }
-  .font-tabular { font-variant-numeric: tabular-nums; }
+  .text-muted     { color: var(--color-text-muted); }
+  .font-tabular   { font-variant-numeric: tabular-nums; }
 }

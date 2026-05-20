@@ -99,32 +99,41 @@ function MemoryContextCard({ photo }: { photo: Photo }) {
       transition={{ duration: 0.35, delay: 0.12, ease: [0.25, 0, 0, 1] }}
       className="absolute bottom-4 left-4 z-20 rounded-xl px-3 py-2.5 pointer-events-none"
       style={{
-        background: 'rgba(0,0,0,0.42)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255,255,255,0.07)',
-        maxWidth: 230,
+        background: 'rgba(0,0,0,0.52)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        border: '1px solid rgba(255,255,255,0.10)',
+        maxWidth: 260,
       }}
     >
+      {/* 日期 — --text-meta: 13px, 颜色 ≥ 0.75 */}
       {formattedDate && (
-        <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 11, lineHeight: 1.5, letterSpacing: '0.02em', fontWeight: 300 }}>
+        <p style={{
+          color: 'rgba(255,255,255,0.82)',
+          fontSize: 13,
+          lineHeight: 1.5,
+          letterSpacing: '0.02em',
+          fontWeight: 400,
+        }}>
           {formattedDate}
         </p>
       )}
-      <div className="flex items-center gap-3 mt-1" style={{ fontSize: 10 }}>
+      {/* 地点 + 相机 — --text-meta: 13px, 颜色 ≥ 0.75 */}
+      <div className="flex items-center gap-3 mt-1" style={{ fontSize: 13 }}>
         {location && (
-          <span style={{ color: 'rgba(255,255,255,0.42)' }}>
+          <span style={{ color: 'rgba(255,255,255,0.75)' }}>
             ↟ {location}
           </span>
         )}
         {camera && (
-          <span style={{ color: 'rgba(255,255,255,0.35)' }}>
+          <span style={{ color: 'rgba(255,255,255,0.75)' }}>
             {camera}
           </span>
         )}
       </div>
+      {/* 今日张数 — 次要信息，text-secondary 0.60 */}
       {dayCount !== null && (
-        <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, marginTop: 4 }}>
+        <p style={{ color: 'rgba(255,255,255,0.60)', fontSize: 13, marginTop: 4 }}>
           今天拍了 {dayCount} 张
         </p>
       )}
@@ -776,7 +785,7 @@ function AllDoneState({
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.08 }}
       >
-        <p className="text-2xl font-light tracking-widest" style={{ color: 'var(--strata-2022)' }}>
+        <p className="font-serif tracking-widest" style={{ color: 'var(--strata-2022)', fontSize: 'var(--text-display)', fontWeight: 400, lineHeight: 1.2 }}>
           这一组挖完了
         </p>
         {eventTitle && (

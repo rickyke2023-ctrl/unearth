@@ -43,8 +43,8 @@ export function MilestoneOverlay({ message, onDismiss }: MilestoneOverlayProps) 
             className="text-center px-10 py-8 select-none"
           >
             <p
-              className="text-2xl font-light tracking-widest"
-              style={{ color: 'rgba(255,255,255,0.88)', letterSpacing: '0.1em', lineHeight: 1.6 }}
+              className="font-serif tracking-widest"
+              style={{ color: 'rgba(255,255,255,0.88)', fontSize: 'var(--text-display)', fontWeight: 400, lineHeight: 1.4, letterSpacing: '0.06em' }}
             >
               {message}
             </p>
