@@ -12,6 +12,7 @@ from .audit import append_audit, utc_now_iso
 from .config import EVENT_GAP_MINUTES, IMAGE_EXTENSIONS, SIDECAR_EXTENSIONS
 from .database import fetch_all, transaction
 from .errors import DiskNotMountedError
+from .preview import start_preview_generation
 
 
 @dataclass(frozen=True)
@@ -241,6 +242,7 @@ def scan_root(conn, root_path: str) -> dict[str, Any]:
             (str(root), utc_now_iso(), total_state["count"], total_state["size"]),
         )
         conn.commit()
+        start_preview_generation(conn)
         progress_store.update(scanned=total, total_estimated=total, current_file=None, phase="done")
         append_audit("scan_complete", result="ok", extra={"root_path": str(root), "total": total})
         return {"total_photos": total, "total_size_bytes": sum(row["file_size_bytes"] for row in rows)}

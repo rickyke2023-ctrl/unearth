@@ -112,6 +112,8 @@ def init_db(conn: sqlite3.Connection) -> None:
 
         CREATE INDEX IF NOT EXISTS idx_photos_year_month ON photos(year, month);
         CREATE INDEX IF NOT EXISTS idx_photos_event ON photos(event_id);
+        CREATE INDEX IF NOT EXISTS idx_photos_event_id ON photos(event_id);
+        CREATE INDEX IF NOT EXISTS idx_photos_shot_at ON photos(shot_at);
         CREATE INDEX IF NOT EXISTS idx_photos_decision ON photos(decision);
         CREATE INDEX IF NOT EXISTS idx_events_year_month ON events(year, month);
         """
