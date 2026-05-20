@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import csv
 import io
+from datetime import datetime
 from typing import Any
 
+from fastapi import HTTPException
 from fastapi.responses import Response
 
 from .database import fetch_all, fetch_one
@@ -123,6 +125,22 @@ def event_photos(conn, event_id: str) -> dict[str, Any]:
         "total": len(rows),
         "decided": sum(1 for row in rows if row["decision"] is not None),
     }
+
+
+def day_photo_count(conn, date: str) -> dict[str, Any]:
+    try:
+        datetime.strptime(date, "%Y-%m-%d")
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "date 参数格式必须是 YYYY-MM-DD", "code": "INVALID_DATE"},
+        ) from exc
+    row = fetch_one(
+        conn,
+        "SELECT COUNT(*) AS count FROM photos WHERE shot_at LIKE ?",
+        (f"{date}%",),
+    ) or {"count": 0}
+    return {"date": date, "count": row["count"] or 0}
 
 
 def book_candidates(conn) -> dict[str, Any]:

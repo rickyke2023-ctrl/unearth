@@ -13,7 +13,7 @@ from .database import get_connection, init_db
 from .decisions import apply_decisions, toggle_book_candidate, undo_decision
 from .errors import DiskNotMountedError, PreviewNotReadyError, UnearthError
 from .preview import accepted_preview_response, get_or_create_preview
-from .queries import book_candidates, event_photos, events_for_month, export_book_candidates, status, strata
+from .queries import book_candidates, day_photo_count, event_photos, events_for_month, export_book_candidates, status, strata
 from .scanner import progress_store, scan_root
 from .schemas import DecisionsRequest, ScanRequest, StagingConfirmRequest, UndoRequest
 from .staging import confirm_staging, list_staging, restore_photo
@@ -90,6 +90,11 @@ def api_events(year: int, month: int, conn=Depends(db)):
 @app.get("/api/events/{event_id}/photos")
 def api_event_photos(event_id: str, conn=Depends(db)):
     return event_photos(conn, event_id)
+
+
+@app.get("/api/photos/day-count")
+def api_day_photo_count(date: str, conn=Depends(db)):
+    return day_photo_count(conn, date)
 
 
 @app.get("/preview/{photo_id}")

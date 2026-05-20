@@ -1,10 +1,117 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getEventPhotos, postDecisions, undoDecision, toggleBookCandidate, previewUrl } from '../../api'
+import { getEventPhotos, postDecisions, undoDecision, toggleBookCandidate, previewUrl, getDayPhotoCount } from '../../api'
 import { useAppStore } from '../../stores/appStore'
 import { useKeyboardDecision } from '../../hooks/useKeyboardDecision'
 import { formatBytes, strataColorForYear } from '../../utils'
 import type { Photo } from '../../types'
+
+// ── Memory context helpers ─────────────────────────────────────────────────
+
+function formatShotAt(shotAt: string): string {
+  const d = new Date(shotAt.replace(' ', 'T'))
+  if (isNaN(d.getTime())) return shotAt
+  const year = d.getFullYear()
+  const month = d.getMonth() + 1
+  const day = d.getDate()
+  const hour = d.getHours()
+  const weekDays = ['日', '一', '二', '三', '四', '五', '六']
+  const weekDay = weekDays[d.getDay()]
+  let timeStr: string
+  if (hour === 0) timeStr = '午夜'
+  else if (hour < 6) timeStr = `凌晨 ${hour} 点`
+  else if (hour < 12) timeStr = `上午 ${hour} 点`
+  else if (hour === 12) timeStr = '正午'
+  else if (hour < 18) timeStr = `下午 ${hour - 12} 点`
+  else if (hour < 21) timeStr = `傍晚 ${hour - 12} 点`
+  else timeStr = `夜里 ${hour - 12} 点`
+  return `${year}年${month}月${day}日，星期${weekDay}，${timeStr}`
+}
+
+function simplifyCamera(model?: string): string | null {
+  if (!model) return null
+  const m = model.toLowerCase()
+  if (m.includes('ilce') || m.includes('sony') || /^a[679]\d/.test(m)) return '索尼'
+  if (m.includes('fujifilm') || m.includes('fuji') || m.startsWith('x-') || m.startsWith('gfx')) return '富士'
+  if (m.includes('iphone') || m.includes('apple')) return 'iPhone'
+  if (m.includes('canon')) return '佳能'
+  if (m.includes('nikon')) return '尼康'
+  if (m.includes('leica')) return '徕卡'
+  if (m.includes('dji')) return 'DJI'
+  return null
+}
+
+// Cache day counts so we don't re-fetch for the same date
+const dayCountCache = new Map<string, number>()
+
+function MemoryContextCard({ photo }: { photo: Photo }) {
+  const dateKey = photo.shot_at ? photo.shot_at.slice(0, 10) : null
+  const [dayCount, setDayCount] = useState<number | null>(
+    dateKey && dayCountCache.has(dateKey) ? dayCountCache.get(dateKey)! : null
+  )
+
+  useEffect(() => {
+    if (!dateKey) return
+    if (dayCountCache.has(dateKey)) {
+      setDayCount(dayCountCache.get(dateKey)!)
+      return
+    }
+    getDayPhotoCount(dateKey)
+      .then(({ count }) => {
+        dayCountCache.set(dateKey, count)
+        setDayCount(count)
+      })
+      .catch(() => {}) // backend endpoint may not exist yet — silently skip
+  }, [dateKey])
+
+  const formattedDate = photo.shot_at ? formatShotAt(photo.shot_at) : null
+  const location = photo.gps_city
+    ? `${photo.gps_city}${photo.gps_country ? `，${photo.gps_country}` : ''}`
+    : photo.gps_country ?? null
+  const camera = simplifyCamera(photo.camera_model)
+
+  if (!formattedDate && !location && !camera) return null
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 4 }}
+      transition={{ duration: 0.35, delay: 0.12, ease: [0.25, 0, 0, 1] }}
+      className="absolute bottom-4 left-4 z-20 rounded-xl px-3 py-2.5 pointer-events-none"
+      style={{
+        background: 'rgba(0,0,0,0.42)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255,255,255,0.07)',
+        maxWidth: 230,
+      }}
+    >
+      {formattedDate && (
+        <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 11, lineHeight: 1.5, letterSpacing: '0.02em', fontWeight: 300 }}>
+          {formattedDate}
+        </p>
+      )}
+      <div className="flex items-center gap-3 mt-1" style={{ fontSize: 10 }}>
+        {location && (
+          <span style={{ color: 'rgba(255,255,255,0.42)' }}>
+            ↟ {location}
+          </span>
+        )}
+        {camera && (
+          <span style={{ color: 'rgba(255,255,255,0.35)' }}>
+            {camera}
+          </span>
+        )}
+      </div>
+      {dayCount !== null && (
+        <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, marginTop: 4 }}>
+          今天拍了 {dayCount} 张
+        </p>
+      )}
+    </motion.div>
+  )
+}
 
 // ── Ripple effect ──────────────────────────────────────────────────────────
 
@@ -368,7 +475,12 @@ export function DecisionView() {
       {/* Photo area */}
       <div className="relative z-10 flex-1 flex items-center justify-center px-6">
         {currentPhoto ? (
-          <PhotoDisplay photo={currentPhoto} exitDir={exitDir} />
+          <>
+            <PhotoDisplay photo={currentPhoto} exitDir={exitDir} />
+            <AnimatePresence mode="wait">
+              <MemoryContextCard key={currentPhoto.id} photo={currentPhoto} />
+            </AnimatePresence>
+          </>
         ) : (
           <AllDoneState
             onBack={navigateBack}

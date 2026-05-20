@@ -6,7 +6,7 @@ from pathlib import Path
 from backend.audit import utc_now_iso
 from backend.database import init_db
 from backend.decisions import apply_decisions, undo_decision
-from backend.queries import event_photos
+from backend.queries import day_photo_count, event_photos
 from backend.scanner import cluster_events, scan_root
 from backend.staging import confirm_staging, list_staging
 
@@ -245,3 +245,23 @@ def test_event_photos_includes_api_contract_fields(tmp_path: Path):
 
     for field in ["file_path", "year", "month", "gps_lat", "gps_lng", "camera_model", "event_id"]:
         assert field in photo
+
+
+def test_day_photo_count_counts_matching_shot_at_date(tmp_path: Path):
+    root = tmp_path / "Photos"
+    month = root / "2023" / "05"
+    month.mkdir(parents=True)
+    photos = [month / "A.JPG", month / "B.JPG", month / "C.JPG"]
+    for photo in photos:
+        photo.write_bytes(b"jpg")
+
+    conn = make_conn()
+    insert_photo(conn, photo_id="a-id", path=photos[0], file_type="JPEG")
+    insert_photo(conn, photo_id="b-id", path=photos[1], file_type="JPEG")
+    insert_photo(conn, photo_id="c-id", path=photos[2], file_type="JPEG")
+    conn.execute("UPDATE photos SET shot_at = '2023-05-03T08:00:00Z' WHERE id = 'a-id'")
+    conn.execute("UPDATE photos SET shot_at = '2023-05-03T23:59:59Z' WHERE id = 'b-id'")
+    conn.execute("UPDATE photos SET shot_at = '2023-05-04T00:00:00Z' WHERE id = 'c-id'")
+    conn.commit()
+
+    assert day_photo_count(conn, "2023-05-03") == {"date": "2023-05-03", "count": 2}

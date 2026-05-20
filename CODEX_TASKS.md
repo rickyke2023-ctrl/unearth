@@ -64,6 +64,43 @@ WHERE restored_at IS NULL AND confirmed_deleted_at IS NULL
 
 ---
 
+## ✅ 🟡 Task 6：新增 `GET /api/photos/day-count` 接口
+
+**优先级：** 低（前端已有 fallback，接口不存在时静默跳过）
+
+### 需求
+
+前端「记忆上下文层」需要知道某一天总共拍了多少张照片（跨所有事件）。
+
+### 接口规范
+
+```
+GET /api/photos/day-count?date=YYYY-MM-DD
+```
+
+**返回：**
+```json
+{ "date": "2023-05-01", "count": 34 }
+```
+
+**SQL（参考）：**
+```sql
+SELECT COUNT(*) AS count
+FROM photos
+WHERE DATE(shot_at) = ?
+```
+
+### 位置建议
+
+`backend/queries.py` 新增 `day_photo_count(conn, date: str) -> dict`，在 `backend/main.py` 注册路由 `GET /api/photos/day-count`。
+
+### 注意
+
+- `date` 参数格式为 `YYYY-MM-DD`，若缺失或格式错误返回 400
+- 前端已有缓存（`dayCountCache` Map），同一天只请求一次
+
+---
+
 ## ✅ 已修复（无需处理）
 
 - ~~Task 1：Keep/Skip 决策遇到 staged 照片应该还原文件~~ ✅ Codex 已修（audit log 16:29 显示 staging_restore 触发，新增 pytest `test_keep_restores_staged_file`）

@@ -94,6 +94,12 @@ export function getBookCandidates(): Promise<{ total: number; candidates: Partia
   return request('/api/book-candidates')
 }
 
+// ── Day count ──────────────────────────────────────────────────────────────
+
+export function getDayPhotoCount(date: string): Promise<{ date: string; count: number }> {
+  return request(`/api/photos/day-count?date=${date}`)
+}
+
 // ── Preview ────────────────────────────────────────────────────────────────
 
 export function previewUrl(photo_id: string): string {
