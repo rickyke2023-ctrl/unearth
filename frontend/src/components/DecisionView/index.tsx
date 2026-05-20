@@ -4,6 +4,7 @@ import { getEventPhotos, postDecisions, undoDecision, toggleBookCandidate, previ
 import { useAppStore } from '../../stores/appStore'
 import { useKeyboardDecision } from '../../hooks/useKeyboardDecision'
 import { formatBytes, strataColorForYear } from '../../utils'
+import { MilestoneOverlay } from '../shared/MilestoneOverlay'
 import type { Photo } from '../../types'
 
 // ── Memory context helpers ─────────────────────────────────────────────────
@@ -238,41 +239,67 @@ function ActionButtons({
   onSkip, onLeaveClick, onKeepClick,
 }: {
   onSkip: () => void
-  onLeaveClick: (e: React.MouseEvent) => void; onKeepClick: (e: React.MouseEvent) => void
+  onLeaveClick: (e: React.MouseEvent) => void
+  onKeepClick: (e: React.MouseEvent) => void
 }) {
+  const [leaveActive, setLeaveActive] = useState(false)
+  const [keepActive, setKeepActive] = useState(false)
+
+  const handleLeave = (e: React.MouseEvent) => {
+    setLeaveActive(true)
+    setTimeout(() => setLeaveActive(false), 500)
+    onLeaveClick(e)
+  }
+
+  const handleKeep = (e: React.MouseEvent) => {
+    setKeepActive(true)
+    setTimeout(() => setKeepActive(false), 500)
+    onKeepClick(e)
+  }
+
   return (
     <div className="flex items-center justify-center gap-4">
+      {/* 留在这里 — sinks down on press */}
       <motion.button
-        onClick={onLeaveClick}
+        onClick={handleLeave}
         whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.97 }}
-        className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm tracking-wider transition-opacity"
+        animate={leaveActive
+          ? { y: 4, scale: 0.97, filter: 'brightness(1.2)' }
+          : { y: 0, scale: 1, filter: 'brightness(1)' }}
+        transition={{ duration: 0.18, ease: [0.25, 0, 0, 1] }}
+        className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm tracking-wider"
         style={{ background: 'rgba(139,115,85,0.2)', border: '1px solid var(--color-leave)', color: 'var(--color-leave)' }}
       >
-        <span>←</span> 留在这里
-        <span className="text-xs ml-1 opacity-50">D</span>
+        <span>←</span>
+        <span>{leaveActive ? '留在这片土地上' : '留在这里'}</span>
+        <kbd className="text-xs opacity-40 ml-1 px-1 py-0.5 rounded" style={{ border: '1px solid currentColor', fontFamily: 'monospace', fontSize: 9 }}>D</kbd>
       </motion.button>
 
+      {/* 稍后 — low presence */}
       <motion.button
         onClick={onSkip}
-        whileHover={{ scale: 1.03 }}
+        whileHover={{ scale: 1.03, opacity: 1 }}
         whileTap={{ scale: 0.97 }}
         className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm tracking-wider"
-        style={{ background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)', color: 'var(--color-text-secondary)' }}
+        style={{ background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)', color: 'var(--color-text-secondary)', opacity: 0.5 }}
       >
         <span>↑</span> 稍后
-        <span className="text-xs ml-1 opacity-50">S</span>
+        <kbd className="text-xs opacity-40 ml-1 px-1 py-0.5 rounded" style={{ border: '1px solid currentColor', fontFamily: 'monospace', fontSize: 9 }}>S</kbd>
       </motion.button>
 
+      {/* 带走 — lifts up on press */}
       <motion.button
-        onClick={onKeepClick}
+        onClick={handleKeep}
         whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.97 }}
+        animate={keepActive
+          ? { y: -4, scale: 1.03, filter: 'brightness(1.2)' }
+          : { y: 0, scale: 1, filter: 'brightness(1)' }}
+        transition={{ duration: 0.18, ease: [0.25, 0, 0, 1] }}
         className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm tracking-wider"
         style={{ background: 'rgba(126,184,164,0.2)', border: '1px solid var(--color-keep)', color: 'var(--color-keep)' }}
       >
-        带走 <span>→</span>
-        <span className="text-xs ml-1 opacity-50">K</span>
+        <span>{keepActive ? '带入行囊' : '带走'}</span> <span>→</span>
+        <kbd className="text-xs opacity-40 ml-1 px-1 py-0.5 rounded" style={{ border: '1px solid currentColor', fontFamily: 'monospace', fontSize: 9 }}>K</kbd>
       </motion.button>
     </div>
   )
@@ -289,11 +316,15 @@ export function DecisionView() {
     updatePhotoDecision, pushHistory, popHistory,
     addSessionStats, navigateBack, setShowLightbox, showLightbox,
     setCurrentPhotoIndex,
+    totalDecisions, incrementDecisions, markMilestone, hasMilestone,
   } = useAppStore()
 
   const [loading, setLoading] = useState(true)
+  // 'intro' = 0.8s curtain before first photo; 'deciding' = normal flow
+  const [phase, setPhase] = useState<'intro' | 'deciding'>('intro')
   const [exitDir, setExitDir] = useState<ExitDir>(null)
   const [isPending, setIsPending] = useState(false)
+  const [milestoneMsg, setMilestoneMsg] = useState<string | null>(null)
   const { ripples, trigger: triggerRipple } = useRipple()
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -303,10 +334,15 @@ export function DecisionView() {
   useEffect(() => {
     if (!selectedEventId) return
     setLoading(true)
+    setPhase('intro')
     getEventPhotos(selectedEventId)
       .then(({ photos }) => setEventPhotos(photos))
       .catch(() => {})
-      .finally(() => setLoading(false))
+      .finally(() => {
+        setLoading(false)
+        // Show intro curtain for 0.8s, then enter deciding phase
+        setTimeout(() => setPhase('deciding'), 800)
+      })
   }, [selectedEventId, setEventPhotos])
 
   // 计算当前组在月内的位置，用于「下一组」按钮
@@ -345,11 +381,42 @@ export function DecisionView() {
       else if (decision === 'leave') addSessionStats(0, 1, res.freed_bytes_preview)
     } catch {}
 
+    // Milestone checks (after stats update)
+    incrementDecisions()
+    const nextTotal = totalDecisions + 1
+    const keptSoFar = eventPhotos.filter((p) => p.decision === 'keep').length + (decision === 'keep' ? 1 : 0)
+
+    let milestone: string | null = null
+    if (!hasMilestone('first_any')) {
+      milestone = '第一个瞬间，从地层里浮现了'
+      markMilestone('first_any')
+    } else if (decision === 'keep' && !hasMilestone('first_keep')) {
+      milestone = '这段记忆，属于你了'
+      markMilestone('first_keep')
+    } else if (decision === 'leave' && !hasMilestone('first_leave')) {
+      milestone = '你让它留在了这里 — 它会等着'
+      markMilestone('first_leave')
+    } else if (decision === 'keep' && keptSoFar > 0 && keptSoFar % 10 === 0) {
+      const key = `keep_${keptSoFar}`
+      if (!hasMilestone(key)) {
+        milestone = `你已经带走了 ${keptSoFar} 段记忆`
+        markMilestone(key)
+      }
+    } else if (nextTotal % 10 === 0) {
+      const key = `total_${nextTotal}`
+      if (!hasMilestone(key)) {
+        milestone = `${nextTotal} 张照片，${nextTotal} 个选择`
+        markMilestone(key)
+      }
+    }
+    if (milestone) setMilestoneMsg(milestone)
+
     await new Promise((r) => setTimeout(r, 150))
     setExitDir(null)
     advancePhoto()
     setIsPending(false)
-  }, [currentPhoto, isPending, pushHistory, updatePhotoDecision, addSessionStats, advancePhoto, triggerRipple])
+  }, [currentPhoto, isPending, pushHistory, updatePhotoDecision, addSessionStats, advancePhoto, triggerRipple,
+      totalDecisions, incrementDecisions, markMilestone, hasMilestone, eventPhotos])
 
   const handleUndo = useCallback(async () => {
     if (isPending) return
@@ -388,7 +455,7 @@ export function DecisionView() {
     onStar: handleStar,
     onLightbox: () => setShowLightbox(!showLightbox),
     onBack: navigateBack,
-    disabled: loading || isPending || showLightbox,
+    disabled: loading || isPending || showLightbox || phase === 'intro' || milestoneMsg !== null,
   })
 
   if (loading) return <LoadingState />
@@ -398,8 +465,88 @@ export function DecisionView() {
     ? (eventPhotos.some((p) => p.id === currentPhoto.paired_photo_id) ? '此照片有配套 RAW 文件' : '此照片有配套 JPEG 文件')
     : null
 
+  const introCoverPhoto = eventPhotos[0] ?? null
+  const eventGroupLabel = (() => {
+    if (monthEvents.length === 0) return null
+    const idx = monthEvents.findIndex((e) => e.id === selectedEventId)
+    return idx >= 0 ? `第 ${idx + 1} 组 · 共 ${eventPhotos.length} 张` : null
+  })()
+
   return (
     <div ref={containerRef} className="h-full flex flex-col relative overflow-hidden">
+      {/* Milestone overlay */}
+      <MilestoneOverlay message={milestoneMsg} onDismiss={() => setMilestoneMsg(null)} />
+
+      {/* Intro curtain — shown for 0.8s before first photo */}
+      <AnimatePresence>
+        {phase === 'intro' && (
+          <motion.div
+            key="intro-curtain"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: [0.25, 0, 0, 1] }}
+            className="absolute inset-0 z-40 flex flex-col items-center justify-center"
+            style={{ background: 'rgba(10,10,15,0.88)', backdropFilter: 'blur(8px)' }}
+          >
+            {/* Blurred cover image behind curtain */}
+            {introCoverPhoto && (
+              <div className="absolute inset-0 overflow-hidden">
+                <img
+                  src={previewUrl(introCoverPhoto.id)}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ filter: 'blur(40px) brightness(0.15)', transform: 'scale(1.1)' }}
+                />
+              </div>
+            )}
+            <div className="relative z-10 text-center">
+              <motion.p
+                initial={{ y: 8, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.1, duration: 0.4 }}
+                className="text-xl font-light tracking-widest"
+                style={{ color: 'rgba(255,255,255,0.82)' }}
+              >
+                {eventPhotos[0]?.shot_at
+                  ? (() => {
+                      const d = new Date(eventPhotos[0].shot_at.replace(' ', 'T'))
+                      return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
+                    })()
+                  : `${selectedYear}年${selectedMonth}月`}
+              </motion.p>
+              {eventGroupLabel && (
+                <motion.p
+                  initial={{ y: 6, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.22, duration: 0.4 }}
+                  className="text-xs mt-2 tracking-widest"
+                  style={{ color: 'rgba(255,255,255,0.32)' }}
+                >
+                  {eventGroupLabel}
+                </motion.p>
+              )}
+              <motion.div
+                className="flex gap-1.5 justify-center mt-5"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.35, duration: 0.4 }}
+              >
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    className="w-1 h-1 rounded-full"
+                    style={{ background: 'rgba(255,255,255,0.35)' }}
+                    animate={{ opacity: [0.35, 1, 0.35] }}
+                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.25, ease: 'easeInOut' }}
+                  />
+                ))}
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Ripple overlays */}
       {ripples.map((r) => (
         <motion.div

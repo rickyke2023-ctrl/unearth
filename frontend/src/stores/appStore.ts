@@ -34,6 +34,13 @@ interface AppState {
   showStagingDialog: boolean
   showLightbox: boolean
 
+  // Milestone / gamification
+  totalDecisions: number
+  milestoneShown: Set<string>
+  incrementDecisions: () => void
+  markMilestone: (key: string) => void
+  hasMilestone: (key: string) => boolean
+
   // Actions
   setView: (view: AppView) => void
   setSystemStatus: (s: SystemStatus) => void
@@ -74,6 +81,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   scanPhase: '',
   showStagingDialog: false,
   showLightbox: false,
+
+  totalDecisions: 0,
+  milestoneShown: new Set<string>(),
+  incrementDecisions: () => set((s) => ({ totalDecisions: s.totalDecisions + 1 })),
+  markMilestone: (key) => set((s) => ({ milestoneShown: new Set([...s.milestoneShown, key]) })),
+  hasMilestone: (key) => get().milestoneShown.has(key),
 
   setView: (view) => set({ view }),
   setSystemStatus: (systemStatus) => set({ systemStatus }),

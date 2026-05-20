@@ -39,7 +39,16 @@ function MonthBlock({ month, yearColor }: { month: MonthSummary; yearColor: stri
           />
         )}
         {isDone && (
-          <div className="absolute inset-0" style={{ background: 'rgba(255,255,255,0.08)' }} />
+          <>
+            <div className="absolute inset-0" style={{ background: 'rgba(255,255,255,0.08)' }} />
+            {/* Breathing glow for completed months */}
+            <motion.div
+              className="absolute inset-0 rounded-sm pointer-events-none"
+              animate={{ opacity: [0.08, 0.2, 0.08] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ background: yearColor }}
+            />
+          </>
         )}
         <div className="relative z-10 p-1.5">
           <p className="text-xs font-tabular" style={{ color: isDone ? 'rgba(10,10,15,0.7)' : 'var(--color-text-secondary)', fontSize: 10 }}>
