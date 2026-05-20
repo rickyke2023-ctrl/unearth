@@ -6,3 +6,5 @@ exifread>=3
 rawpy>=0.19
 pytest>=8
 httpx>=0.28
+geopy>=2.4
+watchdog>=6
