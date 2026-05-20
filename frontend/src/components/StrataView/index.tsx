@@ -68,7 +68,7 @@ function MonthBar({ month, yearColor }: { month: MonthSummary; yearColor: string
           <p
             style={{
               color: isDone ? 'rgba(10,10,15,0.78)' : 'var(--color-text-secondary)',
-              fontSize: 13,
+              fontSize: 16,
               fontWeight: 500,
               lineHeight: 1.3,
             }}
@@ -78,7 +78,7 @@ function MonthBar({ month, yearColor }: { month: MonthSummary; yearColor: string
           <p
             style={{
               color: isDone ? 'rgba(10,10,15,0.52)' : 'var(--color-text-muted)',
-              fontSize: 11,
+              fontSize: 14,
               lineHeight: 1.3,
               marginTop: 2,
               fontVariantNumeric: 'tabular-nums',
@@ -132,7 +132,7 @@ function YearStratum({ year, index }: { year: StrataYear; index: number }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.07, ease: [0.25, 0, 0, 1] }}
       className="flex gap-5"
-      style={{ minHeight: 120 }}
+      style={{ minHeight: 200 }}
     >
       {/* Year label — fixed 72px column, vertically centered */}
       <div
@@ -142,7 +142,7 @@ function YearStratum({ year, index }: { year: StrataYear; index: number }) {
         <p
           style={{
             color,
-            fontSize: 'var(--text-title)',   /* 22px */
+            fontSize: 28,
             fontWeight: 500,
             lineHeight: 1.15,
             letterSpacing: '-0.01em',
@@ -152,12 +152,12 @@ function YearStratum({ year, index }: { year: StrataYear; index: number }) {
         </p>
         <p
           className="font-tabular"
-          style={{ color: 'var(--color-text-muted)', fontSize: 12, marginTop: 5 }}
+          style={{ color: 'var(--color-text-muted)', fontSize: 14, marginTop: 5 }}
         >
           {decidedPct}%
         </p>
         <p
-          style={{ color: 'var(--color-text-muted)', fontSize: 11, marginTop: 2 }}
+          style={{ color: 'var(--color-text-muted)', fontSize: 14, marginTop: 2 }}
         >
           {totalLabel}张
         </p>
