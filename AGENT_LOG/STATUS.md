@@ -7,7 +7,7 @@
 
 后端状态：正常
 最近完成：Task 3/4/5/6 全部由 Codex 修复（多root累加、staging按root过滤、photo缺字段、day-count接口）
-预览图进度：ready=N / 8105
+预览图进度：ready=5838 / 8105（pending=2267）
 
 需要人决策：无
 下一步建议：按 DESIGN_LANGUAGE §四 第三优先继续——SiteView 事件列表重设计（Masonry卡片）
