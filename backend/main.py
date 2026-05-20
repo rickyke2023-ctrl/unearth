@@ -12,7 +12,8 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from .database import get_connection, init_db
 from .decisions import apply_decisions, toggle_book_candidate, undo_decision
 from .errors import DiskNotMountedError, PreviewNotReadyError, UnearthError
-from .preview import accepted_preview_response, get_or_create_preview
+from .geocoding import reverse_geocode_missing
+from .preview import accepted_preview_response, get_or_create_preview, preview_status, start_preview_generation
 from .queries import book_candidates, day_photo_count, event_photos, events_for_month, export_book_candidates, status, strata
 from .scanner import progress_store, scan_root
 from .schemas import DecisionsRequest, ScanRequest, StagingConfirmRequest, UndoRequest
@@ -100,6 +101,29 @@ def api_day_photo_count(date: str, conn=Depends(db)):
 @app.get("/preview/{photo_id}")
 def api_preview(photo_id: str, conn=Depends(db)):
     return get_or_create_preview(conn, photo_id)
+
+
+@app.get("/api/previews/status")
+def api_preview_status(conn=Depends(db)):
+    return preview_status(conn)
+
+
+@app.post("/api/previews/generate")
+def api_generate_previews(conn=Depends(db)):
+    start_preview_generation(conn)
+    return {"status": "started", **preview_status(conn)}
+
+
+@app.post("/api/geocode/reverse-missing")
+def api_reverse_geocode_missing(limit: int = 50, conn=Depends(db)):
+    return {"processed": reverse_geocode_missing(conn, limit)}
+
+
+@app.post("/api/geocode/trigger")
+def api_geocode_trigger(background_tasks: BackgroundTasks, limit: int = 200, conn=Depends(db)):
+    """非阻塞触发反地理编码，前端加载 SiteView 时自动调用。"""
+    background_tasks.add_task(reverse_geocode_missing, conn, limit)
+    return {"status": "started", "limit": limit}
 
 
 @app.post("/api/decisions")

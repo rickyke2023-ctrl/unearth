@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { getEvents, previewUrl } from '../../api'
+import { getEvents, previewUrl, triggerGeocode } from '../../api'
 import { useAppStore } from '../../stores/appStore'
 import { formatTime, strataColorForYear } from '../../utils'
 import type { Event } from '../../types'
@@ -17,9 +17,10 @@ const cardVariants = {
   rest: { opacity: 1 },
   hover: { opacity: 1 },
 }
+// scale(1.05) 基准值补偿 blur 边缘；hover 时额外放大
 const imageVariants = {
-  rest:  { scale: 1 },
-  hover: { scale: 1.04 },
+  rest:  { scale: 1.05, filter: 'blur(2px) brightness(0.82)' },
+  hover: { scale: 1.09, filter: 'blur(1px) brightness(0.88)' },
 }
 
 // ── Event Card ───────────────────────────────────────────────────────────────
@@ -56,11 +57,13 @@ function EventCard({ event, onClick, index }: { event: Event; onClick: () => voi
           borderRadius: 6,
           cursor: 'pointer',
           // 未开始：半透明磨砂
-          opacity: isPending ? 0.6 : 1,
-          // 进行中：左边框微光
-          boxShadow: isInProgress
-            ? `inset 3px 0 0 ${color}, 0 0 20px rgba(0,0,0,0.4)`
-            : '0 0 20px rgba(0,0,0,0.4)',
+          opacity: isPending ? 0.58 : 1,
+          // 已完成：外发光；进行中：左边框微光
+          boxShadow: isDone
+            ? `0 0 0 1px ${color}44, 0 0 28px ${color}55`
+            : isInProgress
+              ? `inset 3px 0 0 ${color}, 0 0 24px rgba(0,0,0,0.5)`
+              : '0 2px 16px rgba(0,0,0,0.45)',
           outline: 'none',
         }}
       >
@@ -194,6 +197,8 @@ export function SiteView() {
       .then(({ events }) => {
         setEvents(events)
         setMonthEvents(events)
+        // 非阻塞触发反地理编码，填充 primary_location（静默，不影响UI）
+        triggerGeocode(200).catch(() => {})
       })
       .catch((e) => setError(e.message ?? '加载失败'))
       .finally(() => setLoading(false))
