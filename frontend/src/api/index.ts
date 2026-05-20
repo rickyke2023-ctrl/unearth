@@ -94,6 +94,12 @@ export function getBookCandidates(): Promise<{ total: number; candidates: Partia
   return request('/api/book-candidates')
 }
 
+// ── Geocoding ──────────────────────────────────────────────────────────────
+
+export function triggerGeocode(limit = 200): Promise<{ status: string; limit: number }> {
+  return request(`/api/geocode/trigger?limit=${limit}`, { method: 'POST' })
+}
+
 // ── Day count ──────────────────────────────────────────────────────────────
 
 export function getDayPhotoCount(date: string): Promise<{ date: string; count: number }> {
