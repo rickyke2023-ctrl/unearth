@@ -2,11 +2,11 @@
 更新时间：2026-05-20 当前会话
 
 前端状态：正常
-最近完成：SiteView 重设计——Masonry 3列瀑布流，发掘坑卡片，封面铺满+进度条+状态微光（commit b1e49a6）
+最近完成：SiteView 全部完成——封面背景模糊+压暗/已完成卡片发光/Geocode自动触发（commit 6c55b77）
 当前任务：无
 
 后端状态：正常
-最近完成：Task 3/4/5/6 全部由 Codex 修复（多root累加、staging按root过滤、photo缺字段、day-count接口）
+最近完成：新增 POST /api/geocode/trigger 非阻塞接口（BackgroundTasks），SiteView 加载时自动触发
 预览图进度：ready=5838 / 8105（pending=2267）
 
 需要人决策：无
