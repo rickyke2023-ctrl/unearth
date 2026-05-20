@@ -28,6 +28,24 @@ function formatShotAt(shotAt: string): string {
   return `${year}年${month}月${day}日，星期${weekDay}，${timeStr}`
 }
 
+function formatEventTitle(shotAt: string): string {
+  const d = new Date(shotAt.replace(' ', 'T'))
+  if (isNaN(d.getTime())) return ''
+  const year = d.getFullYear()
+  const month = d.getMonth() + 1
+  const day = d.getDate()
+  const hour = d.getHours()
+  let timeStr: string
+  if (hour === 0) timeStr = '午夜'
+  else if (hour < 6) timeStr = `凌晨 ${hour} 点`
+  else if (hour < 12) timeStr = `上午 ${hour} 点`
+  else if (hour === 12) timeStr = '正午'
+  else if (hour < 18) timeStr = `下午 ${hour - 12} 点`
+  else if (hour < 21) timeStr = `傍晚 ${hour - 12} 点`
+  else timeStr = `夜里 ${hour - 12} 点`
+  return `${year}年${month}月${day}日 · ${timeStr}的连拍`
+}
+
 function simplifyCamera(model?: string): string | null {
   if (!model) return null
   const m = model.toLowerCase()
@@ -131,12 +149,14 @@ type ExitDir = 'down' | 'up' | null
 
 function PhotoDisplay({ photo, exitDir }: { photo: Photo; exitDir: ExitDir }) {
   const variants = {
-    enter: { opacity: 0, scale: 1 },
-    center: { opacity: 1, scale: 1 },
+    // 从黑暗里显影出来
+    enter: { opacity: 0, scale: 0.97, filter: 'brightness(0) blur(4px)' },
+    center: { opacity: 1, scale: 1, filter: 'brightness(1) blur(0px)' },
     exit: {
       opacity: 0,
       scale: exitDir === 'down' ? 0.95 : 1.02,
       y: exitDir === 'down' ? 10 : -5,
+      filter: 'brightness(0.4) blur(3px)',
     },
   }
 
@@ -148,7 +168,7 @@ function PhotoDisplay({ photo, exitDir }: { photo: Photo; exitDir: ExitDir }) {
         initial="enter"
         animate="center"
         exit="exit"
-        transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+        transition={{ duration: 0.5, ease: [0.25, 0, 0, 1] }}
         className="absolute inset-0 flex items-center justify-center"
       >
         <img
@@ -399,17 +419,26 @@ export function DecisionView() {
         />
       ))}
 
-      {/* Blurred background */}
-      {currentPhoto && (
-        <div className="absolute inset-0 overflow-hidden">
-          <img
-            src={previewUrl(currentPhoto.id)}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ filter: 'blur(40px) brightness(0.25)', transform: 'scale(1.1)' }}
-          />
-        </div>
-      )}
+      {/* Blurred background — crossfade with each photo */}
+      <AnimatePresence mode="sync">
+        {currentPhoto && (
+          <motion.div
+            key={currentPhoto.id}
+            className="absolute inset-0 overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: [0.25, 0, 0, 1] }}
+          >
+            <img
+              src={previewUrl(currentPhoto.id)}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ filter: 'blur(40px) brightness(0.25)', transform: 'scale(1.1)' }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Header */}
       <div className="relative z-10 flex items-center gap-3 px-6 py-4">
@@ -486,8 +515,10 @@ export function DecisionView() {
             onBack={navigateBack}
             onNext={handleNextEvent}
             hasNext={hasNextEvent}
-            sessionKept={eventPhotos.filter((p) => p.decision === 'keep').length}
+            keptPhotos={eventPhotos.filter((p) => p.decision === 'keep')}
             sessionLeft={eventPhotos.filter((p) => p.decision === 'leave').length}
+            freedBytes={eventPhotos.filter((p) => p.decision === 'leave').reduce((s, p) => s + p.file_size_bytes, 0)}
+            eventStartShotAt={eventPhotos[0]?.shot_at}
           />
         )}
       </div>
@@ -570,66 +601,120 @@ function LoadingState() {
 }
 
 function AllDoneState({
-  onBack, onNext, hasNext, sessionKept, sessionLeft,
+  onBack, onNext, hasNext, keptPhotos, sessionLeft, freedBytes, eventStartShotAt,
 }: {
   onBack: () => void
   onNext: () => void
   hasNext: boolean
-  sessionKept: number
+  keptPhotos: Photo[]
   sessionLeft: number
+  freedBytes: number
+  eventStartShotAt?: string
 }) {
+  const polaroidPhotos = keptPhotos.slice(0, 4)
+  // Fixed slight rotations — natural Polaroid feel without re-randomising every render
+  const rotations = [-3.5, 2.2, -1.8, 3.0]
+  const eventTitle = eventStartShotAt ? formatEventTitle(eventStartShotAt) : null
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="flex flex-col items-center gap-6 text-center max-w-md"
+      className="flex flex-col items-center gap-5 text-center"
+      style={{ maxWidth: 440 }}
     >
-      <motion.p
-        className="text-2xl font-light tracking-widest"
-        style={{ color: 'var(--strata-2022)' }}
+      {/* Title */}
+      <motion.div
         initial={{ y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.1 }}
+        transition={{ delay: 0.08 }}
       >
-        这一组挖完了
-      </motion.p>
-      <motion.p
-        className="text-sm"
-        style={{ color: 'var(--color-text-secondary)' }}
+        <p className="text-2xl font-light tracking-widest" style={{ color: 'var(--strata-2022)' }}>
+          这一组挖完了
+        </p>
+        {eventTitle && (
+          <p className="text-xs mt-2 tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
+            {eventTitle}
+          </p>
+        )}
+      </motion.div>
+
+      {/* Polaroid grid */}
+      {polaroidPhotos.length > 0 && (
+        <div className="flex items-end justify-center gap-3 my-1" style={{ minHeight: 110 }}>
+          {polaroidPhotos.map((photo, i) => (
+            <motion.div
+              key={photo.id}
+              initial={{ opacity: 0, scale: 0.75, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0, rotate: rotations[i] ?? 0 }}
+              transition={{ delay: 0.15 + i * 0.08, duration: 0.4, ease: [0.25, 0, 0, 1] }}
+              style={{
+                background: 'rgba(255,255,255,0.07)',
+                border: '1px solid rgba(255,255,255,0.13)',
+                padding: '5px 5px 18px 5px',
+                borderRadius: 3,
+                boxShadow: '0 6px 28px rgba(0,0,0,0.5)',
+              }}
+            >
+              <img
+                src={previewUrl(photo.id)}
+                alt=""
+                style={{ width: 76, height: 76, objectFit: 'cover', display: 'block', borderRadius: 1 }}
+                draggable={false}
+              />
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* Stats */}
+      <motion.div
+        className="flex flex-col items-center gap-1.5"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.38 }}
       >
-        带走 <span style={{ color: 'var(--color-keep)' }}>{sessionKept}</span> 张
-        ， 留下 <span style={{ color: 'var(--color-leave)' }}>{sessionLeft}</span> 张
-      </motion.p>
+        <p className="text-sm font-light" style={{ color: 'var(--color-text-secondary)' }}>
+          带走了{' '}
+          <span style={{ color: 'var(--color-keep)' }}>{keptPhotos.length}</span>{' '}
+          段记忆
+        </p>
+        {(sessionLeft > 0 || freedBytes > 0) && (
+          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            {sessionLeft > 0 && `留下 ${sessionLeft} 张`}
+            {sessionLeft > 0 && freedBytes > 0 && '，'}
+            {freedBytes > 0 && `释放了 ${formatBytes(freedBytes)}`}
+          </p>
+        )}
+      </motion.div>
 
+      {/* Buttons */}
       <motion.div
-        className="flex gap-3 mt-2"
+        className="flex gap-3"
         initial={{ y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3 }}
+        transition={{ delay: 0.45 }}
       >
         <button
           onClick={onBack}
-          className="px-5 py-3 rounded-lg text-sm tracking-wider transition-opacity hover:opacity-70"
+          className="px-5 py-2.5 rounded-lg text-sm tracking-wider transition-opacity hover:opacity-70"
           style={{ background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)' }}
         >
-          ← 返回事件列表
+          ← 返回列表
         </button>
         {hasNext ? (
           <button
             onClick={onNext}
-            className="px-6 py-3 rounded-lg text-sm tracking-wider transition-opacity hover:opacity-70"
+            className="px-6 py-2.5 rounded-lg text-sm tracking-wider transition-opacity hover:opacity-70"
             style={{ background: 'var(--color-keep)', color: '#0A0A0F' }}
           >
             下一组 →
-            <span className="ml-2 text-xs opacity-60">K / →</span>
+            <span className="ml-2 text-xs opacity-60">K</span>
           </button>
         ) : (
           <button
             onClick={onBack}
-            className="px-6 py-3 rounded-lg text-sm tracking-wider transition-opacity hover:opacity-70"
+            className="px-6 py-2.5 rounded-lg text-sm tracking-wider transition-opacity hover:opacity-70"
             style={{ background: 'var(--color-keep)', color: '#0A0A0F' }}
           >
             本月已全部完成
