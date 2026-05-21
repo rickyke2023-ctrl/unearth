@@ -1,6 +1,6 @@
 import type {
   SystemStatus, StrataYear, GlobalStats, Event, Photo,
-  Decision, StagingInfo, ScanProgress,
+  Decision, StagingInfo, TrashInfo, ScanProgress,
 } from '../types'
 
 const BASE = ''
@@ -80,12 +80,30 @@ export function getStaging(): Promise<StagingInfo> {
   return request('/api/staging')
 }
 
-export function confirmStaging(): Promise<{ deleted_count: number; freed_bytes: number }> {
-  return request('/api/staging/confirm', { method: 'POST', body: JSON.stringify({ confirm: true }) })
+/** 把 staging 照片移入 trash（30天缓冲，不立刻删文件） */
+export function confirmStaging(photo_ids?: string[]): Promise<{ trashed_count: number; deleted_count: number; freed_bytes: number }> {
+  return request('/api/staging/confirm', {
+    method: 'POST',
+    body: JSON.stringify({ confirm: true, ...(photo_ids ? { photo_ids } : {}) }),
+  })
 }
 
-export function restoreFromStaging(photo_id: string): Promise<{ success: boolean; photo_id: string; restored_path: string }> {
-  return request(`/api/staging/restore/${photo_id}`, { method: 'POST' })
+export function restoreFromStaging(photo_id: string): Promise<{ photo_id: string; restored_to: string }> {
+  return request('/api/staging/restore', { method: 'POST', body: JSON.stringify({ photo_id }) })
+}
+
+// ── Trash ──────────────────────────────────────────────────────────────────
+
+export function getTrash(): Promise<TrashInfo> {
+  return request('/api/trash')
+}
+
+/** photo_ids 为空时清空全部 trash */
+export function purgeTrash(photo_ids?: string[]): Promise<{ purged_count: number; freed_bytes: number; errors: unknown[] }> {
+  return request('/api/trash/purge', {
+    method: 'DELETE',
+    body: JSON.stringify({ photo_ids: photo_ids ?? [] }),
+  })
 }
 
 // ── Book candidates ────────────────────────────────────────────────────────

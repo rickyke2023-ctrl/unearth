@@ -87,18 +87,41 @@ export interface ScanProgress {
   phase: ScanPhase
 }
 
-export interface StagingFile {
+export interface StagingPhoto {
   photo_id: string
-  file_name: string
+  original_path: string
+  filename: string
+  staging_path: string
   file_size_bytes: number
-  left_at: string
+  date_taken: string | null
+  location: string | null
+  left_at: string | null
+  thumbnail_available: boolean
+}
+
+export interface TrashPhoto extends StagingPhoto {
+  trashed_at: string
+  expires_at: string
+  days_remaining: number
+}
+
+export interface TrashSummary {
+  count: number
+  size_mb: number
+  oldest_expires_at: string | null
 }
 
 export interface StagingInfo {
-  staging_path: string
-  files: StagingFile[]
   total_count: number
-  total_size_bytes: number
+  total_size_mb: number
+  photos: StagingPhoto[]
+  trash_summary: TrashSummary
+}
+
+export interface TrashInfo {
+  total_count: number
+  total_size_mb: number
+  photos: TrashPhoto[]
 }
 
 export type AppView = 'strata' | 'site' | 'decision'
