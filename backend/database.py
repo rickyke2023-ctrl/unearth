@@ -106,6 +106,7 @@ def init_db(conn: sqlite3.Connection) -> None:
             staged_path TEXT NOT NULL,
             file_size_bytes INTEGER NOT NULL,
             left_at TEXT NOT NULL,
+            trashed_at TEXT,
             restored_at TEXT,
             confirmed_deleted_at TEXT
         );
@@ -123,6 +124,7 @@ def init_db(conn: sqlite3.Connection) -> None:
     )
     ensure_column(conn, "events", "root_path", "TEXT NOT NULL DEFAULT ''")
     ensure_column(conn, "events", "photo_count", "INTEGER NOT NULL DEFAULT 0")
+    ensure_column(conn, "staging_files", "trashed_at", "TEXT")
     conn.execute(
         """
         UPDATE events

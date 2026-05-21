@@ -50,6 +50,15 @@ def main() -> None:
         delete_ids = [photo_id for photo_id in photo_ids if photo_id != restore_id][:1]
     call("DELETE", "/api/staging/confirm", json={"photo_ids": delete_ids, "confirm": True})
 
+    staging_after = call("GET", "/api/staging") or {}
+    print(f"trash_summary present: {'trash_summary' in staging_after}")
+
+    trash = call("GET", "/api/trash") or {}
+    trash_photos = trash.get("photos") or []
+    first_days_remaining = trash_photos[0].get("days_remaining") if trash_photos else None
+    print(f"trash total_count: {trash.get('total_count', 0)}")
+    print(f"trash first days_remaining: {first_days_remaining}")
+
 
 if __name__ == "__main__":
     main()

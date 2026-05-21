@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import os
 import shutil
+from datetime import UTC, datetime, timedelta
+from math import ceil
 from pathlib import Path
 from typing import Any
 
@@ -95,6 +97,21 @@ def datetime_from_timestamp(timestamp: float) -> str:
     from datetime import UTC, datetime
 
     return datetime.fromtimestamp(timestamp, UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _parse_utc_iso(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(UTC)
+
+
+def _utc_iso(value: datetime) -> str:
+    return value.astimezone(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _trash_expiry(trashed_at: str, grace_days: int = 30) -> tuple[str, int]:
+    expires = _parse_utc_iso(trashed_at) + timedelta(days=grace_days)
+    seconds_remaining = (expires - datetime.now(UTC)).total_seconds()
+    days_remaining = max(0, ceil(seconds_remaining / 86400))
+    return _utc_iso(expires), days_remaining
 
 
 def _record_decision_history(
@@ -270,7 +287,7 @@ def restore_photo(conn, photo_id: str) -> dict[str, Any]:
     with transaction(conn):
         conn.execute(
             """
-            UPDATE staging_files SET restored_at = ?
+            UPDATE staging_files SET restored_at = ?, trashed_at = NULL
             WHERE photo_id = ? AND restored_at IS NULL AND confirmed_deleted_at IS NULL
             """,
             (now, photo["id"]),
@@ -330,6 +347,7 @@ def resolve_staging_root(conn, root_path: str | None = None, all_roots: bool = F
 
 
 def list_staging(conn, root_path: str | None = None, all_roots: bool = False) -> dict[str, Any]:
+    auto_purge_expired(conn)
     resolved_root = resolve_staging_root(conn, root_path, all_roots)
     root_filter = "" if all_roots or not resolved_root else "AND p.root_path = ?"
     params = () if all_roots or not resolved_root else (resolved_root,)
@@ -350,7 +368,9 @@ def list_staging(conn, root_path: str | None = None, all_roots: bool = False) ->
             p.root_path
         FROM staging_files sf
         JOIN photos p ON p.id = sf.photo_id
-        WHERE sf.restored_at IS NULL AND sf.confirmed_deleted_at IS NULL
+        WHERE sf.restored_at IS NULL
+          AND sf.confirmed_deleted_at IS NULL
+          AND sf.trashed_at IS NULL
         {root_filter}
         ORDER BY sf.left_at DESC, sf.id
         """,
@@ -381,6 +401,107 @@ def list_staging(conn, root_path: str | None = None, all_roots: bool = False) ->
             }
         )
     photos.sort(key=lambda item: item["left_at"] or "", reverse=True)
+    return {
+        "total_count": len(photos),
+        "total_size_mb": round(total_size_bytes / (1024 * 1024), 1) if total_size_bytes else 0,
+        "photos": photos,
+        "trash_summary": trash_summary(conn, root_path=root_path, all_roots=all_roots, auto_purge=False),
+    }
+
+
+def trash_summary(
+    conn,
+    root_path: str | None = None,
+    all_roots: bool = False,
+    auto_purge: bool = True,
+) -> dict[str, Any]:
+    if auto_purge:
+        auto_purge_expired(conn)
+    resolved_root = resolve_staging_root(conn, root_path, all_roots)
+    root_filter = "" if all_roots or not resolved_root else "AND p.root_path = ?"
+    params = () if all_roots or not resolved_root else (resolved_root,)
+    rows = fetch_all(
+        conn,
+        f"""
+        SELECT sf.photo_id, sf.staged_path, sf.trashed_at
+        FROM staging_files sf
+        JOIN photos p ON p.id = sf.photo_id
+        WHERE sf.restored_at IS NULL
+          AND sf.confirmed_deleted_at IS NULL
+          AND sf.trashed_at IS NOT NULL
+        {root_filter}
+        """,
+        params,
+    )
+    photo_ids = {str(row["photo_id"]) for row in rows}
+    total_size_bytes = sum(_file_size_or_zero(Path(row["staged_path"]), photo_id=str(row["photo_id"])) for row in rows)
+    expires_at_values = [_trash_expiry(row["trashed_at"])[0] for row in rows if row.get("trashed_at")]
+    return {
+        "count": len(photo_ids),
+        "size_mb": round(total_size_bytes / (1024 * 1024), 1) if total_size_bytes else 0,
+        "oldest_expires_at": min(expires_at_values) if expires_at_values else None,
+    }
+
+
+def list_trash(conn, root_path: str | None = None, all_roots: bool = False) -> dict[str, Any]:
+    auto_purge_expired(conn)
+    resolved_root = resolve_staging_root(conn, root_path, all_roots)
+    root_filter = "" if all_roots or not resolved_root else "AND p.root_path = ?"
+    params = () if all_roots or not resolved_root else (resolved_root,)
+    rows = fetch_all(
+        conn,
+        f"""
+        SELECT
+            sf.id AS staging_file_id,
+            sf.photo_id,
+            sf.original_path,
+            sf.staged_path,
+            sf.file_size_bytes,
+            sf.left_at,
+            sf.trashed_at,
+            p.file_name,
+            p.shot_at,
+            p.gps_city,
+            p.gps_country,
+            p.root_path
+        FROM staging_files sf
+        JOIN photos p ON p.id = sf.photo_id
+        WHERE sf.restored_at IS NULL
+          AND sf.confirmed_deleted_at IS NULL
+          AND sf.trashed_at IS NOT NULL
+        {root_filter}
+        ORDER BY sf.trashed_at DESC, sf.id
+        """,
+        params,
+    )
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        grouped.setdefault(str(row["photo_id"]), []).append(row)
+
+    photos: list[dict[str, Any]] = []
+    total_size_bytes = 0
+    for photo_id, staged_files in grouped.items():
+        primary = min(staged_files, key=lambda item: item["staging_file_id"])
+        file_size_bytes = sum(_file_size_or_zero(Path(item["staged_path"]), photo_id=photo_id) for item in staged_files)
+        total_size_bytes += file_size_bytes
+        expires_at, days_remaining = _trash_expiry(primary["trashed_at"])
+        photos.append(
+            {
+                "photo_id": primary["photo_id"],
+                "original_path": primary["original_path"],
+                "filename": Path(primary["original_path"]).name or primary["file_name"],
+                "staging_path": primary["staged_path"],
+                "file_size_bytes": file_size_bytes,
+                "date_taken": primary["shot_at"],
+                "location": primary["gps_city"] or primary["gps_country"],
+                "left_at": primary["left_at"],
+                "thumbnail_available": _thumbnail_path(photo_id).exists(),
+                "trashed_at": primary["trashed_at"],
+                "expires_at": expires_at,
+                "days_remaining": days_remaining,
+            }
+        )
+    photos.sort(key=lambda item: item["trashed_at"] or "", reverse=True)
     return {
         "total_count": len(photos),
         "total_size_mb": round(total_size_bytes / (1024 * 1024), 1) if total_size_bytes else 0,
@@ -417,7 +538,9 @@ def confirm_staging(
             p.status
         FROM staging_files sf
         JOIN photos p ON p.id = sf.photo_id
-        WHERE sf.restored_at IS NULL AND sf.confirmed_deleted_at IS NULL
+        WHERE sf.restored_at IS NULL
+          AND sf.confirmed_deleted_at IS NULL
+          AND sf.trashed_at IS NULL
         {root_filter}
         {id_filter}
         ORDER BY id
@@ -433,7 +556,6 @@ def confirm_staging(
 
     errors: list[dict[str, str]] = []
     deleted_count = 0
-    freed_bytes = 0
     now = utc_now_iso()
     for requested_id in normalized_photo_ids or []:
         if requested_id not in grouped:
@@ -460,67 +582,160 @@ def confirm_staging(
             errors.append({"photo_id": photo_id, "error": invalid_reason})
             continue
 
-        row_ids: list[int] = []
-        photo_freed_bytes = 0
-        try:
-            for row in staged_rows:
-                staged = Path(row["staged_path"])
-                size = os.path.getsize(staged)
-                os.remove(staged)
-                photo_freed_bytes += size
-                row_ids.append(row["id"])
-        except OSError as exc:
-            append_audit(
-                "error",
-                photo_id=photo_id,
-                staged_path=str(staged),
-                result="error",
-                error=str(exc),
-            )
-            errors.append({"photo_id": photo_id, "error": str(exc)})
-            continue
-
-        thumbnail = _thumbnail_path(photo_id)
-        if thumbnail.exists():
-            try:
-                os.remove(thumbnail)
-            except OSError as exc:
-                append_audit(
-                    "error",
-                    photo_id=photo_id,
-                    staged_path=str(thumbnail),
-                    result="error",
-                    error=str(exc),
-                )
-                errors.append({"photo_id": photo_id, "error": f"缩略图删除失败：{exc}"})
-
+        row_ids = [row["id"] for row in staged_rows]
         placeholders = ",".join("?" for _ in row_ids)
         with transaction(conn):
             conn.execute(
-                f"UPDATE staging_files SET confirmed_deleted_at = ? WHERE id IN ({placeholders})",
+                f"UPDATE staging_files SET trashed_at = ? WHERE id IN ({placeholders})",
                 (now, *row_ids),
             )
             photo = get_photo(conn, photo_id)
             _record_decision_history(
                 conn,
                 photo=photo,
-                new_decision="deleted",
+                new_decision="trash",
                 moved_files=[{"staged_path": row["staged_path"], "original_path": row["original_path"]} for row in staged_rows],
                 now=now,
             )
             conn.execute(
                 """
                 UPDATE photos
-                SET status = 'deleted', decision = 'deleted', staged_path = NULL, updated_at = ?
+                SET status = 'trash', decision = 'deleted', updated_at = ?
                 WHERE id = ?
                 """,
                 (now, photo_id),
             )
         deleted_count += 1
-        freed_bytes += photo_freed_bytes
 
     append_audit(
         "staging_confirm",
-        extra={"deleted_count": deleted_count, "freed_bytes": freed_bytes, "errors": errors},
+        extra={
+            "details": {"action": "moved_to_trash"},
+            "trash_action": "moved_to_trash",
+            "deleted_count": deleted_count,
+            "trashed_count": deleted_count,
+            "freed_bytes": 0,
+            "errors": errors,
+        },
     )
-    return {"deleted_count": deleted_count, "freed_bytes": freed_bytes, "errors": errors}
+    return {"deleted_count": deleted_count, "trashed_count": deleted_count, "freed_bytes": 0, "errors": errors}
+
+
+def purge_trash(
+    conn,
+    photo_ids: list[str | int] | None = None,
+    force: bool = False,
+    grace_days: int = 30,
+) -> dict[str, Any]:
+    normalized_photo_ids = [str(photo_id) for photo_id in photo_ids] if photo_ids else None
+    params: tuple[Any, ...] = ()
+    id_filter = ""
+    expiry_filter = ""
+    if normalized_photo_ids:
+        id_filter = f"AND sf.photo_id IN ({','.join('?' for _ in normalized_photo_ids)})"
+        params = (*params, *normalized_photo_ids)
+    elif not force:
+        cutoff = _utc_iso(datetime.now(UTC) - timedelta(days=grace_days))
+        expiry_filter = "AND sf.trashed_at < ?"
+        params = (*params, cutoff)
+
+    rows = fetch_all(
+        conn,
+        f"""
+        SELECT
+            sf.*,
+            p.root_path
+        FROM staging_files sf
+        JOIN photos p ON p.id = sf.photo_id
+        WHERE sf.restored_at IS NULL
+          AND sf.confirmed_deleted_at IS NULL
+          AND sf.trashed_at IS NOT NULL
+        {id_filter}
+        {expiry_filter}
+        ORDER BY sf.photo_id, sf.id
+        """,
+        params,
+    )
+
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        grouped.setdefault(str(row["photo_id"]), []).append(row)
+
+    errors: list[dict[str, str]] = []
+    purged_photo_ids: set[str] = set()
+    thumbnail_deleted_for: set[str] = set()
+    freed_bytes = 0
+    now = utc_now_iso()
+    for requested_id in normalized_photo_ids or []:
+        if requested_id not in grouped:
+            errors.append({"photo_id": requested_id, "error": "没有可清除的 trash 文件"})
+
+    for photo_id, staged_rows in grouped.items():
+        for row in staged_rows:
+            staged = Path(row["staged_path"])
+            if not _path_is_in_staging(staged, row["root_path"]):
+                error = f"文件不在 staging 目录中：{staged}"
+                append_audit("error", photo_id=photo_id, staged_path=str(staged), result="error", error=error)
+                errors.append({"photo_id": photo_id, "error": error})
+                continue
+            if not staged.exists():
+                error = f"staging 文件不存在：{staged}"
+                append_audit("error", photo_id=photo_id, staged_path=str(staged), result="error", error=error)
+                errors.append({"photo_id": photo_id, "error": error})
+                continue
+
+            try:
+                size = os.path.getsize(staged)
+                os.remove(staged)
+            except OSError as exc:
+                append_audit("error", photo_id=photo_id, staged_path=str(staged), result="error", error=str(exc))
+                errors.append({"photo_id": photo_id, "error": str(exc)})
+                continue
+
+            with transaction(conn):
+                conn.execute(
+                    "UPDATE staging_files SET confirmed_deleted_at = ? WHERE id = ?",
+                    (now, row["id"]),
+                )
+                conn.execute(
+                    """
+                    UPDATE photos
+                    SET status = 'deleted', decision = 'deleted', staged_path = NULL, updated_at = ?
+                    WHERE id = ?
+                    """,
+                    (now, photo_id),
+                )
+            freed_bytes += size
+            purged_photo_ids.add(photo_id)
+
+        if photo_id in purged_photo_ids and photo_id not in thumbnail_deleted_for:
+            thumbnail = _thumbnail_path(photo_id)
+            if thumbnail.exists():
+                try:
+                    size = os.path.getsize(thumbnail)
+                    os.remove(thumbnail)
+                    freed_bytes += size
+                except OSError as exc:
+                    append_audit("error", photo_id=photo_id, staged_path=str(thumbnail), result="error", error=str(exc))
+                    errors.append({"photo_id": photo_id, "error": f"缩略图删除失败：{exc}"})
+            thumbnail_deleted_for.add(photo_id)
+
+        if photo_id in purged_photo_ids:
+            append_audit(
+                "purge_trash",
+                photo_id=photo_id,
+                extra={
+                    "purged_files": len([row for row in staged_rows if row["photo_id"] == photo_id]),
+                },
+            )
+
+    return {"purged_count": len(purged_photo_ids), "freed_bytes": freed_bytes, "errors": errors}
+
+
+def auto_purge_expired(conn) -> None:
+    try:
+        result = purge_trash(conn, force=False, grace_days=30)
+        if result.get("errors"):
+            append_audit("auto_purge_expired", result="error", extra={"errors": result["errors"]})
+    except Exception as exc:
+        append_audit("auto_purge_expired", result="error", error=str(exc))
