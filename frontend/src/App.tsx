@@ -6,6 +6,7 @@ import { StrataView } from './components/StrataView'
 import { SiteView } from './components/SiteView'
 import { DecisionView } from './components/DecisionView'
 import { ExcavationView } from './components/ExcavationView'
+import { KeptView } from './components/KeptView'
 import { StagingConfirmDialog } from './components/shared/StagingConfirmDialog'
 import { ScanSetup, ScanProgressView } from './components/shared/ScanProgress'
 
@@ -36,6 +37,11 @@ function AppContent() {
       {view === 'excavation' && (
         <motion.div key="excavation" className="h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
           <ExcavationView />
+        </motion.div>
+      )}
+      {view === 'kept' && (
+        <motion.div key="kept" className="h-full" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+          <KeptView />
         </motion.div>
       )}
     </AnimatePresence>
