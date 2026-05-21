@@ -23,5 +23,10 @@ class UndoRequest(BaseModel):
 
 class StagingConfirmRequest(BaseModel):
     confirm: bool
+    photo_ids: list[str | int] | None = None
     root_path: str | None = None
     all_roots: bool = False
+
+
+class StagingRestoreRequest(BaseModel):
+    photo_id: str | int

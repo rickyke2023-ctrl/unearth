@@ -16,7 +16,7 @@ from .geocoding import reverse_geocode_missing
 from .preview import accepted_preview_response, get_or_create_preview, preview_status, start_preview_generation
 from .queries import book_candidates, day_photo_count, event_photos, events_for_month, export_book_candidates, status, strata
 from .scanner import progress_store, scan_root
-from .schemas import DecisionsRequest, ScanRequest, StagingConfirmRequest, UndoRequest
+from .schemas import DecisionsRequest, ScanRequest, StagingConfirmRequest, StagingRestoreRequest, UndoRequest
 from .staging import confirm_staging, list_staging, restore_photo
 
 
@@ -148,7 +148,29 @@ def api_staging(root_path: str | None = None, all_roots: bool = False, conn=Depe
 
 @app.post("/api/staging/confirm")
 def api_confirm_staging(payload: StagingConfirmRequest, conn=Depends(db)):
-    return confirm_staging(conn, payload.confirm, root_path=payload.root_path, all_roots=payload.all_roots)
+    return confirm_staging(
+        conn,
+        payload.confirm,
+        photo_ids=payload.photo_ids,
+        root_path=payload.root_path,
+        all_roots=payload.all_roots,
+    )
+
+
+@app.delete("/api/staging/confirm")
+def api_delete_confirm_staging(payload: StagingConfirmRequest, conn=Depends(db)):
+    return confirm_staging(
+        conn,
+        payload.confirm,
+        photo_ids=payload.photo_ids,
+        root_path=payload.root_path,
+        all_roots=payload.all_roots,
+    )
+
+
+@app.post("/api/staging/restore")
+def api_restore_staging_by_body(payload: StagingRestoreRequest, conn=Depends(db)):
+    return restore_photo(conn, str(payload.photo_id))
 
 
 @app.post("/api/staging/restore/{photo_id}")
