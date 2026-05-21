@@ -2,10 +2,11 @@
 更新时间：2026-05-21 当前会话
 
 前端状态：正常
-最近完成：体验优化 — thumbnail fallback + 里程碑随机化
-  - 预览图加载失败时显示占位块（文件名 + "预览图生成中"），不再白屏
-  - 里程碑文案每类 4 个版本随机轮换，不再每次相同
-  - 覆盖范围：主图 / 岩层队列 / AllDoneState polaroid / StagingConfirmDialog
+最近完成：Task D — 今日发掘 API（commit blocked: 当前沙箱禁止写入 .git）
+  - 新增 GET /api/excavation/today
+  - 同日跨年照片（decision IS NULL，preview_ready）
+  - < 5张时自动补足最近未决策照片
+  - 返回完整 Photo 字段供前端直接使用
 
 已完成功能（完整清单）：
   前端
@@ -47,7 +48,7 @@
 需要人决策：无
 
 下一步（按优先级）：
-  1. 【用户行动】真实体验 — 选1-2个月份，做500张决策，记录摩擦点
+  1. 前端接入 /api/excavation/today（替换 story/today 临时方案）
   2. 【待反馈后决定】根据真实体验暴露的问题做针对性修复
   3. 扫全盘（40k张）— 等体验验证稳定后再做
   4. GPS地理编码 — 跑完后 Story模式themes才有内容

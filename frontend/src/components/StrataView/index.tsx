@@ -230,6 +230,7 @@ function GlobalStatsBar({ stats, stagingCount, trashCount }: { stats: GlobalStat
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 export function StrataView() {
+  const { setView } = useAppStore()
   const [years, setYears] = useState<StrataYear[]>([])
   const [stats, setStats] = useState<GlobalStats | null>(null)
   const [stagingCount, setStagingCount] = useState(0)
@@ -256,21 +257,41 @@ export function StrataView() {
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="px-8 pt-8 pb-0 flex-shrink-0">
-        <div className="flex items-baseline gap-4 mb-6">
-          <h1
-            className="font-serif tracking-widest"
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-baseline gap-4">
+            <h1
+              className="font-serif tracking-widest"
+              style={{
+                color: 'var(--strata-2022)',
+                fontSize: 'var(--text-title)',
+                fontWeight: 500,
+                letterSpacing: '0.12em',
+              }}
+            >
+              显影 · Unearth
+            </h1>
+            <span style={{ color: 'var(--color-text-muted)', fontSize: 12, letterSpacing: '0.08em' }}>
+              A Memory Excavation
+            </span>
+          </div>
+
+          {/* 今日发掘入口 */}
+          <motion.button
+            onClick={() => setView('excavation')}
+            whileHover={{ scale: 1.03, opacity: 1 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs tracking-wider"
             style={{
-              color: 'var(--strata-2022)',
-              fontSize: 'var(--text-title)',
-              fontWeight: 500,
-              letterSpacing: '0.12em',
+              background: 'rgba(255,180,80,0.08)',
+              border: '1px solid rgba(255,180,80,0.25)',
+              color: 'rgba(255,180,80,0.75)',
+              opacity: 0.9,
             }}
           >
-            显影 · Unearth
-          </h1>
-          <span style={{ color: 'var(--color-text-muted)', fontSize: 12, letterSpacing: '0.08em' }}>
-            A Memory Excavation
-          </span>
+            <span style={{ fontSize: 14 }}>⛏</span>
+            今日发掘
+          </motion.button>
         </div>
         {stats && <GlobalStatsBar stats={stats} stagingCount={stagingCount} trashCount={trashCount} />}
       </div>
