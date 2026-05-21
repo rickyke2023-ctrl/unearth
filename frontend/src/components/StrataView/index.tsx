@@ -176,7 +176,7 @@ function YearStratum({ year, index }: { year: StrataYear; index: number }) {
 // ── Global stats bar ─────────────────────────────────────────────────────────
 
 function GlobalStatsBar({ stats, stagingCount, trashCount }: { stats: GlobalStats; stagingCount: number; trashCount: number }) {
-  const { setShowStagingDialog } = useAppStore()
+  const { setShowStagingDialog, setView } = useAppStore()
   const decidedPct =
     stats.total_photos > 0 ? Math.round((stats.decided_count / stats.total_photos) * 100) : 0
 
@@ -190,7 +190,17 @@ function GlobalStatsBar({ stats, stagingCount, trashCount }: { stats: GlobalStat
           <span style={{ color: 'var(--color-text-primary)' }}>{stats.total_photos.toLocaleString()}</span> 张
         </span>
         <span>
-          带走 <span style={{ color: 'var(--color-keep)' }}>{stats.kept_count.toLocaleString()}</span>
+          {stats.kept_count > 0 ? (
+            <button
+              onClick={() => setView('kept')}
+              className="transition-opacity hover:opacity-70"
+              style={{ color: 'inherit' }}
+            >
+              带走 <span style={{ color: 'var(--color-keep)' }}>{stats.kept_count.toLocaleString()}</span> →
+            </button>
+          ) : (
+            <>带走 <span style={{ color: 'var(--color-keep)' }}>0</span></>
+          )}
         </span>
         <span>
           留下 <span style={{ color: 'var(--color-leave)' }}>{stats.left_count.toLocaleString()}</span>

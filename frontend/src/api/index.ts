@@ -1,6 +1,6 @@
 import type {
   SystemStatus, StrataYear, GlobalStats, Event, Photo,
-  Decision, StagingInfo, TrashInfo, ScanProgress, ExcavationResult,
+  Decision, StagingInfo, TrashInfo, ScanProgress, ExcavationResult, KeptResult,
 } from '../types'
 
 const BASE = ''
@@ -146,6 +146,21 @@ export async function getExcavationToday(limit = 20): Promise<ExcavationResult> 
       supplemented: false,
     }
   }
+}
+
+// ── Kept photos ────────────────────────────────────────────────────────────
+
+export function getKeptPhotos(params?: {
+  limit?: number
+  offset?: number
+  year?: number
+}): Promise<KeptResult> {
+  const q = new URLSearchParams()
+  if (params?.limit  != null) q.set('limit',  String(params.limit))
+  if (params?.offset != null) q.set('offset', String(params.offset))
+  if (params?.year   != null) q.set('year',   String(params.year))
+  const qs = q.toString()
+  return request(`/api/photos/kept${qs ? `?${qs}` : ''}`)
 }
 
 // ── Preview ────────────────────────────────────────────────────────────────

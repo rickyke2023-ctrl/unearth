@@ -133,4 +133,10 @@ export interface ExcavationResult {
   supplemented: boolean
 }
 
-export type AppView = 'strata' | 'site' | 'decision' | 'excavation'
+export interface KeptResult {
+  total_count: number
+  by_year: Record<string, number>
+  photos: Photo[]
+}
+
+export type AppView = 'strata' | 'site' | 'decision' | 'excavation' | 'kept'
