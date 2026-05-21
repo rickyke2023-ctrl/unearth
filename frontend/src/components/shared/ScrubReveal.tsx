@@ -178,10 +178,15 @@ export function ScrubReveal({ src, alt = '', onRevealed }: ScrubRevealProps) {
   }, [])
 
   // ── Canvas 尺寸与初始化 ───────────────────────────────────────────────────
+  //
+  // 注意：canvas 只在 imgLoaded=true 后才挂载到 DOM（条件渲染）。
+  // 因此这个 effect 必须把 imgLoaded 也列为依赖，这样图片加载完成、
+  // canvas 出现在 DOM 后，effect 才会重新执行并完成初始化。
 
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (!imgLoaded) return                 // canvas 还未挂载，等下一轮
     const container = containerRef.current
     const canvas = canvasRef.current
     if (!container || !canvas) return
@@ -197,7 +202,7 @@ export function ScrubReveal({ src, alt = '', onRevealed }: ScrubRevealProps) {
     const ro = new ResizeObserver(resize)
     ro.observe(container)
     return () => ro.disconnect()
-  }, [initCanvas])
+  }, [initCanvas, imgLoaded])              // ← imgLoaded 是关键依赖
 
   const cursor = phase === 'cover'
     ? 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'32\' height=\'32\'%3E%3Ccircle cx=\'16\' cy=\'16\' r=\'14\' fill=\'none\' stroke=\'rgba(255,200,120,0.6)\' stroke-width=\'2\'/%3E%3C/svg%3E") 16 16, crosshair'
