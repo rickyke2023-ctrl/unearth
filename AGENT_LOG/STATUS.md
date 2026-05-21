@@ -11,12 +11,15 @@
   - 背景压暗 brightness(0.18) + SVG 噪点纹理
 
 后端状态：正常
-最近完成：新增 dispatch.sh（Codex 任务自动触发脚本）
+最近完成：Task B — 故事模式后端 MVP（commit 未生成：当前沙箱禁止写入 .git）
+  - GET /api/story/today：cross_year（同月同日跨年）+ full_day（全天叙事）
+  - GET /api/themes：GPS 城市分组 + 网格聚类（~1km 精度）
+  - GET /api/story/theme/{theme_id}：按地点获取完整照片列表
 预览图进度：ready=5838 / 8105（pending=2267）
 
 需要人决策：无
 下一步建议：
-  1. 扫全盘（40k张）前先确认 StagingConfirmDialog 是否够用
-  2. DESIGN_LANGUAGE §四 第四优先：间距规范统一
-  3. 故事模式 / 每日限额（V2 方向）
+  1. 前端：故事模式入口（StoryView）
+  2. 前端：StagingConfirmDialog（调用新 API 展示确认界面）
+  3. 扫全盘（40k张）
 ---

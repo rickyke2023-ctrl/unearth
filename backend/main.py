@@ -5,7 +5,7 @@ import json
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import BackgroundTasks, Depends, FastAPI, Request
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 
@@ -18,6 +18,7 @@ from .queries import book_candidates, day_photo_count, event_photos, events_for_
 from .scanner import progress_store, scan_root
 from .schemas import DecisionsRequest, ScanRequest, StagingConfirmRequest, StagingRestoreRequest, UndoRequest
 from .staging import confirm_staging, list_staging, restore_photo
+from .story import theme_story, themes, today_story
 
 
 @asynccontextmanager
@@ -96,6 +97,33 @@ def api_event_photos(event_id: str, conn=Depends(db)):
 @app.get("/api/photos/day-count")
 def api_day_photo_count(date: str, conn=Depends(db)):
     return day_photo_count(conn, date)
+
+
+@app.get("/api/story/today")
+def api_story_today(
+    month: int | None = Query(default=None, ge=1, le=12),
+    day: int | None = Query(default=None, ge=1, le=31),
+    limit: int = Query(default=20, ge=1),
+    conn=Depends(db),
+):
+    return today_story(conn, month=month, day=day, limit=limit)
+
+
+@app.get("/api/themes")
+def api_themes(
+    min_photos: int = Query(default=3, ge=1),
+    limit: int = Query(default=20, ge=1),
+    conn=Depends(db),
+):
+    return themes(conn, min_photos=min_photos, limit=limit)
+
+
+@app.get("/api/story/theme/{theme_id}")
+def api_story_theme(theme_id: str, limit: int = Query(default=200, ge=1), conn=Depends(db)):
+    try:
+        return theme_story(conn, theme_id, limit=limit)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail={"error": str(exc), "code": "INVALID_THEME_ID"}) from exc
 
 
 @app.get("/preview/{photo_id}")
