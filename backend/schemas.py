@@ -30,3 +30,7 @@ class StagingConfirmRequest(BaseModel):
 
 class StagingRestoreRequest(BaseModel):
     photo_id: str | int
+
+
+class TrashPurgeRequest(BaseModel):
+    photo_ids: list[str | int] | None = None

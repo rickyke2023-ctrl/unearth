@@ -16,8 +16,8 @@ from .geocoding import reverse_geocode_missing
 from .preview import accepted_preview_response, get_or_create_preview, preview_status, start_preview_generation
 from .queries import book_candidates, day_photo_count, event_photos, events_for_month, export_book_candidates, status, strata
 from .scanner import progress_store, scan_root
-from .schemas import DecisionsRequest, ScanRequest, StagingConfirmRequest, StagingRestoreRequest, UndoRequest
-from .staging import confirm_staging, list_staging, restore_photo
+from .schemas import DecisionsRequest, ScanRequest, StagingConfirmRequest, StagingRestoreRequest, TrashPurgeRequest, UndoRequest
+from .staging import confirm_staging, list_staging, list_trash, purge_trash, restore_photo
 from .story import theme_story, themes, today_story
 
 
@@ -172,6 +172,16 @@ def api_toggle_book_candidate(photo_id: str, conn=Depends(db)):
 @app.get("/api/staging")
 def api_staging(root_path: str | None = None, all_roots: bool = False, conn=Depends(db)):
     return list_staging(conn, root_path=root_path, all_roots=all_roots)
+
+
+@app.get("/api/trash")
+def api_trash(root_path: str | None = None, all_roots: bool = False, conn=Depends(db)):
+    return list_trash(conn, root_path=root_path, all_roots=all_roots)
+
+
+@app.delete("/api/trash/purge")
+def api_purge_trash(payload: TrashPurgeRequest, conn=Depends(db)):
+    return purge_trash(conn, photo_ids=payload.photo_ids, force=True)
 
 
 @app.post("/api/staging/confirm")
