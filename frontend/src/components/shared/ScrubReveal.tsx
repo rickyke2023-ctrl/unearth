@@ -1,37 +1,42 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+
+// ── Public handle (used by CameraGesture in future) ───────────────────────
+export interface ScrubRevealHandle {
+  scrubAt(nx: number, ny: number): void   // 0-1 normalised coords
+}
 
 interface ScrubRevealProps {
   src: string
   alt?: string
-  onRevealed: () => void   // 拨开阈值达到时调用
+  onRevealed: () => void
 }
 
-const REVEAL_THRESHOLD = 0.72   // 72% 区域拨开后自动完成
-const BRUSH_SIZE_MOUSE = 58     // 鼠标笔刷半径 px
-const BRUSH_SIZE_TOUCH = 72     // 触摸笔刷半径 px
-const GRID_COLS = 32            // coverage 网格列数（低分辨率覆盖率检测）
-const GRID_ROWS = 32
+const REVEAL_THRESHOLD  = 0.72
+const BRUSH_SIZE_MOUSE  = 58
+const BRUSH_SIZE_TOUCH  = 72
+const GRID_COLS         = 32
+const GRID_ROWS         = 32
+const SOUND_THROTTLE_MS = 42   // max scratch sound rate
 
-// ── 低分辨率覆盖率网格 ──────────────────────────────────────────────────────
+// ── Coverage grid (low-res, avoids getImageData per frame) ────────────────
 
 class CoverageGrid {
   private cells: Uint8Array
-  private cols: number
-  private rows: number
+  private cols:  number
+  private rows:  number
   cleared = 0
 
   constructor(cols: number, rows: number) {
-    this.cols = cols
-    this.rows = rows
+    this.cols  = cols
+    this.rows  = rows
     this.cells = new Uint8Array(cols * rows)
   }
 
   mark(nx: number, ny: number, brushFrac: number) {
-    // nx, ny: 0-1 归一化坐标; brushFrac: 笔刷半径占画布宽的比例
     const cx = nx * this.cols
     const cy = ny * this.rows
-    const r = brushFrac * this.cols
+    const r  = brushFrac * this.cols
     const x0 = Math.max(0, Math.floor(cx - r))
     const x1 = Math.min(this.cols - 1, Math.ceil(cx + r))
     const y0 = Math.max(0, Math.floor(cy - r))
@@ -44,235 +49,429 @@ class CoverageGrid {
     }
   }
 
-  get coverage() {
-    return this.cleared / (this.cols * this.rows)
-  }
+  get coverage() { return this.cleared / (this.cols * this.rows) }
 }
 
-// ── ScrubReveal ─────────────────────────────────────────────────────────────
+// ── Web Audio helpers (no external files needed) ──────────────────────────
 
-export function ScrubReveal({ src, alt = '', onRevealed }: ScrubRevealProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const imgRef    = useRef<HTMLImageElement>(null)
-  const gridRef   = useRef<CoverageGrid>(new CoverageGrid(GRID_COLS, GRID_ROWS))
-  const drawingRef = useRef(false)
-  const doneRef    = useRef(false)
-
-  const [phase, setPhase] = useState<'cover' | 'reveal' | 'done'>('cover')
-  const [imgLoaded, setImgLoaded] = useState(false)
-
-  // ── Canvas 初始化：填充深色岩土遮罩 ──────────────────────────────────────
-
-  const initCanvas = useCallback(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')!
-    const w = canvas.width
-    const h = canvas.height
-
-    // 深棕色土层底色
-    ctx.fillStyle = '#16100a'
-    ctx.fillRect(0, 0, w, h)
-
-    // 颗粒噪点纹理（随机点阵模拟土壤质感）
-    const imageData = ctx.getImageData(0, 0, w, h)
-    const data = imageData.data
-    for (let i = 0; i < data.length; i += 4) {
-      const noise = (Math.random() - 0.5) * 28
-      data[i]     = Math.min(255, Math.max(0, data[i]     + noise))         // R
-      data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise * 0.6))  // G
-      data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise * 0.3))  // B
+function getAudioCtx(ref: React.MutableRefObject<AudioContext | null>): AudioContext | null {
+  try {
+    if (!ref.current) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ref.current = new ((window as any).AudioContext || (window as any).webkitAudioContext)()
     }
-    ctx.putImageData(imageData, 0, 0)
+    const ac = ref.current
+    if (ac && ac.state === 'suspended') ac.resume()
+    return ref.current
+  } catch { return null }
+}
 
-    // 边缘加深渐变（四周更暗，中间稍亮——像洞口）
-    const vignette = ctx.createRadialGradient(w / 2, h / 2, h * 0.1, w / 2, h / 2, h * 0.85)
-    vignette.addColorStop(0, 'rgba(0,0,0,0)')
-    vignette.addColorStop(1, 'rgba(0,0,0,0.55)')
-    ctx.fillStyle = vignette
-    ctx.fillRect(0, 0, w, h)
-  }, [])
-
-  // ── 在 canvas 上擦出一个笔刷圆 ───────────────────────────────────────────
-
-  const scrub = useCallback((x: number, y: number, radius: number) => {
-    const canvas = canvasRef.current
-    if (!canvas || doneRef.current) return
-    const ctx = canvas.getContext('2d')!
-
-    ctx.globalCompositeOperation = 'destination-out'
-
-    // 软边圆：中心完全透明，边缘渐隐
-    const grad = ctx.createRadialGradient(x, y, 0, x, y, radius)
-    grad.addColorStop(0,   'rgba(0,0,0,1)')
-    grad.addColorStop(0.6, 'rgba(0,0,0,0.85)')
-    grad.addColorStop(1,   'rgba(0,0,0,0)')
-
-    ctx.fillStyle = grad
-    ctx.beginPath()
-    ctx.arc(x, y, radius, 0, Math.PI * 2)
-    ctx.fill()
-
-    ctx.globalCompositeOperation = 'source-over'
-
-    // 更新覆盖率网格
-    const nx = x / canvas.width
-    const ny = y / canvas.height
-    const brushFrac = radius / canvas.width
-    gridRef.current.mark(nx, ny, brushFrac)
-
-    if (!doneRef.current && gridRef.current.coverage >= REVEAL_THRESHOLD) {
-      doneRef.current = true
-      setPhase('reveal')
-      setTimeout(() => {
-        setPhase('done')
-        onRevealed()
-      }, 520)
+/** Soft earth-scraping sound: short burst of bandpass-filtered noise */
+function playScratch(ctx: AudioContext) {
+  try {
+    const dur = 0.038 + Math.random() * 0.022
+    const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate)
+    const d   = buf.getChannelData(0)
+    for (let i = 0; i < d.length; i++) {
+      d[i] = (Math.random() * 2 - 1) * (1 - i / d.length) * 0.7
     }
-  }, [onRevealed])
+    const src  = ctx.createBufferSource()
+    src.buffer = buf
+    const filt = ctx.createBiquadFilter()
+    filt.type           = 'bandpass'
+    filt.frequency.value = 460 + Math.random() * 660
+    filt.Q.value        = 1.15
+    const gain       = ctx.createGain()
+    gain.gain.value  = 0.048
+    src.connect(filt); filt.connect(gain); gain.connect(ctx.destination)
+    src.start()
+  } catch {}
+}
 
-  // ── 鼠标事件 ─────────────────────────────────────────────────────────────
+/** Gentle reveal chord: stacked sine harmonics */
+function playRevealChord(ctx: AudioContext) {
+  try {
+    const now = ctx.currentTime
+    ;[220, 330, 440, 550].forEach((freq, i) => {
+      const osc  = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type          = 'sine'
+      osc.frequency.value = freq
+      gain.gain.setValueAtTime(0, now)
+      gain.gain.linearRampToValueAtTime(0.052 / (i * 0.55 + 1), now + 0.07 + i * 0.04)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.7 + i * 0.15)
+      osc.connect(gain); gain.connect(ctx.destination)
+      osc.start(now + i * 0.03)
+      osc.stop(now + 2.1)
+    })
+  } catch {}
+}
 
-  const getCanvasPos = (e: React.MouseEvent | MouseEvent) => {
-    const canvas = canvasRef.current!
-    const rect = canvas.getBoundingClientRect()
-    return {
-      x: (e.clientX - rect.left) * (canvas.width / rect.width),
-      y: (e.clientY - rect.top)  * (canvas.height / rect.height),
+// ── Component ─────────────────────────────────────────────────────────────
+
+export const ScrubReveal = forwardRef<ScrubRevealHandle, ScrubRevealProps>(
+  function ScrubReveal({ src, alt = '', onRevealed }, ref) {
+
+    const canvasRef    = useRef<HTMLCanvasElement>(null)
+    const imgRef       = useRef<HTMLImageElement>(null)
+    const glowRef      = useRef<HTMLDivElement>(null)
+    const containerRef = useRef<HTMLDivElement>(null)
+    const gridRef      = useRef(new CoverageGrid(GRID_COLS, GRID_ROWS))
+    const drawingRef   = useRef(false)
+    const doneRef      = useRef(false)
+    const audioCtxRef  = useRef<AudioContext | null>(null)
+    const lastSoundRef = useRef(0)
+
+    const [phase,     setPhase]     = useState<'cover' | 'reveal' | 'done'>('cover')
+    const [imgLoaded, setImgLoaded] = useState(false)
+
+    // ── Rich geological canvas texture ──────────────────────────────────────
+
+    const initCanvas = useCallback(() => {
+      const canvas = canvasRef.current
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')!
+      const w = canvas.width
+      const h = canvas.height
+
+      // 1. Deep earth radial base
+      const base = ctx.createRadialGradient(w * 0.5, h * 0.45, 0, w * 0.5, h * 0.5, Math.max(w, h) * 0.88)
+      base.addColorStop(0,   '#231709')
+      base.addColorStop(0.4, '#1c1007')
+      base.addColorStop(1,   '#0d0803')
+      ctx.fillStyle = base
+      ctx.fillRect(0, 0, w, h)
+
+      // 2. Geological strata bands (wavy, irregular)
+      const strata = [
+        { y: h * 0.14, color: '#2b1c0a', alpha: 0.62 },
+        { y: h * 0.31, color: '#1f1307', alpha: 0.52 },
+        { y: h * 0.49, color: '#2e200e', alpha: 0.58 },
+        { y: h * 0.66, color: '#191106', alpha: 0.48 },
+        { y: h * 0.82, color: '#241709', alpha: 0.54 },
+      ]
+      strata.forEach(({ y: sy, color, alpha }, si) => {
+        ctx.save()
+        ctx.globalAlpha = alpha
+        ctx.beginPath()
+        ctx.moveTo(-2, sy)
+        for (let x = 0; x <= w + 12; x += 5) {
+          const wy = sy
+            + Math.sin(x * 0.021 + si * 1.9) * 8
+            + Math.sin(x * 0.006 + si * 2.4) * 13
+            + (Math.random() - 0.5) * 2.8
+          ctx.lineTo(x, wy)
+        }
+        ctx.lineTo(w + 2, h + 2); ctx.lineTo(-2, h + 2); ctx.closePath()
+        ctx.fillStyle = color; ctx.fill()
+        ctx.restore()
+      })
+
+      // 3. Fine pixel noise (warm-tinted)
+      const id = ctx.getImageData(0, 0, w, h)
+      const d  = id.data
+      for (let i = 0; i < d.length; i += 4) {
+        const n = (Math.random() - 0.5) * 30
+        d[i]     = Math.min(255, Math.max(0, d[i]     + n))
+        d[i + 1] = Math.min(255, Math.max(0, d[i + 1] + n * 0.50))
+        d[i + 2] = Math.min(255, Math.max(0, d[i + 2] + n * 0.16))
+      }
+      ctx.putImageData(id, 0, 0)
+
+      // 4. Soil aggregate clumps (two-scale)
+      for (let a = 0; a < 220; a++) {
+        const ax     = Math.random() * w
+        const ay     = Math.random() * h
+        const r      = 1.5 + Math.random() * 16
+        const bright = Math.random() > 0.48
+        const g = ctx.createRadialGradient(ax, ay, 0, ax, ay, r)
+        g.addColorStop(0, bright ? 'rgba(52,32,11,0.24)' : 'rgba(5,2,1,0.30)')
+        g.addColorStop(1, 'rgba(0,0,0,0)')
+        ctx.fillStyle = g
+        ctx.beginPath()
+        ctx.ellipse(ax, ay, r, r * (0.4 + Math.random() * 0.95), Math.random() * Math.PI, 0, Math.PI * 2)
+        ctx.fill()
+      }
+
+      // 5. Hairline cracks
+      for (let c = 0; c < 16; c++) {
+        ctx.save()
+        ctx.strokeStyle = `rgba(4,2,1,${0.25 + Math.random() * 0.42})`
+        ctx.lineWidth   = Math.random() < 0.22 ? 1.6 : 0.75
+        ctx.beginPath()
+        let cx2 = Math.random() * w
+        let cy2 = Math.random() * h * 0.55
+        ctx.moveTo(cx2, cy2)
+        for (let s = 0; s < 4 + Math.floor(Math.random() * 8); s++) {
+          cx2 = Math.min(w, Math.max(0, cx2 + (Math.random() - 0.5) * 48))
+          cy2 += Math.random() * 40 + 5
+          ctx.lineTo(cx2, cy2)
+        }
+        ctx.stroke(); ctx.restore()
+      }
+
+      // 6. Buried artifact impressions (oval shadows hinting at something below)
+      for (let a = 0; a < 7; a++) {
+        const ax = w * 0.08 + Math.random() * w * 0.84
+        const ay = h * 0.08 + Math.random() * h * 0.84
+        const rx = 14 + Math.random() * 34
+        const ry = 6  + Math.random() * 20
+        ctx.save()
+        ctx.translate(ax, ay); ctx.rotate(Math.random() * Math.PI)
+        const ag = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
+        ag.addColorStop(0,    'rgba(62,38,11,0.24)')
+        ag.addColorStop(0.55, 'rgba(38,22,6,0.12)')
+        ag.addColorStop(1,    'rgba(0,0,0,0)')
+        ctx.fillStyle = ag; ctx.scale(1, ry / rx)
+        ctx.beginPath(); ctx.arc(0, 0, rx, 0, Math.PI * 2); ctx.fill()
+        ctx.restore()
+      }
+
+      // 7. Heavy vignette — excavation pit, peering down from above
+      const vig = ctx.createRadialGradient(w * 0.5, h * 0.5, h * 0.07, w * 0.5, h * 0.5, h * 0.84)
+      vig.addColorStop(0,    'rgba(0,0,0,0)')
+      vig.addColorStop(0.52, 'rgba(0,0,0,0.24)')
+      vig.addColorStop(1,    'rgba(0,0,0,0.88)')
+      ctx.fillStyle = vig; ctx.fillRect(0, 0, w, h)
+
+      // 8. Faint warm center pulse — something buried, barely glowing
+      const warm = ctx.createRadialGradient(w * 0.52, h * 0.50, 0, w * 0.52, h * 0.50, h * 0.40)
+      warm.addColorStop(0, 'rgba(210,100,22,0.08)')
+      warm.addColorStop(1, 'rgba(0,0,0,0)')
+      ctx.fillStyle = warm; ctx.fillRect(0, 0, w, h)
+    }, [])
+
+    // ── Scrub: erase soil + update warm glow + sound ──────────────────────
+
+    const scrub = useCallback((x: number, y: number, radius: number) => {
+      const canvas = canvasRef.current
+      if (!canvas || doneRef.current) return
+      const ctx = canvas.getContext('2d')!
+
+      // Erase soil (destination-out soft circle)
+      ctx.globalCompositeOperation = 'destination-out'
+      const g = ctx.createRadialGradient(x, y, 0, x, y, radius)
+      g.addColorStop(0,    'rgba(0,0,0,1)')
+      g.addColorStop(0.52, 'rgba(0,0,0,0.90)')
+      g.addColorStop(1,    'rgba(0,0,0,0)')
+      ctx.fillStyle = g
+      ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill()
+      ctx.globalCompositeOperation = 'source-over'
+
+      // Coverage tracking
+      gridRef.current.mark(x / canvas.width, y / canvas.height, radius / canvas.width)
+      const cov = gridRef.current.coverage
+
+      // Warm glow builds as soil clears (direct DOM — no React re-render)
+      if (glowRef.current) {
+        glowRef.current.style.opacity = String(Math.min(cov * 0.95, 0.62))
+      }
+
+      // Sound (throttled)
+      const now = Date.now()
+      if (now - lastSoundRef.current > SOUND_THROTTLE_MS) {
+        lastSoundRef.current = now
+        const ac = getAudioCtx(audioCtxRef)
+        if (ac) playScratch(ac)
+      }
+
+      // Threshold → trigger reveal
+      if (!doneRef.current && cov >= REVEAL_THRESHOLD) {
+        doneRef.current = true
+        const ac = getAudioCtx(audioCtxRef)
+        if (ac) playRevealChord(ac)
+        setPhase('reveal')
+        setTimeout(() => { setPhase('done'); onRevealed() }, 520)
+      }
+    }, [onRevealed])
+
+    // ── Expose scrubAt for CameraGesture (future) ─────────────────────────
+
+    useImperativeHandle(ref, () => ({
+      scrubAt(nx: number, ny: number) {
+        const canvas = canvasRef.current
+        if (!canvas) return
+        scrub(nx * canvas.width, ny * canvas.height, BRUSH_SIZE_TOUCH)
+      },
+    }), [scrub])
+
+    // ── Mouse ─────────────────────────────────────────────────────────────
+
+    const getPos = (e: React.MouseEvent | MouseEvent) => {
+      const c = canvasRef.current!; const r = c.getBoundingClientRect()
+      return { x: (e.clientX - r.left) * (c.width / r.width), y: (e.clientY - r.top) * (c.height / r.height) }
     }
-  }
+    const onMouseDown = useCallback(() => { drawingRef.current = true }, [])
+    const onMouseUp   = useCallback(() => { drawingRef.current = false }, [])
+    const onMouseMove = useCallback((e: React.MouseEvent) => {
+      if (!drawingRef.current) return
+      const { x, y } = getPos(e); scrub(x, y, BRUSH_SIZE_MOUSE)
+    }, [scrub])
 
-  const onMouseDown = useCallback(() => { drawingRef.current = true }, [])
-  const onMouseUp   = useCallback(() => { drawingRef.current = false }, [])
-  const onMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!drawingRef.current) return
-    const { x, y } = getCanvasPos(e)
-    scrub(x, y, BRUSH_SIZE_MOUSE)
-  }, [scrub])
+    // ── Touch ─────────────────────────────────────────────────────────────
 
-  // ── 触摸事件 ─────────────────────────────────────────────────────────────
+    const onTouchMove = useCallback((e: React.TouchEvent) => {
+      e.preventDefault()
+      const t = e.touches[0]; if (!t) return
+      const c = canvasRef.current!; const r = c.getBoundingClientRect()
+      scrub((t.clientX - r.left) * (c.width / r.width), (t.clientY - r.top) * (c.height / r.height), BRUSH_SIZE_TOUCH)
+    }, [scrub])
 
-  const getTouchPos = (touch: React.Touch) => {
-    const canvas = canvasRef.current!
-    const rect = canvas.getBoundingClientRect()
-    return {
-      x: (touch.clientX - rect.left) * (canvas.width / rect.width),
-      y: (touch.clientY - rect.top)  * (canvas.height / rect.height),
-    }
-  }
+    useEffect(() => {
+      const up = () => { drawingRef.current = false }
+      window.addEventListener('mouseup', up)
+      return () => window.removeEventListener('mouseup', up)
+    }, [])
 
-  const onTouchMove = useCallback((e: React.TouchEvent) => {
-    e.preventDefault()
-    const touch = e.touches[0]
-    if (!touch) return
-    const { x, y } = getTouchPos(touch)
-    scrub(x, y, BRUSH_SIZE_TOUCH)
-  }, [scrub])
+    // ── Canvas init: runs after imgLoaded so canvas is in DOM ─────────────
+    // (Without imgLoaded dep, canvas is null when effect first fires.)
 
-  // ── 全局 mouseup（防止拖出 canvas 后不松开） ──────────────────────────────
+    useEffect(() => {
+      if (!imgLoaded) return
+      const container = containerRef.current
+      const canvas    = canvasRef.current
+      if (!container || !canvas) return
+      const resize = () => {
+        canvas.width  = container.clientWidth
+        canvas.height = container.clientHeight
+        gridRef.current  = new CoverageGrid(GRID_COLS, GRID_ROWS)
+        doneRef.current  = false
+        if (glowRef.current) glowRef.current.style.opacity = '0'
+        initCanvas()
+      }
+      resize()
+      const ro = new ResizeObserver(resize)
+      ro.observe(container)
+      return () => ro.disconnect()
+    }, [initCanvas, imgLoaded])
 
-  useEffect(() => {
-    const up = () => { drawingRef.current = false }
-    window.addEventListener('mouseup', up)
-    return () => window.removeEventListener('mouseup', up)
-  }, [])
+    // ── Cursor: custom amber circle while in cover phase ──────────────────
 
-  // ── Canvas 尺寸与初始化 ───────────────────────────────────────────────────
-  //
-  // 注意：canvas 只在 imgLoaded=true 后才挂载到 DOM（条件渲染）。
-  // 因此这个 effect 必须把 imgLoaded 也列为依赖，这样图片加载完成、
-  // canvas 出现在 DOM 后，effect 才会重新执行并完成初始化。
+    const cursor = phase === 'cover'
+      ? 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'36\' height=\'36\'%3E%3Ccircle cx=\'18\' cy=\'18\' r=\'15\' fill=\'none\' stroke=\'rgba(225,165,75,0.72)\' stroke-width=\'1.5\'/%3E%3Ccircle cx=\'18\' cy=\'18\' r=\'2.5\' fill=\'rgba(225,165,75,0.55)\'/%3E%3C/svg%3E") 18 18, crosshair'
+      : 'default'
 
-  const containerRef = useRef<HTMLDivElement>(null)
+    return (
+      <div ref={containerRef} className="absolute inset-0 select-none" style={{ cursor }}>
 
-  useEffect(() => {
-    if (!imgLoaded) return                 // canvas 还未挂载，等下一轮
-    const container = containerRef.current
-    const canvas = canvasRef.current
-    if (!container || !canvas) return
+        {/* ── Layer 1: Underground ambient light (behind photo, warm offset) */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 74% 60% at 59% 50%, rgba(205,118,38,0.12) 0%, rgba(145,72,16,0.055) 44%, transparent 72%)',
+          }}
+        />
 
-    const resize = () => {
-      canvas.width  = container.clientWidth
-      canvas.height = container.clientHeight
-      gridRef.current = new CoverageGrid(GRID_COLS, GRID_ROWS)
-      doneRef.current = false
-      initCanvas()
-    }
-    resize()
-    const ro = new ResizeObserver(resize)
-    ro.observe(container)
-    return () => ro.disconnect()
-  }, [initCanvas, imgLoaded])              // ← imgLoaded 是关键依赖
+        {/* ── Layer 2: Photo */}
+        <img
+          ref={imgRef}
+          src={src}
+          alt={alt}
+          onLoad={() => setImgLoaded(true)}
+          className="absolute inset-0 w-full h-full object-contain"
+          draggable={false}
+          style={{
+            padding: '72px 196px 72px 80px',
+            transition: phase === 'reveal' ? 'filter 0.55s ease' : undefined,
+            filter: phase === 'reveal' ? 'brightness(1.1) saturate(1.08)' : 'brightness(1)',
+          }}
+        />
 
-  const cursor = phase === 'cover'
-    ? 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'32\' height=\'32\'%3E%3Ccircle cx=\'16\' cy=\'16\' r=\'14\' fill=\'none\' stroke=\'rgba(255,200,120,0.6)\' stroke-width=\'2\'/%3E%3C/svg%3E") 16 16, crosshair'
-    : 'default'
+        {/* ── Layer 3: Coverage warm glow (below canvas, revealed as soil clears) */}
+        <div
+          ref={glowRef}
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            opacity: 0,
+            transition: 'opacity 0.14s',
+            background:
+              'radial-gradient(ellipse 70% 58% at 59% 50%, rgba(235,148,52,0.34) 0%, rgba(185,94,22,0.16) 42%, transparent 72%)',
+          }}
+        />
 
-  return (
-    <div ref={containerRef} className="absolute inset-0 select-none" style={{ cursor }}>
+        {/* ── Layer 4: Soil canvas */}
+        <AnimatePresence>
+          {phase !== 'done' && imgLoaded && (
+            <motion.canvas
+              ref={canvasRef}
+              className="absolute inset-0 w-full h-full"
+              style={{ touchAction: 'none' }}
+              initial={{ opacity: 1 }}
+              animate={{ opacity: phase === 'reveal' ? 0 : 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5, ease: [0.25, 0, 0, 1] }}
+              onMouseDown={onMouseDown}
+              onMouseUp={onMouseUp}
+              onMouseMove={onMouseMove}
+              onTouchMove={onTouchMove}
+              onTouchStart={(e) => e.preventDefault()}
+            />
+          )}
+        </AnimatePresence>
 
-      {/* 底层：照片（始终渲染，canvas 在上面遮住它） */}
-      <img
-        ref={imgRef}
-        src={src}
-        alt={alt}
-        onLoad={() => setImgLoaded(true)}
-        className="absolute inset-0 w-full h-full object-contain"
-        draggable={false}
-        style={{
-          padding: '72px 196px 72px 80px',
-          transition: phase === 'reveal' ? 'filter 0.5s ease' : undefined,
-          filter: phase === 'reveal' ? 'brightness(1.08) saturate(1.06)' : 'brightness(1)',
-        }}
-      />
-
-      {/* 岩土遮罩 canvas */}
-      <AnimatePresence>
-        {phase !== 'done' && imgLoaded && (
-          <motion.canvas
-            ref={canvasRef}
-            className="absolute inset-0 w-full h-full"
-            style={{ touchAction: 'none' }}
-            animate={{ opacity: phase === 'reveal' ? 0 : 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.45, ease: [0.25, 0, 0, 1] }}
-            onMouseDown={onMouseDown}
-            onMouseUp={onMouseUp}
-            onMouseMove={onMouseMove}
-            onTouchMove={onTouchMove}
-            onTouchStart={(e) => e.preventDefault()}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* 加载中：图片还没 ready 时 */}
-      {!imgLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center" style={{ background: '#16100a' }}>
-          <motion.div
-            className="w-6 h-6 rounded-full border-2"
-            style={{ borderColor: 'rgba(255,180,80,0.4)', borderTopColor: 'transparent' }}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
-          />
-        </div>
-      )}
-
-      {/* 提示文字（还没开始刷时） */}
-      <AnimatePresence>
+        {/* ── Layer 5: Breathing pulse on soil surface (4s cycle, long rest) */}
         {phase === 'cover' && imgLoaded && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ delay: 0.8, duration: 0.5 }}
-            className="absolute bottom-8 left-0 right-0 text-center pointer-events-none text-xs tracking-widest"
-            style={{ color: 'rgba(255,180,80,0.45)' }}
-          >
-            拨开表土，取出记忆
-          </motion.p>
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            animate={{ opacity: [0, 0.75, 0] }}
+            transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut', repeatDelay: 2.2 }}
+            style={{
+              background:
+                'radial-gradient(ellipse 54% 44% at 50% 52%, rgba(195,105,28,0.09) 0%, transparent 100%)',
+            }}
+          />
         )}
-      </AnimatePresence>
 
-    </div>
-  )
-}
+        {/* ── Layer 6: Golden bloom flash on full reveal */}
+        <AnimatePresence>
+          {phase === 'reveal' && (
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 0.52, 0] }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.0, times: [0, 0.16, 1] }}
+              style={{
+                background:
+                  'radial-gradient(ellipse 74% 62% at 59% 50%, rgba(255,215,90,0.40) 0%, rgba(215,142,42,0.14) 46%, transparent 72%)',
+              }}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* ── Loading spinner */}
+        {!imgLoaded && (
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ background: '#120d05' }}
+          >
+            <motion.div
+              className="w-6 h-6 rounded-full border-2"
+              style={{ borderColor: 'rgba(215,145,58,0.52)', borderTopColor: 'transparent' }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+            />
+          </div>
+        )}
+
+        {/* ── Hint text (appears after 1s delay once image is loaded) */}
+        <AnimatePresence>
+          {phase === 'cover' && imgLoaded && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ delay: 1.0, duration: 0.7 }}
+              className="absolute bottom-8 left-0 right-0 text-center pointer-events-none text-xs tracking-widest"
+              style={{ color: 'rgba(222,158,68,0.44)' }}
+            >
+              拨开表土，取出记忆
+            </motion.p>
+          )}
+        </AnimatePresence>
+
+      </div>
+    )
+  }
+)

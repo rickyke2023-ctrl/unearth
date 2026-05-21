@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getExcavationToday, postDecisions, previewUrl } from '../../api'
 import { useAppStore } from '../../stores/appStore'
 import { ScrubReveal } from '../shared/ScrubReveal'
+import type { ScrubRevealHandle } from '../shared/ScrubReveal'
 import { strataColorForYear } from '../../utils'
 import type { Photo } from '../../types'
 
@@ -150,6 +151,9 @@ export function ExcavationView() {
   const [left, setLeft] = useState(0)
   const [done, setDone] = useState(false)
 
+  // Ref for CameraGesture integration (future)
+  const scrubRef = useRef<ScrubRevealHandle>(null)
+
   useEffect(() => {
     getExcavationToday(20)
       .then((res) => {
@@ -159,6 +163,17 @@ export function ExcavationView() {
       .catch((e) => setError(e.message ?? '加载失败'))
       .finally(() => setLoading(false))
   }, [])
+
+  // Preload next 2 photos so transitions feel instant
+  useEffect(() => {
+    [index + 1, index + 2].forEach((i) => {
+      const photo = photos[i]
+      if (photo) {
+        const img = new Image()
+        img.src = previewUrl(photo.id)
+      }
+    })
+  }, [index, photos])
 
   // 键盘快捷键（revealed 状态下）
   useEffect(() => {
@@ -327,6 +342,7 @@ export function ExcavationView() {
             >
               {/* ScrubReveal：照片在下，岩土在上 */}
               <ScrubReveal
+                ref={scrubRef}
                 src={previewUrl(currentPhoto.id)}
                 alt={currentPhoto.file_name}
                 onRevealed={handleRevealed}
