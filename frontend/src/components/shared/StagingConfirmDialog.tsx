@@ -21,6 +21,7 @@ function PhotoCard({
   badgeColor?: string
 }) {
   const [hovered, setHovered] = useState(false)
+  const [imgErr, setImgErr] = useState(false)
 
   return (
     <motion.div
@@ -39,16 +40,20 @@ function PhotoCard({
     >
       {/* Thumbnail */}
       <div className="relative" style={{ aspectRatio: '4/3', background: 'rgba(0,0,0,0.4)' }}>
-        {photo.thumbnail_available ? (
+        {photo.thumbnail_available && !imgErr ? (
           <img
             src={previewUrl(photo.photo_id)}
             alt={photo.filename}
             className="w-full h-full object-cover"
             style={{ filter: 'brightness(0.82)' }}
+            onError={() => setImgErr(true)}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <span style={{ fontSize: 24, opacity: 0.2 }}>⬛</span>
+          <div className="w-full h-full flex flex-col items-center justify-center gap-1.5">
+            <span style={{ fontSize: 20, opacity: 0.15 }}>⬛</span>
+            <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9, textAlign: 'center', padding: '0 6px', wordBreak: 'break-all' }}>
+              {photo.filename}
+            </p>
           </div>
         )}
 

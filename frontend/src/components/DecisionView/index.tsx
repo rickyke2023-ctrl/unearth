@@ -7,6 +7,51 @@ import { formatBytes, strataColorForYear } from '../../utils'
 import { MilestoneOverlay } from '../shared/MilestoneOverlay'
 import type { Photo } from '../../types'
 
+// ── Milestone messages — 每种触发有多个版本，随机选一条 ────────────────────
+
+function pickRandom<T>(arr: readonly T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+const MILESTONE: Record<string, readonly string[]> = {
+  first_any: [
+    '第一个瞬间，从地层里浮现了',
+    '挖掘，开始了',
+    '时间的第一层，被你触碰',
+    '第一张，从黑暗里醒来',
+  ],
+  first_keep: [
+    '这段记忆，属于你了',
+    '放进行囊里了',
+    '带上它，继续',
+    '它会跟你走',
+  ],
+  first_leave: [
+    '你让它留在了这里 — 它会等着',
+    '它留在原地，等候时间',
+    '这里是它的归宿',
+    '你放下了它',
+  ],
+}
+
+function milestoneKeep(n: number): string {
+  return pickRandom([
+    `你已经带走了 ${n} 段记忆`,
+    `行囊里现在有 ${n} 个瞬间`,
+    `${n} 段，带走了`,
+    `${n} 个记忆，收好了`,
+  ] as const)
+}
+
+function milestoneTotal(n: number): string {
+  return pickRandom([
+    `${n} 张照片，${n} 个选择`,
+    `走过了 ${n} 个瞬间`,
+    `${n} 个决定，刻进了时间里`,
+    `已经挖出了 ${n} 张`,
+  ] as const)
+}
+
 // ── Noise texture (SVG feTurbulence as data URL) ───────────────────────────
 
 const NOISE_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.80' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`
@@ -138,6 +183,8 @@ function useRipple() {
 type ExitDir = 'down' | 'up' | null
 
 function PhotoDisplay({ photo, exitDir }: { photo: Photo; exitDir: ExitDir }) {
+  const [imgError, setImgError] = useState(false)
+
   const enterVariants = {
     enter:  { opacity: 0, scale: 0.96, filter: 'brightness(0) blur(8px)', x: 0, y: 0 },
     center: { opacity: 1, scale: 1,    filter: 'brightness(1) blur(0px)', x: 0, y: 0 },
@@ -200,17 +247,36 @@ function PhotoDisplay({ photo, exitDir }: { photo: Photo; exitDir: ExitDir }) {
             justifyContent: 'center',
           }}
         >
-          <img
-            src={previewUrl(photo.id)}
-            alt={photo.file_name}
-            style={{
-              maxWidth: '100%',
-              maxHeight: 'calc(100vh - 310px)',
-              objectFit: 'contain',
-              display: 'block',
-            }}
-            draggable={false}
-          />
+          {imgError ? (
+            <div
+              className="flex flex-col items-center justify-center gap-3"
+              style={{
+                width: 320, height: 240,
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 4,
+              }}
+            >
+              <span style={{ fontSize: 28, opacity: 0.15 }}>⬛</span>
+              <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 11, letterSpacing: '0.04em', textAlign: 'center', maxWidth: 220 }}>
+                {photo.file_name}
+              </p>
+              <p style={{ color: 'rgba(255,255,255,0.14)', fontSize: 10 }}>预览图生成中</p>
+            </div>
+          ) : (
+            <img
+              src={previewUrl(photo.id)}
+              alt={photo.file_name}
+              onError={() => setImgError(true)}
+              style={{
+                maxWidth: '100%',
+                maxHeight: 'calc(100vh - 310px)',
+                objectFit: 'contain',
+                display: 'block',
+              }}
+              draggable={false}
+            />
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
@@ -218,6 +284,26 @@ function PhotoDisplay({ photo, exitDir }: { photo: Photo; exitDir: ExitDir }) {
 }
 
 // ── Strata Queue — 右侧叠放，待取的岩层 ──────────────────────────────────
+
+function StrataThumb({ photoId, size, brightness }: { photoId: string; size: number; brightness: number }) {
+  const [err, setErr] = useState(false)
+  if (err) {
+    return (
+      <div style={{ width: size, height: size, background: 'rgba(255,255,255,0.04)', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: 10, opacity: 0.2 }}>⬛</span>
+      </div>
+    )
+  }
+  return (
+    <img
+      src={previewUrl(photoId)}
+      alt=""
+      onError={() => setErr(true)}
+      style={{ width: size, height: size, objectFit: 'cover', display: 'block', borderRadius: 1, filter: `brightness(${brightness})` }}
+      draggable={false}
+    />
+  )
+}
 
 function StrataQueue({ photos, currentIndex }: {
   photos: Photo[]
@@ -258,19 +344,7 @@ function StrataQueue({ photos, currentIndex }: {
               boxShadow: `0 8px ${i === 0 ? 24 : 36}px rgba(0,0,0,${i === 0 ? 0.55 : 0.7})`,
             }}
           >
-            <img
-              src={previewUrl(photo.id)}
-              alt=""
-              style={{
-                width:  i === 0 ? 76 : 58,
-                height: i === 0 ? 76 : 58,
-                objectFit: 'cover',
-                display: 'block',
-                borderRadius: 1,
-                filter: `brightness(${i === 0 ? 0.72 : 0.48})`,
-              }}
-              draggable={false}
-            />
+            <StrataThumb photoId={photo.id} size={i === 0 ? 76 : 58} brightness={i === 0 ? 0.72 : 0.48} />
           </motion.div>
         ))}
       </AnimatePresence>
@@ -395,20 +469,20 @@ export function DecisionView() {
 
     let milestone: string | null = null
     if (!hasMilestone('first_any')) {
-      milestone = '第一个瞬间，从地层里浮现了'
+      milestone = pickRandom(MILESTONE.first_any)
       markMilestone('first_any')
     } else if (decision === 'keep' && !hasMilestone('first_keep')) {
-      milestone = '这段记忆，属于你了'
+      milestone = pickRandom(MILESTONE.first_keep)
       markMilestone('first_keep')
     } else if (decision === 'leave' && !hasMilestone('first_leave')) {
-      milestone = '你让它留在了这里 — 它会等着'
+      milestone = pickRandom(MILESTONE.first_leave)
       markMilestone('first_leave')
     } else if (decision === 'keep' && keptSoFar > 0 && keptSoFar % 10 === 0) {
       const key = `keep_${keptSoFar}`
-      if (!hasMilestone(key)) { milestone = `你已经带走了 ${keptSoFar} 段记忆`; markMilestone(key) }
+      if (!hasMilestone(key)) { milestone = milestoneKeep(keptSoFar); markMilestone(key) }
     } else if (nextTotal % 10 === 0) {
       const key = `total_${nextTotal}`
-      if (!hasMilestone(key)) { milestone = `${nextTotal} 张照片，${nextTotal} 个选择`; markMilestone(key) }
+      if (!hasMilestone(key)) { milestone = milestoneTotal(nextTotal); markMilestone(key) }
     }
     if (milestone) setMilestoneMsg(milestone)
 
@@ -870,12 +944,7 @@ function AllDoneState({
                 boxShadow: '0 6px 28px rgba(0,0,0,0.5)',
               }}
             >
-              <img
-                src={previewUrl(photo.id)}
-                alt=""
-                style={{ width: 76, height: 76, objectFit: 'cover', display: 'block', borderRadius: 1 }}
-                draggable={false}
-              />
+              <StrataThumb photoId={photo.id} size={76} brightness={1} />
             </motion.div>
           ))}
         </div>
