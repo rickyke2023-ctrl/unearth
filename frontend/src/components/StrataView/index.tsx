@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { getStrata, getStaging } from '../../api'
+import { getStrata, getStaging, getTrash } from '../../api'
 import { useAppStore } from '../../stores/appStore'
 import { formatBytes, strataColorForYear } from '../../utils'
 import type { StrataYear, MonthSummary, GlobalStats } from '../../types'
@@ -175,7 +175,7 @@ function YearStratum({ year, index }: { year: StrataYear; index: number }) {
 
 // ── Global stats bar ─────────────────────────────────────────────────────────
 
-function GlobalStatsBar({ stats, stagingCount }: { stats: GlobalStats; stagingCount: number }) {
+function GlobalStatsBar({ stats, stagingCount, trashCount }: { stats: GlobalStats; stagingCount: number; trashCount: number }) {
   const { setShowStagingDialog } = useAppStore()
   const decidedPct =
     stats.total_photos > 0 ? Math.round((stats.decided_count / stats.total_photos) * 100) : 0
@@ -202,14 +202,25 @@ function GlobalStatsBar({ stats, stagingCount }: { stats: GlobalStats; stagingCo
           进度 <span style={{ color: 'var(--color-text-primary)' }}>{decidedPct}%</span>
         </span>
       </div>
-      {stagingCount > 0 && (
+      {(stagingCount > 0 || trashCount > 0) && (
         <button
           onClick={() => setShowStagingDialog(true)}
-          className="text-xs px-3 py-1.5 rounded transition-opacity hover:opacity-70"
-          style={{ background: 'var(--color-leave)', color: '#fff', fontSize: 13 }}
+          className="flex items-center gap-2 px-3 py-1.5 rounded transition-opacity hover:opacity-80"
+          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', fontSize: 12 }}
         >
-          确认释放空间
-          <span className="ml-1.5 opacity-70">({stagingCount})</span>
+          {stagingCount > 0 && (
+            <span style={{ color: 'var(--color-leave)' }}>
+              待确认 <span className="font-tabular">{stagingCount}</span>
+            </span>
+          )}
+          {stagingCount > 0 && trashCount > 0 && (
+            <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
+          )}
+          {trashCount > 0 && (
+            <span style={{ color: 'var(--color-text-muted)' }}>
+              回收站 <span className="font-tabular">{trashCount}</span>
+            </span>
+          )}
         </button>
       )}
     </div>
@@ -222,15 +233,17 @@ export function StrataView() {
   const [years, setYears] = useState<StrataYear[]>([])
   const [stats, setStats] = useState<GlobalStats | null>(null)
   const [stagingCount, setStagingCount] = useState(0)
+  const [trashCount, setTrashCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    Promise.all([getStrata(), getStaging()])
-      .then(([strataData, stagingData]) => {
+    Promise.all([getStrata(), getStaging(), getTrash()])
+      .then(([strataData, stagingData, trashData]) => {
         setYears(strataData.years)
         setStats(strataData.global_stats)
         setStagingCount(stagingData.total_count)
+        setTrashCount(trashData.total_count)
       })
       .catch((e) => setError(e.message ?? '加载失败'))
       .finally(() => setLoading(false))
@@ -259,7 +272,7 @@ export function StrataView() {
             A Memory Excavation
           </span>
         </div>
-        {stats && <GlobalStatsBar stats={stats} stagingCount={stagingCount} />}
+        {stats && <GlobalStatsBar stats={stats} stagingCount={stagingCount} trashCount={trashCount} />}
       </div>
 
       {/* Strata — full width, no max-width cap */}
