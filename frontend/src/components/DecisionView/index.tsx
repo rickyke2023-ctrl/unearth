@@ -397,7 +397,6 @@ export function DecisionView() {
     setEventPhotos, advancePhoto, goToNextEvent,
     updatePhotoDecision, pushHistory, popHistory,
     addSessionStats, navigateBack, setShowLightbox, showLightbox,
-    setCurrentPhotoIndex,
     totalDecisions, incrementDecisions, markMilestone, hasMilestone,
   } = useAppStore()
 
