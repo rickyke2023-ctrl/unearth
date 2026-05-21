@@ -125,6 +125,13 @@ export const ScrubReveal = forwardRef<ScrubRevealHandle, ScrubRevealProps>(
     const [phase,     setPhase]     = useState<'cover' | 'reveal' | 'done'>('cover')
     const [imgLoaded, setImgLoaded] = useState(false)
 
+    // Cached images: React's synthetic onLoad sometimes doesn't fire when the
+    // image is already in browser cache (e.g. preloaded by ExcavationView).
+    // Check img.complete after mount as a fallback.
+    useEffect(() => {
+      if (imgRef.current?.complete) setImgLoaded(true)
+    }, []) // intentionally empty — one-time post-mount check
+
     // ── Rich geological canvas texture ──────────────────────────────────────
 
     const initCanvas = useCallback(() => {
