@@ -124,4 +124,13 @@ export interface TrashInfo {
   photos: TrashPhoto[]
 }
 
-export type AppView = 'strata' | 'site' | 'decision'
+export interface ExcavationResult {
+  date_label: string
+  source: 'cross_year' | 'supplemented'
+  photos: Photo[]
+  total: number
+  cross_year_count: number
+  supplemented: boolean
+}
+
+export type AppView = 'strata' | 'site' | 'decision' | 'excavation'

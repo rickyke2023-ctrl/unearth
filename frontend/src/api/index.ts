@@ -1,6 +1,6 @@
 import type {
   SystemStatus, StrataYear, GlobalStats, Event, Photo,
-  Decision, StagingInfo, TrashInfo, ScanProgress,
+  Decision, StagingInfo, TrashInfo, ScanProgress, ExcavationResult,
 } from '../types'
 
 const BASE = ''
@@ -122,6 +122,30 @@ export function triggerGeocode(limit = 200): Promise<{ status: string; limit: nu
 
 export function getDayPhotoCount(date: string): Promise<{ date: string; count: number }> {
   return request(`/api/photos/day-count?date=${date}`)
+}
+
+// ── Excavation ────────────────────────────────────────────────────────────
+
+/** 今日发掘：Task D 后端就绪后自动生效，现在用 story/today 作 fallback */
+export async function getExcavationToday(limit = 20): Promise<ExcavationResult> {
+  // 先尝试专用接口（Task D 完成后可用）
+  try {
+    return await request<ExcavationResult>(`/api/excavation/today?limit=${limit}`)
+  } catch {
+    // Fallback：用 story/today 的 cross_year，补充 recent undecided
+    const storyRes = await request<{
+      cross_year: { photos: Photo[]; total_count: number } | null
+    }>(`/api/story/today?limit=${limit}`)
+    const photos = storyRes.cross_year?.photos ?? []
+    return {
+      date_label: new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' }),
+      source: 'cross_year',
+      photos: photos.slice(0, limit),
+      total: Math.min(photos.length, limit),
+      cross_year_count: photos.length,
+      supplemented: false,
+    }
+  }
 }
 
 // ── Preview ────────────────────────────────────────────────────────────────

@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from .database import get_connection, init_db
 from .decisions import apply_decisions, toggle_book_candidate, undo_decision
 from .errors import DiskNotMountedError, PreviewNotReadyError, UnearthError
+from .excavation import today_excavation
 from .geocoding import reverse_geocode_missing
 from .preview import accepted_preview_response, get_or_create_preview, preview_status, start_preview_generation
 from .queries import book_candidates, day_photo_count, event_photos, events_for_month, export_book_candidates, status, strata
@@ -107,6 +108,15 @@ def api_story_today(
     conn=Depends(db),
 ):
     return today_story(conn, month=month, day=day, limit=limit)
+
+
+@app.get("/api/excavation/today")
+def api_excavation_today(
+    limit: int = Query(default=20, ge=1, le=20),
+    date: str | None = None,
+    conn=Depends(db),
+):
+    return today_excavation(conn, limit=limit, date_value=date)
 
 
 @app.get("/api/themes")
