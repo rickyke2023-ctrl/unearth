@@ -14,6 +14,7 @@ from .decisions import apply_decisions, toggle_book_candidate, undo_decision
 from .errors import DiskNotMountedError, PreviewNotReadyError, UnearthError
 from .excavation import today_excavation
 from .geocoding import reverse_geocode_missing
+from .kept import kept_photos
 from .preview import accepted_preview_response, get_or_create_preview, preview_status, start_preview_generation
 from .queries import book_candidates, day_photo_count, event_photos, events_for_month, export_book_candidates, status, strata
 from .scanner import progress_store, scan_root
@@ -98,6 +99,16 @@ def api_event_photos(event_id: str, conn=Depends(db)):
 @app.get("/api/photos/day-count")
 def api_day_photo_count(date: str, conn=Depends(db)):
     return day_photo_count(conn, date)
+
+
+@app.get("/api/photos/kept")
+def api_kept_photos(
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    year: int | None = None,
+    conn=Depends(db),
+):
+    return kept_photos(conn, limit=limit, offset=offset, year=year)
 
 
 @app.get("/api/story/today")
