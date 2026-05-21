@@ -7,6 +7,10 @@ import { formatBytes, strataColorForYear } from '../../utils'
 import { MilestoneOverlay } from '../shared/MilestoneOverlay'
 import type { Photo } from '../../types'
 
+// ── Noise texture (SVG feTurbulence as data URL) ───────────────────────────
+
+const NOISE_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.80' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`
+
 // ── Memory context helpers ─────────────────────────────────────────────────
 
 function formatShotAt(shotAt: string): string {
@@ -60,7 +64,6 @@ function simplifyCamera(model?: string): string | null {
   return null
 }
 
-// Cache day counts so we don't re-fetch for the same date
 const dayCountCache = new Map<string, number>()
 
 function MemoryContextCard({ photo }: { photo: Photo }) {
@@ -71,16 +74,10 @@ function MemoryContextCard({ photo }: { photo: Photo }) {
 
   useEffect(() => {
     if (!dateKey) return
-    if (dayCountCache.has(dateKey)) {
-      setDayCount(dayCountCache.get(dateKey)!)
-      return
-    }
+    if (dayCountCache.has(dateKey)) { setDayCount(dayCountCache.get(dateKey)!); return }
     getDayPhotoCount(dateKey)
-      .then(({ count }) => {
-        dayCountCache.set(dateKey, count)
-        setDayCount(count)
-      })
-      .catch(() => {}) // backend endpoint may not exist yet — silently skip
+      .then(({ count }) => { dayCountCache.set(dateKey, count); setDayCount(count) })
+      .catch(() => {})
   }, [dateKey])
 
   const formattedDate = photo.shot_at ? formatShotAt(photo.shot_at) : null
@@ -96,44 +93,27 @@ function MemoryContextCard({ photo }: { photo: Photo }) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 4 }}
-      transition={{ duration: 0.35, delay: 0.12, ease: [0.25, 0, 0, 1] }}
-      className="absolute bottom-4 left-4 z-20 rounded-xl px-3 py-2.5 pointer-events-none"
+      transition={{ duration: 0.35, delay: 0.18, ease: [0.25, 0, 0, 1] }}
+      className="absolute bottom-5 left-5 z-20 rounded-xl px-3 py-2.5 pointer-events-none"
       style={{
-        background: 'rgba(0,0,0,0.52)',
+        background: 'rgba(0,0,0,0.55)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255,255,255,0.10)',
+        border: '1px solid rgba(255,255,255,0.09)',
         maxWidth: 260,
       }}
     >
-      {/* 日期 — --text-meta: 13px, 颜色 ≥ 0.75 */}
       {formattedDate && (
-        <p style={{
-          color: 'rgba(255,255,255,0.82)',
-          fontSize: 13,
-          lineHeight: 1.5,
-          letterSpacing: '0.02em',
-          fontWeight: 400,
-        }}>
+        <p style={{ color: 'rgba(255,255,255,0.82)', fontSize: 13, lineHeight: 1.5, letterSpacing: '0.02em' }}>
           {formattedDate}
         </p>
       )}
-      {/* 地点 + 相机 — --text-meta: 13px, 颜色 ≥ 0.75 */}
       <div className="flex items-center gap-3 mt-1" style={{ fontSize: 13 }}>
-        {location && (
-          <span style={{ color: 'rgba(255,255,255,0.75)' }}>
-            ↟ {location}
-          </span>
-        )}
-        {camera && (
-          <span style={{ color: 'rgba(255,255,255,0.75)' }}>
-            {camera}
-          </span>
-        )}
+        {location && <span style={{ color: 'rgba(255,255,255,0.75)' }}>↟ {location}</span>}
+        {camera && <span style={{ color: 'rgba(255,255,255,0.75)' }}>{camera}</span>}
       </div>
-      {/* 今日张数 — 次要信息，text-secondary 0.60 */}
       {dayCount !== null && (
-        <p style={{ color: 'rgba(255,255,255,0.60)', fontSize: 13, marginTop: 4 }}>
+        <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, marginTop: 4 }}>
           今天拍了 {dayCount} 张
         </p>
       )}
@@ -153,164 +133,183 @@ function useRipple() {
   return { ripples, trigger }
 }
 
-// ── Photo display ──────────────────────────────────────────────────────────
+// ── Photo display — 从黑暗里取出 ──────────────────────────────────────────
 
 type ExitDir = 'down' | 'up' | null
 
 function PhotoDisplay({ photo, exitDir }: { photo: Photo; exitDir: ExitDir }) {
-  const variants = {
-    // 从黑暗里显影出来
-    enter: { opacity: 0, scale: 0.97, filter: 'brightness(0) blur(4px)' },
-    center: { opacity: 1, scale: 1, filter: 'brightness(1) blur(0px)' },
-    exit: {
+  const enterVariants = {
+    enter:  { opacity: 0, scale: 0.96, filter: 'brightness(0) blur(8px)', x: 0, y: 0 },
+    center: { opacity: 1, scale: 1,    filter: 'brightness(1) blur(0px)', x: 0, y: 0 },
+    // 带走：上浮发光 → 缩向右上角「记忆囊」
+    exitUp: {
       opacity: 0,
-      scale: exitDir === 'down' ? 0.95 : 1.02,
-      y: exitDir === 'down' ? 10 : -5,
-      filter: 'brightness(0.4) blur(3px)',
+      scale: 0.06,
+      x: 560,
+      y: -220,
+      filter: 'brightness(3) blur(1px)',
+    },
+    // 留在这里：下沉入岩层
+    exitDown: {
+      opacity: 0,
+      scale: 0.93,
+      x: 0,
+      y: 28,
+      filter: 'brightness(0.08) blur(6px)',
+    },
+    exitSkip: {
+      opacity: 0,
+      scale: 1,
+      x: 0,
+      y: 0,
+      filter: 'brightness(0.3) blur(2px)',
     },
   }
+
+  const exitVariant = exitDir === 'up' ? 'exitUp' : exitDir === 'down' ? 'exitDown' : 'exitSkip'
 
   return (
     <AnimatePresence mode="wait">
       <motion.div
         key={photo.id}
-        variants={variants}
+        variants={enterVariants}
         initial="enter"
         animate="center"
-        exit="exit"
-        transition={{ duration: 0.5, ease: [0.25, 0, 0, 1] }}
+        exit={exitVariant}
+        transition={{
+          duration: exitDir === 'up' ? 0.44 : 0.4,
+          ease: exitDir === 'up' ? [0.16, 1, 0.3, 1] : [0.4, 0, 0.2, 1],
+        }}
+        // 岩洞空间感：四周留白，右侧为岩层队列多留空间
         className="absolute inset-0 flex items-center justify-center"
+        style={{ padding: '72px 196px 72px 80px' }}
       >
-        <img
-          src={previewUrl(photo.id)}
-          alt={photo.file_name}
-          className="max-w-full max-h-full object-contain"
-          style={{ maxHeight: 'calc(100vh - 220px)' }}
-          draggable={false}
-        />
+        {/* 景深阴影 + keep 时的冷绿发光 */}
+        <motion.div
+          animate={exitDir === 'up'
+            ? { boxShadow: '0 0 60px 18px rgba(126,184,164,0.45), 0 28px 80px rgba(0,0,0,0.65)' }
+            : { boxShadow: '0 28px 80px rgba(0,0,0,0.72), 0 6px 24px rgba(0,0,0,0.55)' }}
+          transition={{ duration: 0.14 }}
+          style={{
+            borderRadius: 4,
+            overflow: 'hidden',
+            maxWidth: '100%',
+            maxHeight: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <img
+            src={previewUrl(photo.id)}
+            alt={photo.file_name}
+            style={{
+              maxWidth: '100%',
+              maxHeight: 'calc(100vh - 310px)',
+              objectFit: 'contain',
+              display: 'block',
+            }}
+            draggable={false}
+          />
+        </motion.div>
       </motion.div>
     </AnimatePresence>
   )
 }
 
-// ── Thumbnail strip ────────────────────────────────────────────────────────
+// ── Strata Queue — 右侧叠放，待取的岩层 ──────────────────────────────────
 
-function ThumbnailStrip({ photos, currentIndex, onSelect }: {
+function StrataQueue({ photos, currentIndex }: {
   photos: Photo[]
   currentIndex: number
-  onSelect: (i: number) => void
 }) {
-  const stripRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const el = stripRef.current?.children[currentIndex] as HTMLElement
-    el?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
-  }, [currentIndex])
-
-  const dotColor = (p: Photo) => {
-    if (p.decision === 'keep') return 'var(--color-keep)'
-    if (p.decision === 'leave') return 'var(--color-leave)'
-    if (p.decision === 'skip') return 'var(--color-text-muted)'
-    return 'transparent'
+  // 只显示 currentIndex 之后最多 2 张未决策的照片
+  const upcoming: Photo[] = []
+  for (let i = currentIndex + 1; i < photos.length && upcoming.length < 2; i++) {
+    if (!photos[i].decision) upcoming.push(photos[i])
   }
 
+  if (upcoming.length === 0) return null
+
   return (
-    <div className="flex items-center gap-1.5 overflow-x-auto py-2 px-4" ref={stripRef}
-      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-      {photos.map((p, i) => (
-        <button
-          key={p.id}
-          onClick={() => onSelect(i)}
-          className="relative flex-shrink-0 rounded overflow-hidden transition-all"
-          style={{
-            width: i === currentIndex ? 48 : 32,
-            height: i === currentIndex ? 48 : 32,
-            border: i === currentIndex ? '2px solid rgba(255,255,255,0.6)' : '2px solid transparent',
-            opacity: i === currentIndex ? 1 : 0.45,
-          }}
-        >
-          <img src={previewUrl(p.id)} alt="" className="w-full h-full object-cover" />
-          {p.decision && (
-            <div
-              className="absolute bottom-0 left-0 right-0 h-1"
-              style={{ background: dotColor(p) }}
+    <div
+      className="absolute flex flex-col gap-3 items-center pointer-events-none z-10"
+      style={{ right: 28, top: '50%', transform: 'translateY(-50%)' }}
+    >
+      <AnimatePresence mode="popLayout">
+        {upcoming.map((photo, i) => (
+          <motion.div
+            key={photo.id}
+            layout
+            initial={{ opacity: 0, y: 20, scale: 0.75 }}
+            animate={{
+              opacity: i === 0 ? 0.50 : 0.24,
+              y: 0,
+              scale: i === 0 ? 1 : 0.84,
+            }}
+            exit={{ opacity: 0, y: -12, scale: 0.7 }}
+            transition={{ duration: 0.38, ease: [0.25, 0, 0, 1] }}
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              // Polaroid 底边留白
+              padding: i === 0 ? '4px 4px 16px 4px' : '3px 3px 12px 3px',
+              borderRadius: 3,
+              boxShadow: `0 8px ${i === 0 ? 24 : 36}px rgba(0,0,0,${i === 0 ? 0.55 : 0.7})`,
+            }}
+          >
+            <img
+              src={previewUrl(photo.id)}
+              alt=""
+              style={{
+                width:  i === 0 ? 76 : 58,
+                height: i === 0 ? 76 : 58,
+                objectFit: 'cover',
+                display: 'block',
+                borderRadius: 1,
+                filter: `brightness(${i === 0 ? 0.72 : 0.48})`,
+              }}
+              draggable={false}
             />
-          )}
-        </button>
-      ))}
+          </motion.div>
+        ))}
+      </AnimatePresence>
+      {/* 「还有 N 张」提示，仅在队列外还有更多时显示 */}
+      {(() => {
+        const remaining = photos.slice(currentIndex + 1).filter((p) => !p.decision).length
+        return remaining > 2 ? (
+          <p style={{ color: 'rgba(255,255,255,0.22)', fontSize: 10, letterSpacing: '0.06em', marginTop: 2 }}>
+            +{remaining - 2}
+          </p>
+        ) : null
+      })()}
     </div>
   )
 }
 
-// ── Action buttons ─────────────────────────────────────────────────────────
+// ── Memory Capsule — 右上角记忆囊 ─────────────────────────────────────────
 
-function ActionButtons({
-  onSkip, onLeaveClick, onKeepClick,
-}: {
-  onSkip: () => void
-  onLeaveClick: (e: React.MouseEvent) => void
-  onKeepClick: (e: React.MouseEvent) => void
-}) {
-  const [leaveActive, setLeaveActive] = useState(false)
-  const [keepActive, setKeepActive] = useState(false)
-
-  const handleLeave = (e: React.MouseEvent) => {
-    setLeaveActive(true)
-    setTimeout(() => setLeaveActive(false), 500)
-    onLeaveClick(e)
-  }
-
-  const handleKeep = (e: React.MouseEvent) => {
-    setKeepActive(true)
-    setTimeout(() => setKeepActive(false), 500)
-    onKeepClick(e)
-  }
-
+function MemoryCapsule({ count, pulseKey }: { count: number; pulseKey: number }) {
+  if (count === 0) return null
   return (
-    <div className="flex items-center justify-center gap-4">
-      {/* 留在这里 — sinks down on press */}
-      <motion.button
-        onClick={handleLeave}
-        whileHover={{ scale: 1.03 }}
-        animate={leaveActive
-          ? { y: 4, scale: 0.97, filter: 'brightness(1.2)' }
-          : { y: 0, scale: 1, filter: 'brightness(1)' }}
-        transition={{ duration: 0.18, ease: [0.25, 0, 0, 1] }}
-        className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm tracking-wider"
-        style={{ background: 'rgba(139,115,85,0.2)', border: '1px solid var(--color-leave)', color: 'var(--color-leave)' }}
-      >
-        <span>←</span>
-        <span>{leaveActive ? '留在这片土地上' : '留在这里'}</span>
-        <kbd className="text-xs opacity-40 ml-1 px-1 py-0.5 rounded" style={{ border: '1px solid currentColor', fontFamily: 'monospace', fontSize: 9 }}>D</kbd>
-      </motion.button>
-
-      {/* 稍后 — low presence */}
-      <motion.button
-        onClick={onSkip}
-        whileHover={{ scale: 1.03, opacity: 1 }}
-        whileTap={{ scale: 0.97 }}
-        className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm tracking-wider"
-        style={{ background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)', color: 'var(--color-text-secondary)', opacity: 0.5 }}
-      >
-        <span>↑</span> 稍后
-        <kbd className="text-xs opacity-40 ml-1 px-1 py-0.5 rounded" style={{ border: '1px solid currentColor', fontFamily: 'monospace', fontSize: 9 }}>S</kbd>
-      </motion.button>
-
-      {/* 带走 — lifts up on press */}
-      <motion.button
-        onClick={handleKeep}
-        whileHover={{ scale: 1.03 }}
-        animate={keepActive
-          ? { y: -4, scale: 1.03, filter: 'brightness(1.2)' }
-          : { y: 0, scale: 1, filter: 'brightness(1)' }}
-        transition={{ duration: 0.18, ease: [0.25, 0, 0, 1] }}
-        className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm tracking-wider"
-        style={{ background: 'rgba(126,184,164,0.2)', border: '1px solid var(--color-keep)', color: 'var(--color-keep)' }}
-      >
-        <span>{keepActive ? '带入行囊' : '带走'}</span> <span>→</span>
-        <kbd className="text-xs opacity-40 ml-1 px-1 py-0.5 rounded" style={{ border: '1px solid currentColor', fontFamily: 'monospace', fontSize: 9 }}>K</kbd>
-      </motion.button>
-    </div>
+    <motion.div
+      key={pulseKey}
+      initial={pulseKey > 0 ? { scale: 1.18, boxShadow: '0 0 22px rgba(126,184,164,0.6)' } : false}
+      animate={{ scale: 1, boxShadow: '0 0 0px rgba(126,184,164,0)' }}
+      transition={{ duration: 0.55, ease: [0.25, 0, 0, 1] }}
+      className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full pointer-events-none"
+      style={{
+        background: 'rgba(126,184,164,0.12)',
+        border: '1px solid rgba(126,184,164,0.28)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+      }}
+    >
+      <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--color-keep)' }} />
+      <span style={{ color: 'var(--color-keep)', fontSize: 11, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.02em' }}>
+        {count} 段记忆
+      </span>
+    </motion.div>
   )
 }
 
@@ -329,11 +328,12 @@ export function DecisionView() {
   } = useAppStore()
 
   const [loading, setLoading] = useState(true)
-  // 'intro' = 0.8s curtain before first photo; 'deciding' = normal flow
   const [phase, setPhase] = useState<'intro' | 'deciding'>('intro')
   const [exitDir, setExitDir] = useState<ExitDir>(null)
   const [isPending, setIsPending] = useState(false)
   const [milestoneMsg, setMilestoneMsg] = useState<string | null>(null)
+  // pulseKey 每次 keep 递增，触发 MemoryCapsule 动画
+  const [keepPulseKey, setKeepPulseKey] = useState(0)
   const { ripples, trigger: triggerRipple } = useRipple()
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -349,16 +349,13 @@ export function DecisionView() {
       .catch(() => {})
       .finally(() => {
         setLoading(false)
-        // Show intro curtain for 0.8s, then enter deciding phase
         setTimeout(() => setPhase('deciding'), 800)
       })
   }, [selectedEventId, setEventPhotos])
 
-  // 计算当前组在月内的位置，用于「下一组」按钮
   const hasNextEvent = (() => {
     if (monthEvents.length === 0) return false
     const idx = monthEvents.findIndex((e) => e.id === selectedEventId)
-    // 任意位置只要还有未完成的组就算 hasNext
     return monthEvents.some((e, i) => i !== idx && e.status !== 'completed')
   })()
 
@@ -377,6 +374,7 @@ export function DecisionView() {
     } else if (decision === 'keep') {
       setExitDir('up')
       triggerRipple(rippleX ?? window.innerWidth / 2, rippleY ?? window.innerHeight / 2, 'var(--color-keep)')
+      setKeepPulseKey((k) => k + 1)
     } else {
       setExitDir(null)
     }
@@ -390,7 +388,7 @@ export function DecisionView() {
       else if (decision === 'leave') addSessionStats(0, 1, res.freed_bytes_preview)
     } catch {}
 
-    // Milestone checks (after stats update)
+    // Milestone checks
     incrementDecisions()
     const nextTotal = totalDecisions + 1
     const keptSoFar = eventPhotos.filter((p) => p.decision === 'keep').length + (decision === 'keep' ? 1 : 0)
@@ -407,16 +405,10 @@ export function DecisionView() {
       markMilestone('first_leave')
     } else if (decision === 'keep' && keptSoFar > 0 && keptSoFar % 10 === 0) {
       const key = `keep_${keptSoFar}`
-      if (!hasMilestone(key)) {
-        milestone = `你已经带走了 ${keptSoFar} 段记忆`
-        markMilestone(key)
-      }
+      if (!hasMilestone(key)) { milestone = `你已经带走了 ${keptSoFar} 段记忆`; markMilestone(key) }
     } else if (nextTotal % 10 === 0) {
       const key = `total_${nextTotal}`
-      if (!hasMilestone(key)) {
-        milestone = `${nextTotal} 张照片，${nextTotal} 个选择`
-        markMilestone(key)
-      }
+      if (!hasMilestone(key)) { milestone = `${nextTotal} 张照片，${nextTotal} 个选择`; markMilestone(key) }
     }
     if (milestone) setMilestoneMsg(milestone)
 
@@ -447,23 +439,17 @@ export function DecisionView() {
     } catch {}
   }, [currentPhoto, updatePhotoDecision])
 
-  const handleLeaveClick = useCallback((e: React.MouseEvent) => {
-    decide('leave', e.clientX, e.clientY)
-  }, [decide])
-
-  const handleKeepClick = useCallback((e: React.MouseEvent) => {
-    decide('keep', e.clientX, e.clientY)
-  }, [decide])
+  const handleLeaveClick = useCallback((e: React.MouseEvent) => decide('leave', e.clientX, e.clientY), [decide])
+  const handleKeepClick  = useCallback((e: React.MouseEvent) => decide('keep',  e.clientX, e.clientY), [decide])
 
   useKeyboardDecision({
-    // 完成状态下 K/→ 改为「进入下一组」
-    onKeep: () => currentPhoto ? decide('keep') : handleNextEvent(),
-    onLeave: () => decide('leave'),
-    onSkip: () => decide('skip'),
-    onUndo: handleUndo,
-    onStar: handleStar,
+    onKeep:    () => currentPhoto ? decide('keep')  : handleNextEvent(),
+    onLeave:   () => decide('leave'),
+    onSkip:    () => decide('skip'),
+    onUndo:    handleUndo,
+    onStar:    handleStar,
     onLightbox: () => setShowLightbox(!showLightbox),
-    onBack: navigateBack,
+    onBack:    navigateBack,
     disabled: loading || isPending || showLightbox || phase === 'intro' || milestoneMsg !== null,
   })
 
@@ -483,10 +469,11 @@ export function DecisionView() {
 
   return (
     <div ref={containerRef} className="h-full flex flex-col relative overflow-hidden">
+
       {/* Milestone overlay */}
       <MilestoneOverlay message={milestoneMsg} onDismiss={() => setMilestoneMsg(null)} />
 
-      {/* Intro curtain — shown for 0.8s before first photo */}
+      {/* Intro curtain */}
       <AnimatePresence>
         {phase === 'intro' && (
           <motion.div
@@ -496,16 +483,15 @@ export function DecisionView() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.35, ease: [0.25, 0, 0, 1] }}
             className="absolute inset-0 z-40 flex flex-col items-center justify-center"
-            style={{ background: 'rgba(10,10,15,0.88)', backdropFilter: 'blur(8px)' }}
+            style={{ background: 'rgba(8,8,16,0.90)', backdropFilter: 'blur(10px)' }}
           >
-            {/* Blurred cover image behind curtain */}
             {introCoverPhoto && (
               <div className="absolute inset-0 overflow-hidden">
                 <img
                   src={previewUrl(introCoverPhoto.id)}
                   alt=""
                   className="absolute inset-0 w-full h-full object-cover"
-                  style={{ filter: 'blur(40px) brightness(0.15)', transform: 'scale(1.1)' }}
+                  style={{ filter: 'blur(40px) brightness(0.12)', transform: 'scale(1.12)' }}
                 />
               </div>
             )}
@@ -514,8 +500,8 @@ export function DecisionView() {
                 initial={{ y: 8, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.1, duration: 0.4 }}
-                className="text-xl font-light tracking-widest"
-                style={{ color: 'rgba(255,255,255,0.82)' }}
+                className="font-serif tracking-widest"
+                style={{ color: 'rgba(255,255,255,0.78)', fontSize: 20, fontWeight: 400 }}
               >
                 {eventPhotos[0]?.shot_at
                   ? (() => {
@@ -529,24 +515,24 @@ export function DecisionView() {
                   initial={{ y: 6, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.22, duration: 0.4 }}
-                  className="text-xs mt-2 tracking-widest"
-                  style={{ color: 'rgba(255,255,255,0.32)' }}
+                  style={{ color: 'rgba(255,255,255,0.28)', fontSize: 12, marginTop: 8, letterSpacing: '0.08em' }}
                 >
                   {eventGroupLabel}
                 </motion.p>
               )}
               <motion.div
-                className="flex gap-1.5 justify-center mt-5"
+                className="flex gap-1.5 justify-center"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.35, duration: 0.4 }}
+                style={{ marginTop: 20 }}
               >
                 {[0, 1, 2].map((i) => (
                   <motion.div
                     key={i}
                     className="w-1 h-1 rounded-full"
-                    style={{ background: 'rgba(255,255,255,0.35)' }}
-                    animate={{ opacity: [0.35, 1, 0.35] }}
+                    style={{ background: 'rgba(255,255,255,0.32)' }}
+                    animate={{ opacity: [0.32, 1, 0.32] }}
                     transition={{ duration: 1, repeat: Infinity, delay: i * 0.25, ease: 'easeInOut' }}
                   />
                 ))}
@@ -561,21 +547,14 @@ export function DecisionView() {
         <motion.div
           key={r.id}
           className="absolute rounded-full pointer-events-none"
-          style={{
-            left: r.x,
-            top: r.y,
-            translateX: '-50%',
-            translateY: '-50%',
-            background: r.color,
-            opacity: 0.15,
-          }}
+          style={{ left: r.x, top: r.y, translateX: '-50%', translateY: '-50%', background: r.color, opacity: 0.18 }}
           initial={{ width: 0, height: 0 }}
-          animate={{ width: 600, height: 600, opacity: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
+          animate={{ width: 700, height: 700, opacity: 0 }}
+          transition={{ duration: 0.65, ease: 'easeOut' }}
         />
       ))}
 
-      {/* Blurred background — crossfade with each photo */}
+      {/* 背景：当前照片高斯模糊，压暗至 18% */}
       <AnimatePresence mode="sync">
         {currentPhoto && (
           <motion.div
@@ -584,17 +563,28 @@ export function DecisionView() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: [0.25, 0, 0, 1] }}
+            transition={{ duration: 0.55, ease: [0.25, 0, 0, 1] }}
           >
             <img
               src={previewUrl(currentPhoto.id)}
               alt=""
               className="absolute inset-0 w-full h-full object-cover"
-              style={{ filter: 'blur(40px) brightness(0.25)', transform: 'scale(1.1)' }}
+              style={{ filter: 'blur(40px) brightness(0.18)', transform: 'scale(1.1)' }}
             />
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* 噪点纹理叠层 — 给背景加质感 */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: NOISE_BG,
+          backgroundSize: '256px 256px',
+          opacity: 0.038,
+          mixBlendMode: 'overlay',
+        }}
+      />
 
       {/* Header */}
       <div className="relative z-10 flex items-center gap-3 px-6 py-4">
@@ -641,10 +631,7 @@ export function DecisionView() {
         <button
           onClick={handleStar}
           className="text-xs px-2 py-1 rounded transition-opacity hover:opacity-70"
-          style={{
-            color: currentPhoto?.is_book_candidate ? 'var(--color-star)' : 'var(--color-text-muted)',
-            border: '1px solid currentColor',
-          }}
+          style={{ color: currentPhoto?.is_book_candidate ? 'var(--color-star)' : 'var(--color-text-muted)', border: '1px solid currentColor' }}
         >
           ★ F
         </button>
@@ -657,25 +644,37 @@ export function DecisionView() {
         </button>
       </div>
 
-      {/* Photo area */}
-      <div className="relative z-10 flex-1 flex items-center justify-center px-6">
+      {/* ── 核心照片区域 ── */}
+      <div className="relative z-10 flex-1" style={{ minHeight: 0 }}>
+
         {currentPhoto ? (
           <>
+            {/* 主照片，带岩洞边距和景深阴影 */}
             <PhotoDisplay photo={currentPhoto} exitDir={exitDir} />
+
+            {/* 记忆上下文卡片 */}
             <AnimatePresence mode="wait">
               <MemoryContextCard key={currentPhoto.id} photo={currentPhoto} />
             </AnimatePresence>
+
+            {/* 岩层队列 — 右侧叠放待决照片 */}
+            <StrataQueue photos={eventPhotos} currentIndex={currentPhotoIndex} />
+
+            {/* 记忆囊 — 右上角 kept 计数，keep 时脉冲 */}
+            <MemoryCapsule count={sessionKept} pulseKey={keepPulseKey} />
           </>
         ) : (
-          <AllDoneState
-            onBack={navigateBack}
-            onNext={handleNextEvent}
-            hasNext={hasNextEvent}
-            keptPhotos={eventPhotos.filter((p) => p.decision === 'keep')}
-            sessionLeft={eventPhotos.filter((p) => p.decision === 'leave').length}
-            freedBytes={eventPhotos.filter((p) => p.decision === 'leave').reduce((s, p) => s + p.file_size_bytes, 0)}
-            eventStartShotAt={eventPhotos[0]?.shot_at}
-          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <AllDoneState
+              onBack={navigateBack}
+              onNext={handleNextEvent}
+              hasNext={hasNextEvent}
+              keptPhotos={eventPhotos.filter((p) => p.decision === 'keep')}
+              sessionLeft={eventPhotos.filter((p) => p.decision === 'leave').length}
+              freedBytes={eventPhotos.filter((p) => p.decision === 'leave').reduce((s, p) => s + p.file_size_bytes, 0)}
+              eventStartShotAt={eventPhotos[0]?.shot_at}
+            />
+          </div>
         )}
       </div>
 
@@ -688,21 +687,11 @@ export function DecisionView() {
         )}
 
         {currentPhoto && (
-          <>
-            {/* Thumbnail strip */}
-            <ThumbnailStrip
-              photos={eventPhotos}
-              currentIndex={currentPhotoIndex}
-              onSelect={(i) => { if (i !== currentPhotoIndex) setCurrentPhotoIndex(i) }}
-            />
-
-            {/* Action buttons */}
-            <ActionButtons
-              onSkip={() => decide('skip')}
-              onLeaveClick={handleLeaveClick}
-              onKeepClick={handleKeepClick}
-            />
-          </>
+          <ActionButtons
+            onSkip={() => decide('skip')}
+            onLeaveClick={handleLeaveClick}
+            onKeepClick={handleKeepClick}
+          />
         )}
 
         {/* Stats bar */}
@@ -724,7 +713,7 @@ export function DecisionView() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{ background: 'rgba(10,10,15,0.95)' }}
+            style={{ background: 'rgba(8,8,16,0.96)' }}
             onClick={() => setShowLightbox(false)}
           >
             <img
@@ -743,6 +732,80 @@ export function DecisionView() {
   )
 }
 
+// ── Action Buttons ─────────────────────────────────────────────────────────
+
+function ActionButtons({
+  onSkip, onLeaveClick, onKeepClick,
+}: {
+  onSkip: () => void
+  onLeaveClick: (e: React.MouseEvent) => void
+  onKeepClick: (e: React.MouseEvent) => void
+}) {
+  const [leaveActive, setLeaveActive] = useState(false)
+  const [keepActive, setKeepActive] = useState(false)
+
+  const handleLeave = (e: React.MouseEvent) => {
+    setLeaveActive(true)
+    setTimeout(() => setLeaveActive(false), 500)
+    onLeaveClick(e)
+  }
+  const handleKeep = (e: React.MouseEvent) => {
+    setKeepActive(true)
+    setTimeout(() => setKeepActive(false), 500)
+    onKeepClick(e)
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-4">
+      {/* 留在这里 */}
+      <motion.button
+        onClick={handleLeave}
+        whileHover={{ scale: 1.03 }}
+        animate={leaveActive
+          ? { y: 4, scale: 0.97, filter: 'brightness(1.2)' }
+          : { y: 0, scale: 1,    filter: 'brightness(1)' }}
+        transition={{ duration: 0.18, ease: [0.25, 0, 0, 1] }}
+        className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm tracking-wider"
+        style={{ background: 'rgba(139,115,85,0.18)', border: '1px solid var(--color-leave)', color: 'var(--color-leave)' }}
+      >
+        <span>←</span>
+        <span>{leaveActive ? '留在这片土地上' : '留在这里'}</span>
+        <kbd style={{ fontSize: 9, opacity: 0.38, marginLeft: 4, padding: '1px 4px', borderRadius: 3, border: '1px solid currentColor', fontFamily: 'monospace' }}>D</kbd>
+      </motion.button>
+
+      {/* 稍后 */}
+      <motion.button
+        onClick={onSkip}
+        whileHover={{ scale: 1.03, opacity: 1 }}
+        whileTap={{ scale: 0.97 }}
+        className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm tracking-wider"
+        style={{ background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)', color: 'var(--color-text-secondary)', opacity: 0.48 }}
+      >
+        <span>↑</span> 稍后
+        <kbd style={{ fontSize: 9, opacity: 0.38, marginLeft: 4, padding: '1px 4px', borderRadius: 3, border: '1px solid currentColor', fontFamily: 'monospace' }}>S</kbd>
+      </motion.button>
+
+      {/* 带走 */}
+      <motion.button
+        onClick={handleKeep}
+        whileHover={{ scale: 1.03 }}
+        animate={keepActive
+          ? { y: -4, scale: 1.03, filter: 'brightness(1.2)' }
+          : { y: 0, scale: 1,     filter: 'brightness(1)' }}
+        transition={{ duration: 0.18, ease: [0.25, 0, 0, 1] }}
+        className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm tracking-wider"
+        style={{ background: 'rgba(126,184,164,0.18)', border: '1px solid var(--color-keep)', color: 'var(--color-keep)' }}
+      >
+        <span>{keepActive ? '带入行囊' : '带走'}</span>
+        <span>→</span>
+        <kbd style={{ fontSize: 9, opacity: 0.38, marginLeft: 4, padding: '1px 4px', borderRadius: 3, border: '1px solid currentColor', fontFamily: 'monospace' }}>K</kbd>
+      </motion.button>
+    </div>
+  )
+}
+
+// ── Loading ────────────────────────────────────────────────────────────────
+
 function LoadingState() {
   return (
     <div className="h-full flex items-center justify-center">
@@ -756,6 +819,8 @@ function LoadingState() {
   )
 }
 
+// ── AllDoneState ───────────────────────────────────────────────────────────
+
 function AllDoneState({
   onBack, onNext, hasNext, keptPhotos, sessionLeft, freedBytes, eventStartShotAt,
 }: {
@@ -768,7 +833,6 @@ function AllDoneState({
   eventStartShotAt?: string
 }) {
   const polaroidPhotos = keptPhotos.slice(0, 4)
-  // Fixed slight rotations — natural Polaroid feel without re-randomising every render
   const rotations = [-3.5, 2.2, -1.8, 3.0]
   const eventTitle = eventStartShotAt ? formatEventTitle(eventStartShotAt) : null
 
@@ -779,12 +843,7 @@ function AllDoneState({
       className="flex flex-col items-center gap-5 text-center"
       style={{ maxWidth: 440 }}
     >
-      {/* Title */}
-      <motion.div
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.08 }}
-      >
+      <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.08 }}>
         <p className="font-serif tracking-widest" style={{ color: 'var(--strata-2022)', fontSize: 'var(--text-display)', fontWeight: 400, lineHeight: 1.2 }}>
           这一组挖完了
         </p>
@@ -795,7 +854,6 @@ function AllDoneState({
         )}
       </motion.div>
 
-      {/* Polaroid grid */}
       {polaroidPhotos.length > 0 && (
         <div className="flex items-end justify-center gap-3 my-1" style={{ minHeight: 110 }}>
           {polaroidPhotos.map((photo, i) => (
@@ -823,17 +881,9 @@ function AllDoneState({
         </div>
       )}
 
-      {/* Stats */}
-      <motion.div
-        className="flex flex-col items-center gap-1.5"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.38 }}
-      >
+      <motion.div className="flex flex-col items-center gap-1.5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.38 }}>
         <p className="text-sm font-light" style={{ color: 'var(--color-text-secondary)' }}>
-          带走了{' '}
-          <span style={{ color: 'var(--color-keep)' }}>{keptPhotos.length}</span>{' '}
-          段记忆
+          带走了{' '}<span style={{ color: 'var(--color-keep)' }}>{keptPhotos.length}</span>{' '}段记忆
         </p>
         {(sessionLeft > 0 || freedBytes > 0) && (
           <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
@@ -844,13 +894,7 @@ function AllDoneState({
         )}
       </motion.div>
 
-      {/* Buttons */}
-      <motion.div
-        className="flex gap-3"
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.45 }}
-      >
+      <motion.div className="flex gap-3" initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.45 }}>
         <button
           onClick={onBack}
           className="px-5 py-2.5 rounded-lg text-sm tracking-wider transition-opacity hover:opacity-70"
@@ -864,8 +908,7 @@ function AllDoneState({
             className="px-6 py-2.5 rounded-lg text-sm tracking-wider transition-opacity hover:opacity-70"
             style={{ background: 'var(--color-keep)', color: '#0A0A0F' }}
           >
-            下一组 →
-            <span className="ml-2 text-xs opacity-60">K</span>
+            下一组 → <span className="ml-1 opacity-60 text-xs">K</span>
           </button>
         ) : (
           <button
