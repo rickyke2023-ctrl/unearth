@@ -2,11 +2,10 @@
 更新时间：2026-05-21 commit 089beb4
 
 前端状态：正常
-最近完成：今日发掘完整实现（commit 089beb4）
-  - ScrubReveal Canvas组件：destination-out擦除，72%阈值，鼠标/触摸
-  - ExcavationView：20张/天，拨开→K/D决策，完成仪式页
-  - App.tsx + StrataView 接入"今日发掘"入口按钮
-  - GET /api/excavation/today (Task D by Codex)：同日跨年优先，< 5张自动补足
+最近完成：Task E — 带走的记忆 API（commit pending：当前沙箱禁止写入 .git）
+  - GET /api/photos/kept：支持 limit/offset 分页、year 过滤
+  - 返回 total_count + by_year 分布供前端 tab 使用
+  - 完整 Photo 字段与其他接口一致
 
 已完成功能（完整清单）：
   前端
@@ -49,7 +48,7 @@
 需要人决策：无
 
 下一步（按优先级）：
-  1. 🎮 体验"今日发掘"模式 — 进入 StrataView 点"今日发掘"按钮
+  1. 前端接入 /api/photos/kept，实现 KeptView 画廊
   2. 根据真实体验反馈做针对性微调（刷子大小、阈值、动画时长等）
   3. 扫全盘（40k张）— 等体验验证稳定后再做
   4. GPS地理编码 — 跑完后 Story模式themes才有内容
