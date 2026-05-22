@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getStaging, getTrash, confirmStaging, restoreFromStaging, purgeTrash, previewUrl } from '../../api'
 import { useAppStore } from '../../stores/appStore'
+import { useTranslation } from '../../hooks/useTranslation'
 import { formatBytes, formatDate } from '../../utils'
 import type { StagingPhoto, TrashPhoto } from '../../types'
 
@@ -20,6 +21,7 @@ function PhotoCard({
   badge?: string
   badgeColor?: string
 }) {
+  const { t } = useTranslation()
   const [hovered, setHovered] = useState(false)
   const [imgErr, setImgErr] = useState(false)
 
@@ -57,7 +59,6 @@ function PhotoCard({
           </div>
         )}
 
-        {/* Badge: days remaining (trash) */}
         {badge && (
           <div
             className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded text-xs font-tabular"
@@ -67,7 +68,6 @@ function PhotoCard({
           </div>
         )}
 
-        {/* Restore overlay on hover */}
         <AnimatePresence>
           {hovered && (
             <motion.div
@@ -88,7 +88,7 @@ function PhotoCard({
                   fontWeight: 500,
                 }}
               >
-                恢复
+                {t('staging.restore.btn')}
               </button>
             </motion.div>
           )}
@@ -123,6 +123,7 @@ function PhotoCard({
 // ── Staging tab ───────────────────────────────────────────────────────────────
 
 function StagingTab({ onMoved }: { onMoved: () => void }) {
+  const { t } = useTranslation()
   const [photos, setPhotos] = useState<StagingPhoto[]>([])
   const [totalMb, setTotalMb] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -155,10 +156,10 @@ function StagingTab({ onMoved }: { onMoved: () => void }) {
     }
   }
 
-  if (loading) return <EmptyState icon="⏳" text="加载中…" />
+  if (loading) return <EmptyState icon="⏳" text={t('staging.loading')} />
 
   if (photos.length === 0) {
-    return <EmptyState icon="✦" text="没有待确认的照片" subtext="标记「留在这里」的照片会出现在这里" />
+    return <EmptyState icon="✦" text={t('staging.pending.empty')} subtext={t('staging.pending.hint')} />
   }
 
   return (
@@ -172,16 +173,16 @@ function StagingTab({ onMoved }: { onMoved: () => void }) {
           <span>
             <span style={{ color: 'var(--color-text-primary)', fontVariantNumeric: 'tabular-nums' }}>
               {photos.length}
-            </span>{' '}张
+            </span>
           </span>
           <span>
             <span style={{ color: 'var(--color-leave)', fontVariantNumeric: 'tabular-nums' }}>
               {totalMb.toFixed(1)} MB
-            </span>{' '}占用
+            </span>{' '}{t('staging.size.used')}
           </span>
         </div>
         <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-          悬停可单独恢复
+          {t('staging.hover.restore')}
         </p>
       </div>
 
@@ -202,7 +203,7 @@ function StagingTab({ onMoved }: { onMoved: () => void }) {
         style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}
       >
         <div className="mb-2.5 text-xs" style={{ color: 'var(--color-text-muted)' }}>
-          移入回收站后 30 天内仍可恢复，之后自动清除
+          {t('staging.move.note')}
         </div>
         <button
           onClick={handleMoveAllToTrash}
@@ -210,7 +211,7 @@ function StagingTab({ onMoved }: { onMoved: () => void }) {
           className="w-full py-3 rounded text-sm tracking-wider transition-opacity disabled:opacity-40 hover:opacity-80"
           style={{ background: 'var(--color-leave)', color: '#fff' }}
         >
-          {moving ? '移入中…' : `全部移入回收站 · ${totalMb.toFixed(1)} MB`}
+          {moving ? t('staging.moving') : `${t('staging.move.action')} · ${totalMb.toFixed(1)} MB`}
         </button>
       </div>
     </div>
@@ -220,6 +221,7 @@ function StagingTab({ onMoved }: { onMoved: () => void }) {
 // ── Trash tab ─────────────────────────────────────────────────────────────────
 
 function TrashTab({ onPurged }: { onPurged: () => void }) {
+  const { t, lang } = useTranslation()
   const [photos, setPhotos] = useState<TrashPhoto[]>([])
   const [totalMb, setTotalMb] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -260,10 +262,13 @@ function TrashTab({ onPurged }: { onPurged: () => void }) {
     return 'var(--color-leave)'
   }
 
-  if (loading) return <EmptyState icon="⏳" text="加载中…" />
+  const daysBadge = (days: number) =>
+    lang === 'en' ? `${days}d` : `${days}天`
+
+  if (loading) return <EmptyState icon="⏳" text={t('staging.loading')} />
 
   if (photos.length === 0) {
-    return <EmptyState icon="◎" text="回收站是空的" subtext="移入回收站的照片会在 30 天后自动清除" />
+    return <EmptyState icon="◎" text={t('trash.empty.title')} subtext={t('trash.empty.hint')} />
   }
 
   return (
@@ -277,7 +282,7 @@ function TrashTab({ onPurged }: { onPurged: () => void }) {
           <span>
             <span style={{ color: 'var(--color-text-primary)', fontVariantNumeric: 'tabular-nums' }}>
               {photos.length}
-            </span>{' '}张
+            </span>
           </span>
           <span>
             <span style={{ color: 'var(--color-text-muted)', fontVariantNumeric: 'tabular-nums' }}>
@@ -286,7 +291,7 @@ function TrashTab({ onPurged }: { onPurged: () => void }) {
           </span>
         </div>
         <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-          悬停可恢复单张
+          {t('trash.hover.restore')}
         </p>
       </div>
 
@@ -299,7 +304,7 @@ function TrashTab({ onPurged }: { onPurged: () => void }) {
                 key={p.photo_id}
                 photo={p}
                 onRestore={handleRestore}
-                badge={`${p.days_remaining}天`}
+                badge={daysBadge(p.days_remaining)}
                 badgeColor={daysColor(p.days_remaining)}
               />
             ))}
@@ -327,7 +332,7 @@ function TrashTab({ onPurged }: { onPurged: () => void }) {
                 color: 'var(--color-text-secondary)',
               }}
             >
-              提前清空回收站
+              {t('trash.purge.btn')}
             </motion.button>
           ) : (
             <motion.div
@@ -338,7 +343,9 @@ function TrashTab({ onPurged }: { onPurged: () => void }) {
               className="flex flex-col gap-2"
             >
               <p className="text-xs text-center" style={{ color: 'var(--color-leave)' }}>
-                确定要立刻永久删除这 {photos.length} 张照片吗？此操作不可撤销。
+                {lang === 'en'
+                  ? `Permanently delete these ${photos.length} photos? This cannot be undone.`
+                  : `确定要立刻永久删除这 ${photos.length} 张照片吗？此操作不可撤销。`}
               </p>
               <div className="flex gap-2">
                 <button
@@ -346,7 +353,7 @@ function TrashTab({ onPurged }: { onPurged: () => void }) {
                   className="flex-1 py-2.5 rounded text-sm transition-opacity hover:opacity-70"
                   style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--color-text-secondary)' }}
                 >
-                  取消
+                  {t('trash.purge.cancel')}
                 </button>
                 <button
                   onClick={handlePurge}
@@ -354,7 +361,7 @@ function TrashTab({ onPurged }: { onPurged: () => void }) {
                   className="flex-1 py-2.5 rounded text-sm transition-opacity disabled:opacity-40 hover:opacity-80"
                   style={{ background: 'var(--color-leave)', color: '#fff' }}
                 >
-                  {purging ? '清除中…' : '确认永久清除'}
+                  {purging ? t('trash.purge.clearing') : t('trash.purge.confirm')}
                 </button>
               </div>
             </motion.div>
@@ -383,27 +390,26 @@ function EmptyState({ icon, text, subtext }: { icon: string; text: string; subte
 
 export function StagingConfirmDialog() {
   const { showStagingDialog, setShowStagingDialog } = useAppStore()
+  const { t } = useTranslation()
   const [tab, setTab] = useState<Tab>('staging')
   const [trashCount, setTrashCount] = useState(0)
   const [stagingCount, setStagingCount] = useState(0)
 
-  // Refresh badge counts when dialog opens
   useEffect(() => {
     if (!showStagingDialog) return
     setTab('staging')
-    Promise.all([getStaging(), getTrash()]).then(([s, t]) => {
+    Promise.all([getStaging(), getTrash()]).then(([s, tr]) => {
       setStagingCount(s.total_count)
-      setTrashCount(t.total_count)
+      setTrashCount(tr.total_count)
     }).catch(() => {})
   }, [showStagingDialog])
 
   const handleClose = () => setShowStagingDialog(false)
 
   const handleMoved = () => {
-    // After moving all staging → trash, switch to trash tab
     setTab('trash')
     setStagingCount(0)
-    getTrash().then((t) => setTrashCount(t.total_count)).catch(() => {})
+    getTrash().then((tr) => setTrashCount(tr.total_count)).catch(() => {})
   }
 
   const handlePurged = () => {
@@ -440,19 +446,19 @@ export function StagingConfirmDialog() {
                 className="tracking-widest"
                 style={{ color: 'var(--color-text-primary)', fontSize: 13, fontWeight: 400, letterSpacing: '0.1em' }}
               >
-                整理空间
+                {t('staging.title')}
               </h2>
 
               {/* Tabs */}
               <div className="flex gap-1 rounded-lg p-0.5" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                {(['staging', 'trash'] as Tab[]).map((t) => {
-                  const count = t === 'staging' ? stagingCount : trashCount
-                  const label = t === 'staging' ? '待确认' : '回收站'
-                  const active = tab === t
+                {(['staging', 'trash'] as Tab[]).map((tabKey) => {
+                  const count = tabKey === 'staging' ? stagingCount : trashCount
+                  const label = tabKey === 'staging' ? t('staging.tab.pending') : t('staging.tab.trash')
+                  const active = tab === tabKey
                   return (
                     <button
-                      key={t}
-                      onClick={() => setTab(t)}
+                      key={tabKey}
+                      onClick={() => setTab(tabKey)}
                       className="px-3 py-1.5 rounded text-xs tracking-wider transition-all"
                       style={{
                         background: active ? 'rgba(255,255,255,0.1)' : 'transparent',
@@ -464,7 +470,7 @@ export function StagingConfirmDialog() {
                         <span
                           className="ml-1.5 font-tabular"
                           style={{
-                            color: t === 'staging' ? 'var(--color-leave)' : 'var(--color-text-muted)',
+                            color: tabKey === 'staging' ? 'var(--color-leave)' : 'var(--color-text-muted)',
                             fontSize: 10,
                           }}
                         >

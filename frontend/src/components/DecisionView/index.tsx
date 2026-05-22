@@ -2,55 +2,15 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getEventPhotos, postDecisions, undoDecision, toggleBookCandidate, previewUrl, getDayPhotoCount } from '../../api'
 import { useAppStore } from '../../stores/appStore'
+import { useTranslation } from '../../hooks/useTranslation'
 import { useKeyboardDecision } from '../../hooks/useKeyboardDecision'
 import { formatBytes, strataColorForYear } from '../../utils'
 import { MilestoneOverlay } from '../shared/MilestoneOverlay'
+import {
+  getMilestone, milestoneKeep, milestoneTotal,
+  formatShotAt, formatEventTitle, formatDateShort, simplifyCamera,
+} from '../../i18n'
 import type { Photo } from '../../types'
-
-// ── Milestone messages — 每种触发有多个版本，随机选一条 ────────────────────
-
-function pickRandom<T>(arr: readonly T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)]
-}
-
-const MILESTONE: Record<string, readonly string[]> = {
-  first_any: [
-    '第一个瞬间，从地层里浮现了',
-    '挖掘，开始了',
-    '时间的第一层，被你触碰',
-    '第一张，从黑暗里醒来',
-  ],
-  first_keep: [
-    '这段记忆，属于你了',
-    '放进行囊里了',
-    '带上它，继续',
-    '它会跟你走',
-  ],
-  first_leave: [
-    '你让它留在了这里 — 它会等着',
-    '它留在原地，等候时间',
-    '这里是它的归宿',
-    '你放下了它',
-  ],
-}
-
-function milestoneKeep(n: number): string {
-  return pickRandom([
-    `你已经带走了 ${n} 段记忆`,
-    `行囊里现在有 ${n} 个瞬间`,
-    `${n} 段，带走了`,
-    `${n} 个记忆，收好了`,
-  ] as const)
-}
-
-function milestoneTotal(n: number): string {
-  return pickRandom([
-    `${n} 张照片，${n} 个选择`,
-    `走过了 ${n} 个瞬间`,
-    `${n} 个决定，刻进了时间里`,
-    `已经挖出了 ${n} 张`,
-  ] as const)
-}
 
 // ── Noise texture (SVG feTurbulence as data URL) ───────────────────────────
 
@@ -58,60 +18,10 @@ const NOISE_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/s
 
 // ── Memory context helpers ─────────────────────────────────────────────────
 
-function formatShotAt(shotAt: string): string {
-  const d = new Date(shotAt.replace(' ', 'T'))
-  if (isNaN(d.getTime())) return shotAt
-  const year = d.getFullYear()
-  const month = d.getMonth() + 1
-  const day = d.getDate()
-  const hour = d.getHours()
-  const weekDays = ['日', '一', '二', '三', '四', '五', '六']
-  const weekDay = weekDays[d.getDay()]
-  let timeStr: string
-  if (hour === 0) timeStr = '午夜'
-  else if (hour < 6) timeStr = `凌晨 ${hour} 点`
-  else if (hour < 12) timeStr = `上午 ${hour} 点`
-  else if (hour === 12) timeStr = '正午'
-  else if (hour < 18) timeStr = `下午 ${hour - 12} 点`
-  else if (hour < 21) timeStr = `傍晚 ${hour - 12} 点`
-  else timeStr = `夜里 ${hour - 12} 点`
-  return `${year}年${month}月${day}日，星期${weekDay}，${timeStr}`
-}
-
-function formatEventTitle(shotAt: string): string {
-  const d = new Date(shotAt.replace(' ', 'T'))
-  if (isNaN(d.getTime())) return ''
-  const year = d.getFullYear()
-  const month = d.getMonth() + 1
-  const day = d.getDate()
-  const hour = d.getHours()
-  let timeStr: string
-  if (hour === 0) timeStr = '午夜'
-  else if (hour < 6) timeStr = `凌晨 ${hour} 点`
-  else if (hour < 12) timeStr = `上午 ${hour} 点`
-  else if (hour === 12) timeStr = '正午'
-  else if (hour < 18) timeStr = `下午 ${hour - 12} 点`
-  else if (hour < 21) timeStr = `傍晚 ${hour - 12} 点`
-  else timeStr = `夜里 ${hour - 12} 点`
-  return `${year}年${month}月${day}日 · ${timeStr}的连拍`
-}
-
-function simplifyCamera(model?: string): string | null {
-  if (!model) return null
-  const m = model.toLowerCase()
-  if (m.includes('ilce') || m.includes('sony') || /^a[679]\d/.test(m)) return '索尼'
-  if (m.includes('fujifilm') || m.includes('fuji') || m.startsWith('x-') || m.startsWith('gfx')) return '富士'
-  if (m.includes('iphone') || m.includes('apple')) return 'iPhone'
-  if (m.includes('canon')) return '佳能'
-  if (m.includes('nikon')) return '尼康'
-  if (m.includes('leica')) return '徕卡'
-  if (m.includes('dji')) return 'DJI'
-  return null
-}
-
 const dayCountCache = new Map<string, number>()
 
 function MemoryContextCard({ photo }: { photo: Photo }) {
+  const { t, lang } = useTranslation()
   const dateKey = photo.shot_at ? photo.shot_at.slice(0, 10) : null
   const [dayCount, setDayCount] = useState<number | null>(
     dateKey && dayCountCache.has(dateKey) ? dayCountCache.get(dateKey)! : null
@@ -125,13 +35,19 @@ function MemoryContextCard({ photo }: { photo: Photo }) {
       .catch(() => {})
   }, [dateKey])
 
-  const formattedDate = photo.shot_at ? formatShotAt(photo.shot_at) : null
+  const formattedDate = photo.shot_at ? formatShotAt(photo.shot_at, lang) : null
   const location = photo.gps_city
     ? `${photo.gps_city}${photo.gps_country ? `，${photo.gps_country}` : ''}`
     : photo.gps_country ?? null
-  const camera = simplifyCamera(photo.camera_model)
+  const camera = simplifyCamera(photo.camera_model, lang)
 
   if (!formattedDate && !location && !camera) return null
+
+  const dayCountLabel = dayCount !== null
+    ? (lang === 'en'
+        ? `${dayCount} ${t('decision.day.count.unit')}`
+        : `${t('decision.day.count')} ${dayCount} ${t('decision.day.count.unit')}`)
+    : null
 
   return (
     <motion.div
@@ -157,9 +73,9 @@ function MemoryContextCard({ photo }: { photo: Photo }) {
         {location && <span style={{ color: 'rgba(255,255,255,0.75)' }}>↟ {location}</span>}
         {camera && <span style={{ color: 'rgba(255,255,255,0.75)' }}>{camera}</span>}
       </div>
-      {dayCount !== null && (
+      {dayCountLabel && (
         <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, marginTop: 4 }}>
-          今天拍了 {dayCount} 张
+          {dayCountLabel}
         </p>
       )}
     </motion.div>
@@ -183,12 +99,12 @@ function useRipple() {
 type ExitDir = 'down' | 'up' | null
 
 function PhotoDisplay({ photo, exitDir }: { photo: Photo; exitDir: ExitDir }) {
+  const { t } = useTranslation()
   const [imgError, setImgError] = useState(false)
 
   const enterVariants = {
     enter:  { opacity: 0, scale: 0.96, filter: 'brightness(0) blur(8px)', x: 0, y: 0 },
     center: { opacity: 1, scale: 1,    filter: 'brightness(1) blur(0px)', x: 0, y: 0 },
-    // 带走：上浮发光 → 缩向右上角「记忆囊」
     exitUp: {
       opacity: 0,
       scale: 0.06,
@@ -196,7 +112,6 @@ function PhotoDisplay({ photo, exitDir }: { photo: Photo; exitDir: ExitDir }) {
       y: -220,
       filter: 'brightness(3) blur(1px)',
     },
-    // 留在这里：下沉入岩层
     exitDown: {
       opacity: 0,
       scale: 0.93,
@@ -227,11 +142,9 @@ function PhotoDisplay({ photo, exitDir }: { photo: Photo; exitDir: ExitDir }) {
           duration: exitDir === 'up' ? 0.44 : 0.4,
           ease: exitDir === 'up' ? [0.16, 1, 0.3, 1] : [0.4, 0, 0.2, 1],
         }}
-        // 岩洞空间感：四周留白，右侧为岩层队列多留空间
         className="absolute inset-0 flex items-center justify-center"
         style={{ padding: '72px 196px 72px 80px' }}
       >
-        {/* 景深阴影 + keep 时的冷绿发光 */}
         <motion.div
           animate={exitDir === 'up'
             ? { boxShadow: '0 0 60px 18px rgba(126,184,164,0.45), 0 28px 80px rgba(0,0,0,0.65)' }
@@ -261,7 +174,7 @@ function PhotoDisplay({ photo, exitDir }: { photo: Photo; exitDir: ExitDir }) {
               <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 11, letterSpacing: '0.04em', textAlign: 'center', maxWidth: 220 }}>
                 {photo.file_name}
               </p>
-              <p style={{ color: 'rgba(255,255,255,0.14)', fontSize: 10 }}>预览图生成中</p>
+              <p style={{ color: 'rgba(255,255,255,0.14)', fontSize: 10 }}>{t('decision.preview.gen')}</p>
             </div>
           ) : (
             <img
@@ -309,7 +222,6 @@ function StrataQueue({ photos, currentIndex }: {
   photos: Photo[]
   currentIndex: number
 }) {
-  // 只显示 currentIndex 之后最多 2 张未决策的照片
   const upcoming: Photo[] = []
   for (let i = currentIndex + 1; i < photos.length && upcoming.length < 2; i++) {
     if (!photos[i].decision) upcoming.push(photos[i])
@@ -338,7 +250,6 @@ function StrataQueue({ photos, currentIndex }: {
             style={{
               background: 'rgba(255,255,255,0.06)',
               border: '1px solid rgba(255,255,255,0.12)',
-              // Polaroid 底边留白
               padding: i === 0 ? '4px 4px 16px 4px' : '3px 3px 12px 3px',
               borderRadius: 3,
               boxShadow: `0 8px ${i === 0 ? 24 : 36}px rgba(0,0,0,${i === 0 ? 0.55 : 0.7})`,
@@ -348,7 +259,6 @@ function StrataQueue({ photos, currentIndex }: {
           </motion.div>
         ))}
       </AnimatePresence>
-      {/* 「还有 N 张」提示，仅在队列外还有更多时显示 */}
       {(() => {
         const remaining = photos.slice(currentIndex + 1).filter((p) => !p.decision).length
         return remaining > 2 ? (
@@ -364,6 +274,7 @@ function StrataQueue({ photos, currentIndex }: {
 // ── Memory Capsule — 右上角记忆囊 ─────────────────────────────────────────
 
 function MemoryCapsule({ count, pulseKey }: { count: number; pulseKey: number }) {
+  const { t } = useTranslation()
   if (count === 0) return null
   return (
     <motion.div
@@ -381,7 +292,7 @@ function MemoryCapsule({ count, pulseKey }: { count: number; pulseKey: number })
     >
       <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--color-keep)' }} />
       <span style={{ color: 'var(--color-keep)', fontSize: 11, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.02em' }}>
-        {count} 段记忆
+        {count} {t('decision.capsule.unit')}
       </span>
     </motion.div>
   )
@@ -399,13 +310,13 @@ export function DecisionView() {
     addSessionStats, navigateBack, setShowLightbox, showLightbox,
     totalDecisions, incrementDecisions, markMilestone, hasMilestone,
   } = useAppStore()
+  const { t, lang } = useTranslation()
 
   const [loading, setLoading] = useState(true)
   const [phase, setPhase] = useState<'intro' | 'deciding'>('intro')
   const [exitDir, setExitDir] = useState<ExitDir>(null)
   const [isPending, setIsPending] = useState(false)
   const [milestoneMsg, setMilestoneMsg] = useState<string | null>(null)
-  // pulseKey 每次 keep 递增，触发 MemoryCapsule 动画
   const [keepPulseKey, setKeepPulseKey] = useState(0)
   const { ripples, trigger: triggerRipple } = useRipple()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -461,27 +372,26 @@ export function DecisionView() {
       else if (decision === 'leave') addSessionStats(0, 1, res.freed_bytes_preview)
     } catch {}
 
-    // Milestone checks
     incrementDecisions()
     const nextTotal = totalDecisions + 1
     const keptSoFar = eventPhotos.filter((p) => p.decision === 'keep').length + (decision === 'keep' ? 1 : 0)
 
     let milestone: string | null = null
     if (!hasMilestone('first_any')) {
-      milestone = pickRandom(MILESTONE.first_any)
+      milestone = getMilestone('first_any', lang)
       markMilestone('first_any')
     } else if (decision === 'keep' && !hasMilestone('first_keep')) {
-      milestone = pickRandom(MILESTONE.first_keep)
+      milestone = getMilestone('first_keep', lang)
       markMilestone('first_keep')
     } else if (decision === 'leave' && !hasMilestone('first_leave')) {
-      milestone = pickRandom(MILESTONE.first_leave)
+      milestone = getMilestone('first_leave', lang)
       markMilestone('first_leave')
     } else if (decision === 'keep' && keptSoFar > 0 && keptSoFar % 10 === 0) {
       const key = `keep_${keptSoFar}`
-      if (!hasMilestone(key)) { milestone = milestoneKeep(keptSoFar); markMilestone(key) }
+      if (!hasMilestone(key)) { milestone = milestoneKeep(keptSoFar, lang); markMilestone(key) }
     } else if (nextTotal % 10 === 0) {
       const key = `total_${nextTotal}`
-      if (!hasMilestone(key)) { milestone = milestoneTotal(nextTotal); markMilestone(key) }
+      if (!hasMilestone(key)) { milestone = milestoneTotal(nextTotal, lang); markMilestone(key) }
     }
     if (milestone) setMilestoneMsg(milestone)
 
@@ -490,7 +400,7 @@ export function DecisionView() {
     advancePhoto()
     setIsPending(false)
   }, [currentPhoto, isPending, pushHistory, updatePhotoDecision, addSessionStats, advancePhoto, triggerRipple,
-      totalDecisions, incrementDecisions, markMilestone, hasMilestone, eventPhotos])
+      totalDecisions, incrementDecisions, markMilestone, hasMilestone, eventPhotos, lang])
 
   const handleUndo = useCallback(async () => {
     if (isPending) return
@@ -530,15 +440,24 @@ export function DecisionView() {
 
   const decided = eventPhotos.filter((p) => p.decision !== null).length
   const pairedInfo = currentPhoto?.paired_photo_id
-    ? (eventPhotos.some((p) => p.id === currentPhoto.paired_photo_id) ? '此照片有配套 RAW 文件' : '此照片有配套 JPEG 文件')
+    ? (eventPhotos.some((p) => p.id === currentPhoto.paired_photo_id)
+        ? t('decision.paired.raw')
+        : t('decision.paired.jpeg'))
     : null
 
   const introCoverPhoto = eventPhotos[0] ?? null
   const eventGroupLabel = (() => {
     if (monthEvents.length === 0) return null
     const idx = monthEvents.findIndex((e) => e.id === selectedEventId)
-    return idx >= 0 ? `第 ${idx + 1} 组 · 共 ${eventPhotos.length} 张` : null
+    if (idx < 0) return null
+    return lang === 'en'
+      ? `${t('decision.group.prefix')} ${idx + 1} · ${eventPhotos.length} photos`
+      : `第 ${idx + 1} 组 · 共 ${eventPhotos.length} 张`
   })()
+
+  const monthLabel = lang === 'en'
+    ? `${new Date(selectedYear!, selectedMonth! - 1).toLocaleString('en', { month: 'long' })} ${selectedYear}`
+    : `${selectedYear}年${selectedMonth}月`
 
   return (
     <div ref={containerRef} className="h-full flex flex-col relative overflow-hidden">
@@ -577,11 +496,8 @@ export function DecisionView() {
                 style={{ color: 'rgba(255,255,255,0.78)', fontSize: 20, fontWeight: 400 }}
               >
                 {eventPhotos[0]?.shot_at
-                  ? (() => {
-                      const d = new Date(eventPhotos[0].shot_at.replace(' ', 'T'))
-                      return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
-                    })()
-                  : `${selectedYear}年${selectedMonth}月`}
+                  ? formatDateShort(eventPhotos[0].shot_at, lang)
+                  : monthLabel}
               </motion.p>
               {eventGroupLabel && (
                 <motion.p
@@ -627,7 +543,7 @@ export function DecisionView() {
         />
       ))}
 
-      {/* 背景：当前照片高斯模糊，压暗至 18% */}
+      {/* Background blur */}
       <AnimatePresence mode="sync">
         {currentPhoto && (
           <motion.div
@@ -648,7 +564,7 @@ export function DecisionView() {
         )}
       </AnimatePresence>
 
-      {/* 噪点纹理叠层 — 给背景加质感 */}
+      {/* Noise texture */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -666,26 +582,29 @@ export function DecisionView() {
           className="text-xs transition-opacity hover:opacity-70"
           style={{ color: 'var(--color-text-secondary)' }}
         >
-          ← 返回
+          {t('decision.back')}
         </button>
         <span style={{ color: 'var(--color-text-muted)' }}>/</span>
         <span className="text-xs" style={{ color }}>
-          {selectedYear}年{selectedMonth}月
+          {monthLabel}
         </span>
         {monthEvents.length > 0 && (() => {
           const idx = monthEvents.findIndex((e) => e.id === selectedEventId)
           if (idx < 0) return null
+          const groupLabel = lang === 'en'
+            ? `${t('decision.group.prefix')} ${idx + 1} of ${monthEvents.length}`
+            : `第 ${idx + 1} 组 / 共 ${monthEvents.length} 组`
           return (
             <>
               <span style={{ color: 'var(--color-text-muted)' }}>/</span>
               <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                第 {idx + 1} 组 / 共 {monthEvents.length} 组
+                {groupLabel}
               </span>
               {eventPhotos.length > 1 && (
                 <span className="text-xs px-1.5 py-0.5 rounded" style={{
                   background: 'var(--color-glass)', color: 'var(--color-text-muted)', fontSize: 10,
                 }}>
-                  连拍 {eventPhotos.length} 张
+                  {t('decision.burst.label')} {eventPhotos.length}
                 </span>
               )}
             </>
@@ -697,7 +616,7 @@ export function DecisionView() {
         </span>
         {currentPhoto?.is_book_candidate && (
           <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: 'rgba(232,200,120,0.15)', color: 'var(--color-star)', fontSize: 10 }}>
-            ★ 书候选
+            {t('decision.book.badge')}
           </span>
         )}
         <div className="flex-1" />
@@ -713,27 +632,23 @@ export function DecisionView() {
           className="text-xs px-2 py-1 rounded transition-opacity hover:opacity-70"
           style={{ color: 'var(--color-text-muted)', border: '1px solid currentColor' }}
         >
-          撤销 Z
+          {t('decision.undo')}
         </button>
       </div>
 
-      {/* ── 核心照片区域 ── */}
+      {/* 核心照片区域 */}
       <div className="relative z-10 flex-1" style={{ minHeight: 0 }}>
 
         {currentPhoto ? (
           <>
-            {/* 主照片，带岩洞边距和景深阴影 */}
             <PhotoDisplay photo={currentPhoto} exitDir={exitDir} />
 
-            {/* 记忆上下文卡片 */}
             <AnimatePresence mode="wait">
               <MemoryContextCard key={currentPhoto.id} photo={currentPhoto} />
             </AnimatePresence>
 
-            {/* 岩层队列 — 右侧叠放待决照片 */}
             <StrataQueue photos={eventPhotos} currentIndex={currentPhotoIndex} />
 
-            {/* 记忆囊 — 右上角 kept 计数，keep 时脉冲 */}
             <MemoryCapsule count={sessionKept} pulseKey={keepPulseKey} />
           </>
         ) : (
@@ -769,11 +684,11 @@ export function DecisionView() {
 
         {/* Stats bar */}
         <div className="flex items-center justify-center gap-6 text-xs font-tabular" style={{ color: 'var(--color-text-secondary)' }}>
-          <span>已处理 <span className="text-primary">{decided}</span> 张</span>
-          <span>带走 <span style={{ color: 'var(--color-keep)' }}>{sessionKept}</span></span>
-          <span>留下 <span style={{ color: 'var(--color-leave)' }}>{sessionLeft}</span></span>
+          <span>{t('decision.processed')} <span className="text-primary">{decided}</span></span>
+          <span>{t('stats.carried')} <span style={{ color: 'var(--color-keep)' }}>{sessionKept}</span></span>
+          <span>{t('stats.left')} <span style={{ color: 'var(--color-leave)' }}>{sessionLeft}</span></span>
           {sessionFreedBytes > 0 && (
-            <span>释放 <span style={{ color: 'var(--color-keep)' }}>{formatBytes(sessionFreedBytes)}</span></span>
+            <span>{t('decision.freed')} <span style={{ color: 'var(--color-keep)' }}>{formatBytes(sessionFreedBytes)}</span></span>
           )}
         </div>
       </div>
@@ -796,7 +711,7 @@ export function DecisionView() {
               onClick={(e) => e.stopPropagation()}
             />
             <p className="absolute bottom-4 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-              按 Space 或点击背景关闭
+              {t('decision.lightbox.hint')}
             </p>
           </motion.div>
         )}
@@ -814,6 +729,7 @@ function ActionButtons({
   onLeaveClick: (e: React.MouseEvent) => void
   onKeepClick: (e: React.MouseEvent) => void
 }) {
+  const { t } = useTranslation()
   const [leaveActive, setLeaveActive] = useState(false)
   const [keepActive, setKeepActive] = useState(false)
 
@@ -830,7 +746,7 @@ function ActionButtons({
 
   return (
     <div className="flex items-center justify-center gap-4">
-      {/* 留在这里 */}
+      {/* Leave */}
       <motion.button
         onClick={handleLeave}
         whileHover={{ scale: 1.03 }}
@@ -842,11 +758,11 @@ function ActionButtons({
         style={{ background: 'rgba(139,115,85,0.18)', border: '1px solid var(--color-leave)', color: 'var(--color-leave)' }}
       >
         <span>←</span>
-        <span>{leaveActive ? '留在这片土地上' : '留在这里'}</span>
+        <span>{leaveActive ? t('btn.leave.active') : t('btn.leave')}</span>
         <kbd style={{ fontSize: 9, opacity: 0.38, marginLeft: 4, padding: '1px 4px', borderRadius: 3, border: '1px solid currentColor', fontFamily: 'monospace' }}>D</kbd>
       </motion.button>
 
-      {/* 稍后 */}
+      {/* Skip */}
       <motion.button
         onClick={onSkip}
         whileHover={{ scale: 1.03, opacity: 1 }}
@@ -854,11 +770,11 @@ function ActionButtons({
         className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm tracking-wider"
         style={{ background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)', color: 'var(--color-text-secondary)', opacity: 0.48 }}
       >
-        <span>↑</span> 稍后
+        <span>↑</span> {t('btn.skip')}
         <kbd style={{ fontSize: 9, opacity: 0.38, marginLeft: 4, padding: '1px 4px', borderRadius: 3, border: '1px solid currentColor', fontFamily: 'monospace' }}>S</kbd>
       </motion.button>
 
-      {/* 带走 */}
+      {/* Keep */}
       <motion.button
         onClick={handleKeep}
         whileHover={{ scale: 1.03 }}
@@ -869,7 +785,7 @@ function ActionButtons({
         className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm tracking-wider"
         style={{ background: 'rgba(126,184,164,0.18)', border: '1px solid var(--color-keep)', color: 'var(--color-keep)' }}
       >
-        <span>{keepActive ? '带入行囊' : '带走'}</span>
+        <span>{keepActive ? t('btn.keep.active') : t('btn.keep')}</span>
         <span>→</span>
         <kbd style={{ fontSize: 9, opacity: 0.38, marginLeft: 4, padding: '1px 4px', borderRadius: 3, border: '1px solid currentColor', fontFamily: 'monospace' }}>K</kbd>
       </motion.button>
@@ -905,9 +821,10 @@ function AllDoneState({
   freedBytes: number
   eventStartShotAt?: string
 }) {
+  const { t, lang } = useTranslation()
   const polaroidPhotos = keptPhotos.slice(0, 4)
   const rotations = [-3.5, 2.2, -1.8, 3.0]
-  const eventTitle = eventStartShotAt ? formatEventTitle(eventStartShotAt) : null
+  const eventTitle = eventStartShotAt ? formatEventTitle(eventStartShotAt, lang) : null
 
   return (
     <motion.div
@@ -918,7 +835,7 @@ function AllDoneState({
     >
       <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.08 }}>
         <p className="font-serif tracking-widest" style={{ color: 'var(--strata-2022)', fontSize: 'var(--text-display)', fontWeight: 400, lineHeight: 1.2 }}>
-          这一组挖完了
+          {t('done.group.title')}
         </p>
         {eventTitle && (
           <p className="text-xs mt-2 tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
@@ -951,13 +868,13 @@ function AllDoneState({
 
       <motion.div className="flex flex-col items-center gap-1.5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.38 }}>
         <p className="text-sm font-light" style={{ color: 'var(--color-text-secondary)' }}>
-          带走了{' '}<span style={{ color: 'var(--color-keep)' }}>{keptPhotos.length}</span>{' '}段记忆
+          {t('done.group.carried')}{' '}<span style={{ color: 'var(--color-keep)' }}>{keptPhotos.length}</span>{' '}{t('done.group.memories')}
         </p>
         {(sessionLeft > 0 || freedBytes > 0) && (
           <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-            {sessionLeft > 0 && `留下 ${sessionLeft} 张`}
+            {sessionLeft > 0 && `${t('done.group.left')} ${sessionLeft}`}
             {sessionLeft > 0 && freedBytes > 0 && '，'}
-            {freedBytes > 0 && `释放了 ${formatBytes(freedBytes)}`}
+            {freedBytes > 0 && `${t('done.group.freed')} ${formatBytes(freedBytes)}`}
           </p>
         )}
       </motion.div>
@@ -968,7 +885,7 @@ function AllDoneState({
           className="px-5 py-2.5 rounded-lg text-sm tracking-wider transition-opacity hover:opacity-70"
           style={{ background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)' }}
         >
-          ← 返回列表
+          {t('done.back.list')}
         </button>
         {hasNext ? (
           <button
@@ -976,7 +893,7 @@ function AllDoneState({
             className="px-6 py-2.5 rounded-lg text-sm tracking-wider transition-opacity hover:opacity-70"
             style={{ background: 'var(--color-keep)', color: '#0A0A0F' }}
           >
-            下一组 → <span className="ml-1 opacity-60 text-xs">K</span>
+            {t('done.next.group')} <span className="ml-1 opacity-60 text-xs">K</span>
           </button>
         ) : (
           <button
@@ -984,7 +901,7 @@ function AllDoneState({
             className="px-6 py-2.5 rounded-lg text-sm tracking-wider transition-opacity hover:opacity-70"
             style={{ background: 'var(--color-keep)', color: '#0A0A0F' }}
           >
-            本月已全部完成
+            {t('done.all.month')}
           </button>
         )}
       </motion.div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { getEvents, previewUrl, triggerGeocode } from '../../api'
 import { useAppStore } from '../../stores/appStore'
+import { useTranslation } from '../../hooks/useTranslation'
 import { formatTime, strataColorForYear } from '../../utils'
 import type { Event } from '../../types'
 
@@ -26,6 +27,7 @@ const imageVariants = {
 // ── Event Card ───────────────────────────────────────────────────────────────
 
 function EventCard({ event, onClick, index }: { event: Event; onClick: () => void; index: number }) {
+  const { t } = useTranslation()
   const color = strataColorForYear(event.year)
   const pct = event.photo_count > 0 ? event.decided_count / event.photo_count : 0
   const height = cardHeight(event.photo_count)
@@ -33,17 +35,19 @@ function EventCard({ event, onClick, index }: { event: Event; onClick: () => voi
   const isInProgress = event.status === 'in_progress'
   const isPending = event.status === 'pending'
 
-  // 时间显示：只显示 HH:MM，去掉重复日期
   const timeLabel = event.ended_at && event.ended_at !== event.started_at
     ? `${formatTime(event.started_at)} — ${formatTime(event.ended_at)}`
     : formatTime(event.started_at)
+
+  const photoCountLabel = event.photo_count > 1
+    ? `${t('site.burst')} ${event.photo_count}`
+    : t('site.photo.single')
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.03, ease: [0.25, 0, 0, 1] }}
-      // break-inside: avoid 防止卡片被 CSS columns 截断
       style={{ breakInside: 'avoid', marginBottom: 10 }}
     >
       <motion.button
@@ -56,9 +60,7 @@ function EventCard({ event, onClick, index }: { event: Event; onClick: () => voi
           height,
           borderRadius: 6,
           cursor: 'pointer',
-          // 未开始：半透明磨砂
           opacity: isPending ? 0.58 : 1,
-          // 已完成：外发光；进行中：左边框微光
           boxShadow: isDone
             ? `0 0 0 1px ${color}44, 0 0 28px ${color}55`
             : isInProgress
@@ -86,7 +88,7 @@ function EventCard({ event, onClick, index }: { event: Event; onClick: () => voi
           )}
         </div>
 
-        {/* 压暗遮罩 + 底部渐变（确保文字可读） */}
+        {/* 压暗遮罩 + 底部渐变 */}
         <div
           className="absolute inset-0"
           style={{
@@ -118,9 +120,8 @@ function EventCard({ event, onClick, index }: { event: Event; onClick: () => voi
           </div>
         )}
 
-        {/* 卡片内容（叠在照片上） */}
+        {/* 卡片内容 */}
         <div className="absolute bottom-0 left-0 right-0 z-10 p-3 flex flex-col gap-1.5">
-          {/* 时间 + 张数 */}
           <div className="flex items-end justify-between gap-2">
             <p
               style={{
@@ -141,24 +142,16 @@ function EventCard({ event, onClick, index }: { event: Event; onClick: () => voi
                 flexShrink: 0,
               }}
             >
-              {event.photo_count > 1 ? `连拍 ${event.photo_count} 张` : '1 张'}
+              {photoCountLabel}
             </p>
           </div>
 
-          {/* 地点 */}
           {event.primary_location && (
-            <p
-              style={{
-                color: 'rgba(255,255,255,0.55)',
-                fontSize: 11,
-                lineHeight: 1.3,
-              }}
-            >
+            <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, lineHeight: 1.3 }}>
               ↟ {event.primary_location}
             </p>
           )}
 
-          {/* 进度条 */}
           <div
             className="w-full rounded-full overflow-hidden"
             style={{ height: 2, background: 'rgba(255,255,255,0.15)', marginTop: 2 }}
@@ -186,6 +179,7 @@ export function SiteView() {
     navigateToDecision, navigateBack,
     setEventPhotos, setMonthEvents,
   } = useAppStore()
+  const { t, lang } = useTranslation()
 
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
@@ -197,12 +191,11 @@ export function SiteView() {
       .then(({ events }) => {
         setEvents(events)
         setMonthEvents(events)
-        // 非阻塞触发反地理编码，填充 primary_location（静默，不影响UI）
         triggerGeocode(200).catch(() => {})
       })
-      .catch((e) => setError(e.message ?? '加载失败'))
+      .catch((e) => setError(e.message ?? t('site.error')))
       .finally(() => setLoading(false))
-  }, [selectedYear, selectedMonth, setMonthEvents])
+  }, [selectedYear, selectedMonth, setMonthEvents]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSelectEvent = (event: Event) => {
     setEventPhotos([])
@@ -210,6 +203,10 @@ export function SiteView() {
   }
 
   const color = strataColorForYear(selectedYear ?? 2021)
+
+  const monthLabel = lang === 'en'
+    ? `${new Date(selectedYear!, selectedMonth! - 1).toLocaleString('en', { month: 'long' })} ${selectedYear}`
+    : `${selectedYear}年${selectedMonth}月`
 
   return (
     <div className="h-full flex flex-col">
@@ -223,17 +220,15 @@ export function SiteView() {
           className="transition-opacity hover:opacity-70"
           style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}
         >
-          ← 地层
+          {t('nav.back.strata')}
         </button>
         <span style={{ color: 'var(--color-text-muted)' }}>/</span>
-        <h2
-          style={{ color, fontSize: 16, fontWeight: 500, letterSpacing: '0.04em' }}
-        >
-          {selectedYear}年{selectedMonth}月
+        <h2 style={{ color, fontSize: 16, fontWeight: 500, letterSpacing: '0.04em' }}>
+          {monthLabel}
         </h2>
         {events.length > 0 && (
           <span style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>
-            {events.length} 个拍摄事件
+            {events.length} {t('site.events.count')}
           </span>
         )}
       </div>
@@ -246,11 +241,10 @@ export function SiteView() {
         )}
         {!loading && !error && events.length === 0 && (
           <p style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
-            这个月没有拍摄记录
+            {t('site.empty')}
           </p>
         )}
 
-        {/* CSS columns masonry — 3 列，自动填充 */}
         {!loading && events.length > 0 && (
           <div style={{ columns: '3 260px', columnGap: 10 }}>
             {events.map((event, i) => (
@@ -271,6 +265,7 @@ export function SiteView() {
 // ── Loading ───────────────────────────────────────────────────────────────────
 
 function LoadingState() {
+  const { t } = useTranslation()
   return (
     <div className="flex items-center gap-3 py-8">
       <motion.div
@@ -279,7 +274,7 @@ function LoadingState() {
         animate={{ rotate: 360 }}
         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
       />
-      <p style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>加载拍摄事件…</p>
+      <p style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>{t('site.loading')}</p>
     </div>
   )
 }

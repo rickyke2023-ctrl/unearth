@@ -2,18 +2,24 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getKeptPhotos, previewUrl } from '../../api'
 import { useAppStore } from '../../stores/appStore'
+import { useTranslation } from '../../hooks/useTranslation'
 import { strataColorForYear, formatBytes } from '../../utils'
+import { MONTH_NAMES } from '../../i18n'
 import type { Photo } from '../../types'
 
 // ── Single photo card ─────────────────────────────────────────────────────
 
 function PhotoCard({ photo, index }: { photo: Photo; index: number }) {
+  const { lang } = useTranslation()
   const [imgError, setImgError] = useState(false)
 
+  const monthNames = MONTH_NAMES[lang]
   const dateStr = photo.shot_at
     ? (() => {
         const d = new Date(photo.shot_at.replace(' ', 'T'))
-        return `${d.getMonth() + 1}月${d.getDate()}日`
+        return lang === 'en'
+          ? `${monthNames[d.getMonth() + 1]} ${d.getDate()}`
+          : `${d.getMonth() + 1}月${d.getDate()}日`
       })()
     : ''
 
@@ -98,7 +104,7 @@ function YearHeader({ year, count }: { year: number; count: number }) {
         {year}
       </h2>
       <span className="text-xs font-tabular" style={{ color: 'var(--color-text-muted)' }}>
-        {count} 张
+        {count}
       </span>
     </div>
   )
@@ -107,6 +113,7 @@ function YearHeader({ year, count }: { year: number; count: number }) {
 // ── Empty state ────────────────────────────────────────────────────────────
 
 function EmptyState({ onBack }: { onBack: () => void }) {
+  const { t } = useTranslation()
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -118,10 +125,10 @@ function EmptyState({ onBack }: { onBack: () => void }) {
           className="font-serif tracking-widest mb-3"
           style={{ color: 'var(--strata-2022)', fontSize: 22, fontWeight: 400 }}
         >
-          行囊还是空的
+          {t('kept.empty.title')}
         </p>
         <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-          开始挖掘，把值得带走的记忆放进来。
+          {t('kept.empty.hint')}
         </p>
       </div>
       <button
@@ -129,7 +136,7 @@ function EmptyState({ onBack }: { onBack: () => void }) {
         className="text-xs px-4 py-2 rounded transition-opacity hover:opacity-70"
         style={{ color: 'var(--color-text-secondary)', border: '1px solid var(--color-glass-border)' }}
       >
-        ← 回到地层
+        {t('kept.empty.back')}
       </button>
     </motion.div>
   )
@@ -139,6 +146,7 @@ function EmptyState({ onBack }: { onBack: () => void }) {
 
 export function KeptView() {
   const { setView } = useAppStore()
+  const { t } = useTranslation()
 
   const [photos, setPhotos]         = useState<Photo[]>([])
   const [totalCount, setTotalCount] = useState(0)
@@ -155,18 +163,17 @@ export function KeptView() {
         setTotalCount(res.total_count)
         setByYear(res.by_year)
       })
-      .catch((e) => setError(e.message ?? '加载失败'))
+      .catch((e) => setError(e.message ?? t('kept.error')))
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => { fetchPhotos() }, [])
+  useEffect(() => { fetchPhotos() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleYearSelect = (year: number | null) => {
     setSelectedYear(year)
     fetchPhotos(year ?? undefined)
   }
 
-  // Group photos by year for display (when showing all years)
   const grouped: Array<{ year: number; photos: Photo[] }> = selectedYear
     ? [{ year: selectedYear, photos }]
     : Object.keys(byYear)
@@ -178,7 +185,6 @@ export function KeptView() {
         }))
         .filter((g) => g.photos.length > 0)
 
-  // Total size of shown photos
   const totalBytes = photos.reduce((sum, p) => sum + (p.file_size_bytes ?? 0), 0)
 
   return (
@@ -193,7 +199,7 @@ export function KeptView() {
               className="text-xs transition-opacity hover:opacity-70"
               style={{ color: 'var(--color-text-secondary)' }}
             >
-              ← 地层
+              {t('kept.nav.strata')}
             </button>
             <h1
               className="font-serif tracking-widest"
@@ -204,7 +210,7 @@ export function KeptView() {
                 letterSpacing: '0.12em',
               }}
             >
-              带走的记忆
+              {t('kept.title')}
             </h1>
           </div>
 
@@ -220,7 +226,7 @@ export function KeptView() {
                 <span className="font-tabular" style={{ color: 'var(--color-keep)' }}>
                   {totalCount}
                 </span>{' '}
-                张带走
+                {t('kept.stats.unit')}
               </span>
               <span style={{ opacity: 0.35 }}>·</span>
               <span className="font-tabular">{formatBytes(totalBytes)}</span>
@@ -240,7 +246,7 @@ export function KeptView() {
                 border: `1px solid ${selectedYear === null ? 'rgba(255,255,255,0.18)' : 'transparent'}`,
               }}
             >
-              全部
+              {t('kept.year.all')}
             </button>
             {Object.keys(byYear)
               .map(Number)

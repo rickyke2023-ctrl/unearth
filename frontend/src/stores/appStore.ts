@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { AppView, Photo, GlobalStats, SystemStatus, Event } from '../types'
+import type { Language } from '../i18n'
 
 interface DecisionHistoryItem {
   photo_id: string
@@ -33,6 +34,10 @@ interface AppState {
   // UI state
   showStagingDialog: boolean
   showLightbox: boolean
+
+  // i18n
+  language: Language
+  setLanguage: (lang: Language) => void
 
   // Milestone / gamification
   totalDecisions: number
@@ -81,6 +86,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   scanPhase: '',
   showStagingDialog: false,
   showLightbox: false,
+
+  language: 'en',
+  setLanguage: (language) => set({ language }),
 
   totalDecisions: 0,
   milestoneShown: new Set<string>(),
