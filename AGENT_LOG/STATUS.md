@@ -4,6 +4,13 @@
 节点1 ✅  节点2 ✅  节点3 ✅  节点4 ✅
 
 最近完成（本次 session）：
+  ✅ 摄像头手势 MVP（CameraGestureController）
+      - frontend/src/components/shared/CameraGestureController.tsx
+      - ExcavationView 集成：✋ 按钮固定在右下角，点击启用/禁用
+      - MediaPipe Hands 从 CDN 动态加载（首次需网络，之后缓存）
+      - 食指指尖 (landmark 8) 实时映射 → scrubAt(nx, ny)
+      - 小摄像头预览框（120×90），绿点显示检测到的指尖位置
+      - 仅代码完成，体验验证需用户操作摄像头
   ✅ BookView（精选册候选画廊）
       - frontend/src/components/BookView/index.tsx
       - StrataView 加「★ 精选册」金色入口按钮
