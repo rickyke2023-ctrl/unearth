@@ -12,17 +12,31 @@
 
 ## What it looks like
 
+![Excavation — untouched soil](SCREENSHOTS/excavation_soil_untouched.png)
+
+*Today's Excavation — a photo buried beneath geological layers. Scrub the soil to reveal it.*
+
+![Excavation — mid reveal](SCREENSHOTS/excavation_mid_reveal.png)
+
+*As you scrub, the photo emerges from darkness. The further you dig, the more it surfaces.*
+
+![Excavation — fully revealed](SCREENSHOTS/excavation_fully_revealed.png)
+
+*Fully revealed. Now decide: carry it forward, or leave it here.*
+
+---
+
+![Site View — shooting events](SCREENSHOTS/siteview_events.png)
+
+*Site View — your month as an excavation site. Each card is a shooting event, grouped automatically.*
+
 ![Strata View — your years as geological layers](SCREENSHOTS/20260520_2107_StrataView_redesign.png)
 
-*Strata View — every year a geological layer, every month a block proportional to photo count*
+*Strata View — every year a geological layer, every month a block proportional to photo count.*
 
-![Decision View — photos emerge from darkness](SCREENSHOTS/20260521_1333_DecisionView_strata_overview.png)
+![Decision View — classic mode](SCREENSHOTS/decisionview_classic.png)
 
-*Decision View — photos surface from darkness, waiting for your judgment*
-
-![Leave milestone — the poetic pause](SCREENSHOTS/20260521_1333_DecisionView_after_leave.png)
-
-*"You let it stay here — it will wait." A moment of pause after each leave decision*
+*Decision View — classic batch mode with Polaroid queue, memory capsule, and context card.*
 
 ---
 
@@ -129,20 +143,29 @@ Then open the app, click "Start Scan", and let it index your photos. Scanning 8,
 
 **v0.2 — current**
 - [x] Full decision loop (keep / leave / skip / undo / star)
-- [x] Strata, Site, Decision, Excavation, Gallery views
+- [x] Strata, Site, Decision, Excavation, Memory Gallery views
 - [x] Soft delete with 30-day buffer
-- [x] Story mode backend (cross-year same-location)
-- [x] Procedural audio + geological canvas texture
+- [x] Today's Excavation — cross-year same-day surfacing
+- [x] Procedural audio + 8-layer geological canvas texture
+- [x] Story mode backend (cross-year same-location, full-day narratives)
 
 **v0.3 — next**
-- [ ] Camera gesture: scrub with your hand in front of the webcam (MediaPipe Hands interface already in place)
-- [ ] Full 40K photo scan validation
-- [ ] GPS geocoding for location data
+- [ ] Camera gesture: scrub with your hand in front of the webcam (MediaPipe Hands — interface already in place via `scrubAt(nx, ny)`)
+- [ ] GPS geocoding for richer location data
+- [ ] Full 40K photo scan (pending camera gesture UX validation)
 
-**v1.0 — later**
-- [ ] Theme mode: "your obsessions" — photos of the same subject across years (windows, cats, rain)
-- [ ] Story mode frontend: cross-year same-location narrative
-- [ ] Daily quota: 30 photos/day, like a poem, not a chore
+**v1.0 — discovery layer**
+
+*The shift from "you judge photos" to "the system helps you understand yourself."*
+
+- [ ] **Theme Mode — your obsessions**: the system finds what you've been photographing all along — windows, rain, cats, empty streets — and presents them as a thematic reel across years. "It turns out you've taken 847 photos of windows." That discovery is the gift.
+- [ ] **Story Mode — cross-year narratives**: the same GPS location in 2020 and 2023. Every first day of each month across a year. Three cities, the same kind of light. The system composes the story; you experience it.
+- [ ] **Daily quota**: 30 photos/day, like a daily poem. Not a backlog to clear — a ritual to return to.
+
+**v2.0 — open tool**
+- [ ] Extract configurable defaults (photo root, language, preferences)
+- [ ] Package as standalone Mac app (Tauri or Electron)
+- [ ] Open source release (MIT)
 
 ---
 
