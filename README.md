@@ -106,7 +106,8 @@ Nothing is permanently deleted without your explicit confirmation. All "leave" d
 | Audio | Web Audio API — procedurally generated, zero external files |
 | Canvas | HTML Canvas `destination-out` compositing for soil reveal |
 | Fonts | Cormorant Garamond (headings) + DM Sans (body) |
-| Storage | Local SQLite only — no cloud, no account, no server |
+| Storage | Local SQLite — intentional: local-first, zero-dependency, single-user |
+| Backend complexity | RAW decoding, EXIF parsing, event clustering algorithm, file-system safety guarantees (soft delete + XMP sidecar tracking + append-only audit log), async preview pipeline, GPS clustering for story mode |
 
 ---
 
