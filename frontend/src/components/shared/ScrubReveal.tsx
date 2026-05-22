@@ -1,5 +1,6 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from '../../hooks/useTranslation'
 
 // ── Public handle (used by CameraGesture in future) ───────────────────────
 export interface ScrubRevealHandle {
@@ -88,21 +89,35 @@ function playScratch(ctx: AudioContext) {
   } catch {}
 }
 
-/** Gentle reveal chord: stacked sine harmonics */
-function playRevealChord(ctx: AudioContext) {
+/** Meditative singing bowl: soft onset, long harmonic decay, subtle shimmer */
+function playSingingBowl(ctx: AudioContext) {
   try {
     const now = ctx.currentTime
-    ;[220, 330, 440, 550].forEach((freq, i) => {
+    // Non-integer overtone ratios match real Tibetan bowl acoustics
+    const partials = [
+      { freq: 392,        maxGain: 0.072, attack: 0.28, decay: 5.8 },
+      { freq: 392 * 2.76, maxGain: 0.032, attack: 0.42, decay: 4.4 },
+      { freq: 392 * 4.95, maxGain: 0.016, attack: 0.58, decay: 3.2 },
+    ]
+    partials.forEach(({ freq, maxGain, attack, decay }) => {
       const osc  = ctx.createOscillator()
       const gain = ctx.createGain()
-      osc.type          = 'sine'
+      // Tiny LFO shimmer (~0.2% frequency depth)
+      const lfo     = ctx.createOscillator()
+      const lfoGain = ctx.createGain()
+      lfo.type            = 'sine'
+      lfo.frequency.value = 5.5 + Math.random() * 1.5
+      lfoGain.gain.value  = freq * 0.0022
+      lfo.connect(lfoGain); lfoGain.connect(osc.frequency)
+      osc.type            = 'sine'
       osc.frequency.value = freq
       gain.gain.setValueAtTime(0, now)
-      gain.gain.linearRampToValueAtTime(0.052 / (i * 0.55 + 1), now + 0.07 + i * 0.04)
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.7 + i * 0.15)
+      gain.gain.linearRampToValueAtTime(maxGain, now + attack)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + attack + decay)
       osc.connect(gain); gain.connect(ctx.destination)
-      osc.start(now + i * 0.03)
-      osc.stop(now + 2.1)
+      const end = now + attack + decay + 0.1
+      lfo.start(now); lfo.stop(end)
+      osc.start(now); osc.stop(end)
     })
   } catch {}
 }
@@ -111,6 +126,7 @@ function playRevealChord(ctx: AudioContext) {
 
 export const ScrubReveal = forwardRef<ScrubRevealHandle, ScrubRevealProps>(
   function ScrubReveal({ src, alt = '', onRevealed }, ref) {
+    const { t } = useTranslation()
 
     const canvasRef    = useRef<HTMLCanvasElement>(null)
     const imgRef       = useRef<HTMLImageElement>(null)
@@ -286,7 +302,7 @@ export const ScrubReveal = forwardRef<ScrubRevealHandle, ScrubRevealProps>(
       if (!doneRef.current && cov >= REVEAL_THRESHOLD) {
         doneRef.current = true
         const ac = getAudioCtx(audioCtxRef)
-        if (ac) playRevealChord(ac)
+        if (ac) playSingingBowl(ac)
         setPhase('reveal')
         setTimeout(() => { setPhase('done'); onRevealed() }, 520)
       }
@@ -473,7 +489,7 @@ export const ScrubReveal = forwardRef<ScrubRevealHandle, ScrubRevealProps>(
               className="absolute bottom-8 left-0 right-0 text-center pointer-events-none text-xs tracking-widest"
               style={{ color: 'rgba(222,158,68,0.44)' }}
             >
-              拨开表土，取出记忆
+              {t('excav.hint')}
             </motion.p>
           )}
         </AnimatePresence>

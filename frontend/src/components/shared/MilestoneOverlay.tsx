@@ -1,16 +1,15 @@
 import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from '../../hooks/useTranslation'
 
 interface MilestoneOverlayProps {
   message: string | null
   onDismiss: () => void
 }
 
-/**
- * Full-screen semi-transparent overlay for milestone moments.
- * Auto-dismisses after 3s, or immediately on any keypress / click.
- */
 export function MilestoneOverlay({ message, onDismiss }: MilestoneOverlayProps) {
+  const { t } = useTranslation()
+
   useEffect(() => {
     if (!message) return
     const timer = setTimeout(onDismiss, 3000)
@@ -52,7 +51,7 @@ export function MilestoneOverlay({ message, onDismiss }: MilestoneOverlayProps) 
               className="mt-4 text-xs tracking-widest"
               style={{ color: 'rgba(255,255,255,0.22)' }}
             >
-              按任意键继续
+              {t('milestone.continue')}
             </p>
           </motion.div>
         </motion.div>

@@ -1,11 +1,20 @@
 ---
-更新时间：2026-05-22 commit d0e9a07
+更新时间：2026-05-22 singing bowl + default EN
 
 前端状态：正常
 后端状态：正常
 GitHub：已公开 → github.com/rickyke2023-ctrl/unearth
 
 最近完成：
+  ✅ 颂钵音效 — 替换发掘完成音（playSingingBowl：392 Hz 基频 + 非整数泛音，5s 衰减，LFO 颤动）
+  ✅ 默认英文 — appStore language 改为 'en'，右上角显示「中」切换
+  ✅ ScrubReveal i18n 漏网修复 — 拨开表土提示文字接入 excav.hint
+  ✅ i18n 国际化 — 中英文切换（StrataView 右上角 EN/中 按钮）
+      - frontend/src/i18n/index.ts（translation map + 格式化函数）
+      - hooks/useTranslation.ts
+      - appStore language + setLanguage
+      - 9个组件全部替换（含 ScrubReveal）
+      - 诗意文案英译（first_leave 等 milestone 文案）
   ✅ ExcavationView（今日发掘）— 8层地质纹理 + Web Audio + forwardRef接口
   ✅ KeptView（带走的记忆画廊）
   ✅ Task E：GET /api/photos/kept（分页 + year过滤）
@@ -60,7 +69,7 @@ GitHub：已公开 → github.com/rickyke2023-ctrl/unearth
 需要人决策：无
 
 下一步（按优先级）：
-  1. 【新 session】i18n 国际化 — 中英文切换按钮（见下方说明）
+  1. ✅ i18n 国际化 — 已完成
   2. 摄像头手势 MVP — MediaPipe Hands → scrubAt(nx,ny)
   3. 全盘 40K 扫描 — 等手势体验验证后
   4. GPS 地理编码 — 跑完后 Story模式themes才有内容
