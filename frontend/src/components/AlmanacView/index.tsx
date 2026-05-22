@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { getCalendar, getTimeDistribution } from '../../api'
+import { getCalendar, getStrata, getTimeDistribution } from '../../api'
 import { useAppStore } from '../../stores/appStore'
 import { useTranslation } from '../../hooks/useTranslation'
 import { MONTH_NAMES } from '../../i18n'
@@ -307,32 +307,59 @@ export function AlmanacView() {
   const { t } = useTranslation()
 
   const [tab, setTab] = useState<Tab>('calendar')
-  const [year] = useState(2023)
+  const [availableYears, setAvailableYears] = useState<number[]>([])
+  const [year, setYear] = useState<number | null>(null)
 
   const [calData, setCalData] = useState<CalendarResult | null>(null)
   const [timeData, setTimeData] = useState<TimeDistribution | null>(null)
+  const [yearLoading, setYearLoading] = useState(true)
   const [calLoading, setCalLoading]   = useState(true)
   const [timeLoading, setTimeLoading] = useState(false)
   const [calError, setCalError]       = useState('')
   const [timeError, setTimeError]     = useState('')
+  const [yearError, setYearError]     = useState('')
 
-  // Calendar tab: fetch on mount
+  // Available years: fetch on mount
   useEffect(() => {
+    getStrata()
+      .then((data) => {
+        const years = data.years
+          .map((item) => item.year)
+          .filter((value, index, arr) => arr.indexOf(value) === index)
+          .sort((a, b) => b - a)
+        setAvailableYears(years)
+        setYear(years[0] ?? new Date().getFullYear())
+      })
+      .catch((e) => {
+        setYearError(e.message ?? t('almanac.error'))
+        setYear(new Date().getFullYear())
+      })
+      .finally(() => setYearLoading(false))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Calendar tab: fetch whenever selected year changes
+  useEffect(() => {
+    if (year == null) return
+    setCalLoading(true)
+    setCalError('')
+    setCalData(null)
     getCalendar(year)
       .then(setCalData)
       .catch((e) => setCalError(e.message ?? t('almanac.error')))
       .finally(() => setCalLoading(false))
   }, [year]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Time tab: fetch lazily on first switch
+  // Time tab: fetch for the selected year when shown
   useEffect(() => {
-    if (tab !== 'time' || timeData || timeLoading) return
+    if (tab !== 'time' || year == null) return
     setTimeLoading(true)
-    getTimeDistribution()
+    setTimeError('')
+    setTimeData(null)
+    getTimeDistribution(year)
       .then(setTimeData)
       .catch((e) => setTimeError(e.message ?? t('almanac.error')))
       .finally(() => setTimeLoading(false))
-  }, [tab]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tab, year]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const tabs: Array<{ key: Tab; label: string }> = [
     { key: 'calendar', label: t('almanac.tab.calendar') },
@@ -360,9 +387,35 @@ export function AlmanacView() {
               {t('almanac.title')}
             </h1>
             <span className="font-tabular text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              {year}
+              {year ?? '—'}
             </span>
           </div>
+        </div>
+
+        {/* Year tabs */}
+        <div className="flex gap-1 pb-0 mb-2">
+          {yearLoading && (
+            <span className="px-4 py-2 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+              …
+            </span>
+          )}
+          {!yearLoading && availableYears.map((item) => {
+            const active = year === item
+            return (
+              <button
+                key={item}
+                onClick={() => setYear(item)}
+                className="px-4 py-2 text-xs rounded-t transition-all font-tabular"
+                style={{
+                  background: active ? 'rgba(255,255,255,0.06)' : 'transparent',
+                  color: active ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+                  borderBottom: active ? '1px solid rgba(255,255,255,0.18)' : '1px solid transparent',
+                }}
+              >
+                {item}
+              </button>
+            )
+          })}
         </div>
 
         {/* Tabs */}
@@ -394,6 +447,7 @@ export function AlmanacView() {
 
         {tab === 'calendar' && (
           <>
+            {yearError && <ErrorMsg msg={yearError} />}
             {calLoading && <Spinner />}
             {!calLoading && calError && <ErrorMsg msg={calError} />}
             {!calLoading && !calError && calData && (

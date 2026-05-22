@@ -96,7 +96,7 @@ function TimeBar({ segments, total }: { segments: FullDayStory['time_segments'];
 // ── Full-day story panel ───────────────────────────────────────────────────
 
 function FullDayPanel({ story }: { story: FullDayStory }) {
-  const { t, lang } = useTranslation()
+  const { t } = useTranslation()
   const color = strataColorForYear(story.year)
 
   return (
