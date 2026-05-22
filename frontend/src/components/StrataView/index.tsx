@@ -310,6 +310,24 @@ export function StrataView() {
               {language === 'zh' ? 'EN' : '中'}
             </button>
 
+            {/* 故事入口 */}
+            <motion.button
+              onClick={() => setView('story')}
+              whileHover={{ scale: 1.03, opacity: 1 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.15 }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs tracking-wider"
+              style={{
+                background: 'rgba(126,184,164,0.08)',
+                border: '1px solid rgba(126,184,164,0.25)',
+                color: 'rgba(126,184,164,0.75)',
+                opacity: 0.9,
+              }}
+            >
+              <span style={{ fontSize: 14 }}>◎</span>
+              {t('story.button')}
+            </motion.button>
+
             {/* 今日发掘入口 */}
             <motion.button
               onClick={() => setView('excavation')}

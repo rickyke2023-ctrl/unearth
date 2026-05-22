@@ -1,11 +1,27 @@
 ---
-更新时间：2026-05-22 singing bowl + default EN
+更新时间：2026-05-22 StoryView + GPS script 全部完成
+
+节点1 ✅  节点2 ✅  节点3 ✅
+
+最近完成（本次 session）：
+  ✅ StoryView 前端 — 今日故事(full_day) + 地方(themes) + 地方详情(ThemeDetail)
+      - frontend/src/components/StoryView/index.tsx
+      - StrataView 加「◎ Stories」绿色入口按钮
+      - 类型: StoryPhoto, FullDayStory, Theme, ThemeDetail
+      - API: getStoryToday(), getStoryThemes(), getThemeDetail()
+      - i18n: 20条 story.* 翻译键
+      - hover overlay 显示时间 + 城市
+  ✅ GPS 批量地理编码脚本 — backend/scripts/geocode_all.py (Codex 完成)
+      - --dry-run 验证通过：1张照片待地理编码
+      - 分批处理，可中断恢复，进度输出
+  ✅ 颂钵音效 + 默认英文 + ScrubReveal i18n 漏网修复
 
 前端状态：正常
 后端状态：正常
 GitHub：已公开 → github.com/rickyke2023-ctrl/unearth
 
 最近完成：
+  ✅ GPS 批量地理编码脚本（geocode_all.py）
   ✅ 颂钵音效 — 替换发掘完成音（playSingingBowl：392 Hz 基频 + 非整数泛音，5s 衰减，LFO 颤动）
   ✅ 默认英文 — appStore language 改为 'en'，右上角显示「中」切换
   ✅ ScrubReveal i18n 漏网修复 — 拨开表土提示文字接入 excav.hint
