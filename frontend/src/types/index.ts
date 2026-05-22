@@ -139,7 +139,50 @@ export interface KeptResult {
   photos: Photo[]
 }
 
-export type AppView = 'strata' | 'site' | 'decision' | 'excavation' | 'kept' | 'story' | 'story-theme'
+export type AppView = 'strata' | 'site' | 'decision' | 'excavation' | 'kept' | 'story' | 'story-theme' | 'book' | 'almanac'
+
+// ── Book candidates ────────────────────────────────────────────────────────
+
+export interface BookCandidate {
+  id: string
+  file_path: string
+  file_name: string
+  shot_at: string | null
+  gps_city: string | null
+  gps_country: string | null
+}
+
+export interface BookCandidatesResult {
+  total: number
+  candidates: BookCandidate[]
+}
+
+// ── Calendar / Almanac ─────────────────────────────────────────────────────
+
+export interface CalendarDay {
+  date: string
+  photo_count: number
+  decided_count: number
+  kept_count: number
+}
+
+export interface CalendarResult {
+  year: number
+  days: CalendarDay[]
+}
+
+export interface TimeBucket {
+  hour: number
+  half: number
+  label: string
+  photo_count: number
+}
+
+export interface TimeDistribution {
+  buckets: TimeBucket[]
+  peak_label: string
+  peak_count: number
+}
 
 // ── Story / Theme types ────────────────────────────────────────────────────
 

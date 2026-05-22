@@ -2,6 +2,7 @@ import type {
   SystemStatus, StrataYear, GlobalStats, Event, Photo,
   Decision, StagingInfo, TrashInfo, ScanProgress, ExcavationResult, KeptResult,
   StoryToday, StoryThemes, ThemeDetail,
+  BookCandidatesResult, CalendarResult, TimeDistribution,
 } from '../types'
 
 const BASE = ''
@@ -109,8 +110,16 @@ export function purgeTrash(photo_ids?: string[]): Promise<{ purged_count: number
 
 // ── Book candidates ────────────────────────────────────────────────────────
 
-export function getBookCandidates(): Promise<{ total: number; candidates: Partial<Photo>[] }> {
+export function getBookCandidates(): Promise<BookCandidatesResult> {
   return request('/api/book-candidates')
+}
+
+export function getCalendar(year: number): Promise<CalendarResult> {
+  return request(`/api/calendar?year=${year}`)
+}
+
+export function getTimeDistribution(year?: number): Promise<TimeDistribution> {
+  return request(`/api/time-distribution${year != null ? `?year=${year}` : ''}`)
 }
 
 // ── Geocoding ──────────────────────────────────────────────────────────────
