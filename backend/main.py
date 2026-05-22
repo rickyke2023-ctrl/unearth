@@ -16,7 +16,17 @@ from .excavation import today_excavation
 from .geocoding import reverse_geocode_missing
 from .kept import kept_photos
 from .preview import accepted_preview_response, get_or_create_preview, preview_status, start_preview_generation
-from .queries import book_candidates, day_photo_count, event_photos, events_for_month, export_book_candidates, status, strata
+from .queries import (
+    book_candidates,
+    calendar_days,
+    day_photo_count,
+    event_photos,
+    events_for_month,
+    export_book_candidates,
+    status,
+    strata,
+    time_distribution,
+)
 from .scanner import progress_store, scan_root
 from .schemas import DecisionsRequest, ScanRequest, StagingConfirmRequest, StagingRestoreRequest, TrashPurgeRequest, UndoRequest
 from .staging import confirm_staging, list_staging, list_trash, purge_trash, restore_photo
@@ -80,7 +90,6 @@ async def api_scan_progress():
 
     return StreamingResponse(stream(), media_type="text/event-stream")
 
-
 @app.get("/api/strata")
 def api_strata(conn=Depends(db)):
     return strata(conn)
@@ -99,6 +108,16 @@ def api_event_photos(event_id: str, conn=Depends(db)):
 @app.get("/api/photos/day-count")
 def api_day_photo_count(date: str, conn=Depends(db)):
     return day_photo_count(conn, date)
+
+
+@app.get("/api/calendar")
+def api_calendar(year: int, conn=Depends(db)):
+    return calendar_days(conn, year)
+
+
+@app.get("/api/time-distribution")
+def api_time_distribution(year: int | None = None, conn=Depends(db)):
+    return time_distribution(conn, year)
 
 
 @app.get("/api/photos/kept")

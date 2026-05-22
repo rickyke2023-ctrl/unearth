@@ -143,6 +143,70 @@ def day_photo_count(conn, date: str) -> dict[str, Any]:
     return {"date": date, "count": row["count"] or 0}
 
 
+def calendar_days(conn, year: int) -> dict[str, Any]:
+    days = fetch_all(
+        conn,
+        """
+        SELECT
+          date(shot_at) AS date,
+          COUNT(*) AS photo_count,
+          COUNT(CASE WHEN decision IS NOT NULL AND decision != 'skip' THEN 1 END) AS decided_count,
+          COUNT(CASE WHEN decision = 'keep' THEN 1 END) AS kept_count
+        FROM photos
+        WHERE year = ?
+          AND shot_at IS NOT NULL
+          AND status NOT IN ('staged', 'deleted')
+        GROUP BY date(shot_at)
+        ORDER BY date ASC
+        """,
+        (year,),
+    )
+    return {"year": year, "days": days}
+
+
+def time_distribution(conn, year: int | None = None) -> dict[str, Any]:
+    params: tuple[Any, ...]
+    year_filter = ""
+    if year is None:
+        params = ()
+    else:
+        params = (year,)
+        year_filter = "AND year = ?"
+
+    rows = fetch_all(
+        conn,
+        f"""
+        SELECT
+          CAST(strftime('%H', shot_at) AS INTEGER) AS hour,
+          CASE WHEN CAST(strftime('%M', shot_at) AS INTEGER) >= 30 THEN 1 ELSE 0 END AS half,
+          COUNT(*) AS photo_count
+        FROM photos
+        WHERE shot_at IS NOT NULL
+          AND status NOT IN ('staged', 'deleted')
+          {year_filter}
+        GROUP BY hour, half
+        ORDER BY hour ASC, half ASC
+        """,
+        params,
+    )
+    counts = {(row["hour"], row["half"]): row["photo_count"] for row in rows}
+    buckets = []
+    for hour in range(24):
+        for half in range(2):
+            label = f"{hour:02d}:{half * 30:02d}"
+            buckets.append(
+                {
+                    "hour": hour,
+                    "half": half,
+                    "label": label,
+                    "photo_count": counts.get((hour, half), 0),
+                }
+            )
+
+    peak = max(buckets, key=lambda bucket: bucket["photo_count"])
+    return {"buckets": buckets, "peak_label": peak["label"], "peak_count": peak["photo_count"]}
+
+
 def book_candidates(conn) -> dict[str, Any]:
     rows = fetch_all(
         conn,

@@ -1,9 +1,14 @@
 ---
-更新时间：2026-05-22 StoryView + GPS script 全部完成
+更新时间：2026-05-22 Scan CLI + Calendar/Time APIs 完成
 
 节点1 ✅  节点2 ✅  节点3 ✅
 
 最近完成（本次 session）：
+  ✅ Scan CLI + Calendar/Time APIs（Codex 完成）
+      - backend/scripts/scan_cli.py：独立扫描入口，支持 --dry-run，不启动 FastAPI
+      - GET /api/calendar?year=XXXX：按日返回 photo/decided/kept 计数
+      - GET /api/time-distribution：48 个半小时桶 + peak label/count
+      - 验证：py_compile、scan_cli --dry-run、FastAPI TestClient 通过
   ✅ StoryView 前端 — 今日故事(full_day) + 地方(themes) + 地方详情(ThemeDetail)
       - frontend/src/components/StoryView/index.tsx
       - StrataView 加「◎ Stories」绿色入口按钮
