@@ -139,7 +139,40 @@ export interface KeptResult {
   photos: Photo[]
 }
 
-export type AppView = 'strata' | 'site' | 'decision' | 'excavation' | 'kept' | 'story' | 'story-theme' | 'book' | 'almanac'
+export type AppView = 'gateway' | 'strata' | 'site' | 'decision' | 'excavation' | 'kept' | 'story' | 'story-theme' | 'book' | 'almanac' | 'library' | 'dune'
+
+// ── Novel / Library types ──────────────────────────────────────────────────
+
+export interface DuneFragment {
+  id: string
+  file_name: string
+  file_type: string
+  file_size_bytes: number
+  shot_at: string | null
+  year: number
+  month: number
+  gps_lat: number | null
+  gps_lng: number | null
+  gps_city: string | null
+  gps_country: string | null
+  camera_model: string | null
+  preview_path: string | null
+  decision: string | null
+  fragment_number: number
+  fragment_id: string
+  mystery_score: number
+  condition: string
+  era: string
+  instrument: string
+  territory: string
+}
+
+export interface DuneResult {
+  mode: 'dune'
+  total_unknown: number
+  total_active: number
+  fragments: DuneFragment[]
+}
 
 // ── Book candidates ────────────────────────────────────────────────────────
 

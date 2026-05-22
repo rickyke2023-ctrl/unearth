@@ -31,6 +31,7 @@ from .scanner import progress_store, scan_root
 from .schemas import DecisionsRequest, ScanRequest, StagingConfirmRequest, StagingRestoreRequest, TrashPurgeRequest, UndoRequest
 from .staging import confirm_staging, list_staging, list_trash, purge_trash, restore_photo
 from .story import theme_story, themes, today_story
+from .novel import dune_fragments
 
 
 @asynccontextmanager
@@ -264,6 +265,15 @@ def api_book_candidates(conn=Depends(db)):
 @app.get("/api/book-candidates/export")
 def api_export_book_candidates(format: str, conn=Depends(db)):
     return export_book_candidates(conn, format)
+
+
+@app.get("/api/novel/dune")
+def api_novel_dune(
+    limit: int = Query(default=24, ge=1, le=60),
+    seed: int | None = None,
+    conn=Depends(db),
+):
+    return dune_fragments(conn, limit=limit, seed=seed)
 
 
 @app.post("/api/summary/generate")

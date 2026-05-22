@@ -68,7 +68,7 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
-  view: 'strata',
+  view: 'gateway',
   systemStatus: null,
   globalStats: null,
   selectedYear: null,
