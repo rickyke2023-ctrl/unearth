@@ -1,4 +1,27 @@
 ---
+更新时间：2026-05-22 Almanac 年份选择器 + 预览生成脚本
+
+最近完成（Codex）：
+  ✅ AlmanacView 年份选择器
+      - frontend/src/components/AlmanacView/index.tsx
+      - mount 时调用 getStrata()，从 years[] 提取可用年份并降序排列
+      - 顶部新增年份 tab，默认选最新年份
+      - 切换年份时重新请求 GET /api/calendar?year=X
+      - Time tab 按当前年份请求 GET /api/time-distribution?year=X
+      - 年份 tab 使用 StoryView 风格的 border-bottom active 样式
+  ✅ 预览图生成 CLI
+      - backend/scripts/generate_previews.py
+      - 支持 python3 -m backend.scripts.generate_previews
+      - 支持 --limit N 和 --batch-size
+      - 每 100 张输出进度，完成后打印 summary
+      - 当前数据库无 preview_ready 列，脚本按 preview_path 为空等价判断待生成
+  ✅ 验证
+      - .venv/bin/python -m pytest tests backend/test_*.py → 8 passed
+      - frontend npm run build → passed
+      - generate_previews --limit 1 → processed 1, errors 0
+
+---
+
 更新时间：2026-05-22 BookView + AlmanacView 完成
 
 节点1 ✅  节点2 ✅  节点3 ✅  节点4 ✅

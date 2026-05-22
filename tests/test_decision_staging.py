@@ -211,7 +211,7 @@ def test_staging_defaults_to_current_root_for_list_and_confirm(tmp_path: Path):
 
     staging = list_staging(conn)
     assert staging["total_count"] == 1
-    assert staging["files"][0]["file_name"] == "B001.JPG"
+    assert staging["photos"][0]["filename"] == "B001.JPG"
 
     result = confirm_staging(conn, True)
 
@@ -221,12 +221,12 @@ def test_staging_defaults_to_current_root_for_list_and_confirm(tmp_path: Path):
         SELECT p.file_name
         FROM staging_files sf
         JOIN photos p ON p.id = sf.photo_id
-        WHERE sf.restored_at IS NULL AND sf.confirmed_deleted_at IS NULL
+        WHERE sf.restored_at IS NULL AND sf.confirmed_deleted_at IS NULL AND sf.trashed_at IS NULL
         """
     ).fetchall()
     assert [row["file_name"] for row in active] == ["A001.JPG"]
     assert (root_a / "_unearth_staging" / "2023" / "05" / "A001.JPG").exists()
-    assert not (root_b / "_unearth_staging" / "2023" / "05" / "B001.JPG").exists()
+    assert (root_b / "_unearth_staging" / "2023" / "05" / "B001.JPG").exists()
 
 
 def test_event_photos_includes_api_contract_fields(tmp_path: Path):
