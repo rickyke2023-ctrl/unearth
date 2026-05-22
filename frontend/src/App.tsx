@@ -7,6 +7,7 @@ import { SiteView } from './components/SiteView'
 import { DecisionView } from './components/DecisionView'
 import { ExcavationView } from './components/ExcavationView'
 import { KeptView } from './components/KeptView'
+import { StoryView } from './components/StoryView'
 import { StagingConfirmDialog } from './components/shared/StagingConfirmDialog'
 import { ScanSetup, ScanProgressView } from './components/shared/ScanProgress'
 
@@ -42,6 +43,11 @@ function AppContent() {
       {view === 'kept' && (
         <motion.div key="kept" className="h-full" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
           <KeptView />
+        </motion.div>
+      )}
+      {(view === 'story' || view === 'story-theme') && (
+        <motion.div key="story" className="h-full" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+          <StoryView />
         </motion.div>
       )}
     </AnimatePresence>

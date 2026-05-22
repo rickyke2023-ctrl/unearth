@@ -1,107 +1,72 @@
-# Task E — 「带走的记忆」后端接口
+# Codex Task: GPS Batch Geocoding Script
 
-## 背景
+## Context
+Project: 显影 Unearth — personal photo organizer
+Backend: Python + FastAPI + SQLite at `backend/`
+The app has a `backend/geocoding.py` module with `reverse_geocode_missing(conn, limit)` using Nominatim (OpenStreetMap).
+There are 8105+ photos in the database. Most have GPS lat/lng from EXIF but no `gps_city` yet.
+The existing `/api/geocode/trigger` endpoint only processes up to 200 at a time and runs in the background.
 
-用户在「今日发掘」和「批量决策」中把照片标记为 keep，但目前没有任何接口可以查询所有已保留照片。
-需要一个专用接口供前端渲染「带走的记忆」画廊视图。
+## Task
+Create `backend/scripts/geocode_all.py` — a standalone CLI script that batch-geocodes ALL photos with GPS coordinates.
 
----
+## Files to create
+- `backend/scripts/__init__.py` (empty)
+- `backend/scripts/geocode_all.py`
 
-## 任务
+## Requirements
 
-**修改文件**：`backend/main.py`（注册路由）
-**新建文件**：`backend/kept.py`（查询逻辑）
-**新建文件**：`backend/test_kept_api.py`（验收脚本）
+### Core logic
+Loop: call `reverse_geocode_missing(conn, limit=50)` until it returns an empty list.
+Each call processes up to 50 photos, sleeping 1s between each (already handled inside `reverse_geocode_missing`).
+Stop when the function returns `[]` (no more photos need geocoding).
 
----
+### CLI flags
+- `--dry-run`: Only print how many photos need geocoding. Do NOT call Nominatim. Exit.
+- `--batch-size N` (default 50, max 50 — Nominatim rate limit): batch size per call.
 
-### 接口：`GET /api/photos/kept`
-
-**查询参数**：
-- `limit` (int, default=50, max=200)
-- `offset` (int, default=0)
-- `year` (int, optional)：按年份过滤
-
-**查询逻辑**：
-```sql
--- 总数（不受 limit/offset 影响）
-SELECT COUNT(*) FROM photos
-WHERE decision = 'keep' AND status = 'active'
-
--- 分布（不受 year 过滤影响，始终全量）
-SELECT year, COUNT(*) FROM photos
-WHERE decision = 'keep' AND status = 'active'
-GROUP BY year ORDER BY year DESC
-
--- 分页数据
-SELECT <photo_columns> FROM photos
-WHERE decision = 'keep' AND status = 'active'
-  AND (:year IS NULL OR year = :year)
-ORDER BY shot_at DESC
-LIMIT :limit OFFSET :offset
+### Progress output (during run)
+```
+[batch 1] processed 50, errors: 0, total geocoded so far: 50
+[batch 2] processed 50, errors: 2, total geocoded so far: 98
+...
+Done. Total processed: 842, now with city: 838, errors: 4
 ```
 
-**响应结构**：
-```json
-{
-  "total_count": 42,
-  "by_year": { "2023": 30, "2022": 12 },
-  "photos": [
-    {
-      "id": "uuid",
-      "file_path": "/Volumes/...",
-      "file_name": "DSC00462.JPG",
-      "file_type": "JPEG",
-      "file_size_bytes": 8234567,
-      "shot_at": "2023-05-21T14:30:00",
-      "year": 2023,
-      "month": 5,
-      "gps_city": null,
-      "gps_country": null,
-      "camera_model": "ILCE-7M4",
-      "decision": "keep",
-      "is_book_candidate": false,
-      "preview_ready": true,
-      "event_id": "uuid",
-      "has_xmp_sidecar": false,
-      "paired_photo_id": null
-    }
-  ]
-}
+### Resumable
+If interrupted, just re-run. Already-geocoded photos are skipped automatically inside `reverse_geocode_missing`.
+
+### How to connect to DB
+Look at `backend/database.py` and `backend/config.py` to see how other modules get the DB path and open a connection. Mirror that pattern exactly. Do NOT use `Depends(db)` (that's FastAPI-only).
+
+### How to run
+```bash
+# from project root:
+python -m backend.scripts.geocode_all
+python -m backend.scripts.geocode_all --dry-run
 ```
 
-字段说明：
-- `total_count`：满足 year 过滤的总数
-- `by_year`：所有 kept 照片按年份的数量分布（不受 year 参数影响）
-- `preview_ready`：`preview_path IS NOT NULL AND preview_path != ''` 时为 true
+## What NOT to change
+- Do not modify `geocoding.py`, `main.py`, or any existing files.
+- Only add the two new files listed above.
 
-**约束**：
-- 只返回 `status = 'active'` 的照片
-- `decision = 'keep'`
-- 如果没有 kept 照片，返回 `{"total_count": 0, "by_year": {}, "photos": []}` 不报错
+## Verification
+After writing the files, run:
+```bash
+cd /Users/ricky/Downloads/照片整理工作流
+python -m backend.scripts.geocode_all --dry-run
+```
+It should print how many photos need geocoding without errors.
 
----
-
-## 验收脚本 `backend/test_kept_api.py`
-
-用 `requests`，假设后端在 `localhost:8000`：
-1. `GET /api/photos/kept` — 打印 total_count、by_year、前两张照片的 file_name 和 year
-2. `GET /api/photos/kept?limit=3` — 确认返回不超过 3 张
-3. `GET /api/photos/kept?year=2023` — 按年过滤，打印结果数量
-
----
-
-## 完成后必须执行
-
-1. 运行 `cd /Users/ricky/Downloads/照片整理工作流 && python3 backend/test_kept_api.py`
-2. git 提交所有改动，commit message：
+## After completing
+1. Run the dry-run verification above and confirm it works.
+2. git add + commit with message:
    ```
-   Task E: 带走的记忆 API — GET /api/photos/kept
+   feat: GPS batch geocoding script — backend/scripts/geocode_all.py
 
-   - 支持 limit/offset 分页、year 过滤
-   - 返回 total_count + by_year 分布供前端 tab 使用
-   - 完整 Photo 字段与其他接口一致
+   - Processes all GPS photos with missing city in batches of 50
+   - Nominatim reverse geocoding (1 req/s, Nominatim ToS compliant)
+   - --dry-run flag for safe preview
+   - Resumable: re-run safely if interrupted
    ```
-3. 更新 `/Users/ricky/Downloads/照片整理工作流/AGENT_LOG/STATUS.md`：
-   - 「最近完成」改为「Task E — 带走的记忆 API（commit xxxxx）」
-   - 「下一步建议」第一条改为「前端接入 /api/photos/kept，实现 KeptView 画廊」
+3. Update `AGENT_LOG/STATUS.md`: add to 最近完成: "✅ GPS 批量地理编码脚本（geocode_all.py）"

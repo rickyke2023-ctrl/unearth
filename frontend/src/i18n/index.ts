@@ -86,6 +86,30 @@ const translations: Record<string, { zh: string; en: string }> = {
   'kept.empty.back':          { zh: '← 回到地层',             en: '← Back to Strata' },
   'kept.error':               { zh: '加载失败',               en: 'Failed to load' },
 
+  // ── StoryView ────────────────────────────────────────────────────────────
+  'story.title':                   { zh: '故事',                    en: 'Stories' },
+  'story.tab.today':               { zh: '今日故事',                en: "Today's Story" },
+  'story.tab.places':              { zh: '地方',                   en: 'Places' },
+  'story.today.label':             { zh: '这一天',                  en: 'This Day' },
+  'story.today.empty.title':       { zh: '今天这一天，还没有照片',     en: 'No photos found for this day' },
+  'story.today.empty.hint':        { zh: '继续挖掘，随着时间积累，今天的故事会显现。',
+                                     en: 'Keep excavating. Stories surface over time.' },
+  'story.time.morning':            { zh: '晨',                     en: 'morning' },
+  'story.time.afternoon':          { zh: '午',                     en: 'afternoon' },
+  'story.time.evening':            { zh: '暮',                     en: 'evening' },
+  'story.time.night':              { zh: '夜',                     en: 'night' },
+  'story.showing':                 { zh: '显示',                   en: 'Showing' },
+  'story.places.label':            { zh: '地方',                   en: 'Places' },
+  'story.places.gps_count':        { zh: '张照片有位置',             en: 'photos with location' },
+  'story.places.no_gps':           { zh: '张暂无',                  en: 'without location' },
+  'story.places.photo_count_unit': { zh: '张',                     en: 'photos' },
+  'story.places.empty.title':      { zh: '还没有地方',              en: 'No places yet' },
+  'story.places.empty.hint':       { zh: '地方故事需要 GPS 数据。运行 GPS 地理编码后，你去过的地方会在这里显现。',
+                                     en: 'Place stories need GPS data. Run geocoding and the places you\'ve been will appear here.' },
+  'story.error':                   { zh: '加载失败',                en: 'Failed to load' },
+  // entry button on StrataView
+  'story.button':                  { zh: '故事',                   en: 'Stories' },
+
   // ── MilestoneOverlay ────────────────────────────────────────────────────
   'milestone.continue':       { zh: '按任意键继续',            en: 'Press any key to continue' },
 

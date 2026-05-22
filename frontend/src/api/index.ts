@@ -1,6 +1,7 @@
 import type {
   SystemStatus, StrataYear, GlobalStats, Event, Photo,
   Decision, StagingInfo, TrashInfo, ScanProgress, ExcavationResult, KeptResult,
+  StoryToday, StoryThemes, ThemeDetail,
 } from '../types'
 
 const BASE = ''
@@ -161,6 +162,29 @@ export function getKeptPhotos(params?: {
   if (params?.year   != null) q.set('year',   String(params.year))
   const qs = q.toString()
   return request(`/api/photos/kept${qs ? `?${qs}` : ''}`)
+}
+
+// ── Story ──────────────────────────────────────────────────────────────────
+
+export function getStoryToday(params?: { month?: number; day?: number; limit?: number }): Promise<StoryToday> {
+  const q = new URLSearchParams()
+  if (params?.month != null) q.set('month', String(params.month))
+  if (params?.day   != null) q.set('day',   String(params.day))
+  if (params?.limit != null) q.set('limit', String(params.limit))
+  const qs = q.toString()
+  return request(`/api/story/today${qs ? `?${qs}` : ''}`)
+}
+
+export function getStoryThemes(params?: { min_photos?: number; limit?: number }): Promise<StoryThemes> {
+  const q = new URLSearchParams()
+  if (params?.min_photos != null) q.set('min_photos', String(params.min_photos))
+  if (params?.limit      != null) q.set('limit',      String(params.limit))
+  const qs = q.toString()
+  return request(`/api/themes${qs ? `?${qs}` : ''}`)
+}
+
+export function getThemeDetail(theme_id: string, limit = 200): Promise<ThemeDetail> {
+  return request(`/api/story/theme/${encodeURIComponent(theme_id)}?limit=${limit}`)
 }
 
 // ── Preview ────────────────────────────────────────────────────────────────

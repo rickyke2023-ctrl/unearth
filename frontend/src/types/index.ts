@@ -139,4 +139,71 @@ export interface KeptResult {
   photos: Photo[]
 }
 
-export type AppView = 'strata' | 'site' | 'decision' | 'excavation' | 'kept'
+export type AppView = 'strata' | 'site' | 'decision' | 'excavation' | 'kept' | 'story' | 'story-theme'
+
+// ── Story / Theme types ────────────────────────────────────────────────────
+
+export interface StoryPhoto {
+  photo_id: string
+  shot_at: string | null
+  year: number
+  filename: string
+  thumbnail_available: boolean
+  gps_city?: string | null
+}
+
+export interface TimeSegments {
+  morning: number
+  afternoon: number
+  evening: number
+  night: number
+}
+
+export interface FullDayStory {
+  type: 'full_day'
+  title: string
+  subtitle: string
+  year: number
+  photos: StoryPhoto[]
+  time_segments: TimeSegments
+  total_count: number
+}
+
+export interface CrossYearStory {
+  type: 'cross_year'
+  title: string
+  subtitle: string
+  years: number[]
+  photos: StoryPhoto[]
+  total_count: number
+}
+
+export interface StoryToday {
+  date_label: string
+  cross_year: CrossYearStory | null
+  full_day: FullDayStory | null
+}
+
+export interface Theme {
+  theme_id: string
+  label: string
+  type: 'city' | 'grid'
+  photo_count: number
+  year_range: [number, number]
+  cover_photo_id: string | null
+  sample_photo_ids: string[]
+}
+
+export interface StoryThemes {
+  themes: Theme[]
+  total_themes: number
+  photos_with_gps: number
+  photos_without_gps: number
+}
+
+export interface ThemeDetail {
+  theme_id: string
+  label: string
+  photos_by_year: Record<string, StoryPhoto[]>
+  total_count: number
+}
