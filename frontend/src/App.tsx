@@ -2,6 +2,9 @@ import { useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { getStatus } from './api'
 import { useAppStore } from './stores/appStore'
+import { GatewayView } from './components/GatewayView'
+import { LibraryView } from './components/LibraryView'
+import { DuneView } from './components/DuneView'
 import { StrataView } from './components/StrataView'
 import { SiteView } from './components/SiteView'
 import { DecisionView } from './components/DecisionView'
@@ -22,6 +25,28 @@ function AppContent() {
 
   return (
     <AnimatePresence mode="wait">
+      {/* ── 微光之门 ─────────────────────────────────────── */}
+      {view === 'gateway' && (
+        <motion.div key="gateway" className="h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
+          <GatewayView />
+        </motion.div>
+      )}
+
+      {/* ── 书库 ─────────────────────────────────────────── */}
+      {view === 'library' && (
+        <motion.div key="library" className="h-full" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.35 }}>
+          <LibraryView />
+        </motion.div>
+      )}
+
+      {/* ── 沙丘 / Unknown Archives ───────────────────────── */}
+      {view === 'dune' && (
+        <motion.div key="dune" className="h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
+          <DuneView />
+        </motion.div>
+      )}
+
+      {/* ── 整理世界 ──────────────────────────────────────── */}
       {view === 'strata' && (
         <motion.div key="strata" className="h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
           <StrataView />
@@ -67,7 +92,7 @@ function AppContent() {
 }
 
 export default function App() {
-  const { setSystemStatus, setScanState } = useAppStore()
+  const { setSystemStatus, setScanState, setView } = useAppStore()
 
   useEffect(() => {
     getStatus()
@@ -75,10 +100,12 @@ export default function App() {
         setSystemStatus(status)
         if (status.status === 'scanning') {
           setScanState(true)
+        } else if (status.scan_completed) {
+          // Always open at the gateway once data is present
+          setView('gateway')
         }
       })
       .catch(() => {
-        // Backend not running — show scan setup with a synthetic "no db" status
         setSystemStatus({
           status: 'no_db',
           db_exists: false,
@@ -87,7 +114,7 @@ export default function App() {
           scan_completed: false,
         })
       })
-  }, [setSystemStatus, setScanState])
+  }, [setSystemStatus, setScanState, setView])
 
   return (
     <div className="h-full" style={{ background: 'var(--color-void)' }}>

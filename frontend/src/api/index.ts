@@ -3,6 +3,7 @@ import type {
   Decision, StagingInfo, TrashInfo, ScanProgress, ExcavationResult, KeptResult,
   StoryToday, StoryThemes, ThemeDetail,
   BookCandidatesResult, CalendarResult, TimeDistribution,
+  DuneResult,
 } from '../types'
 
 const BASE = ''
@@ -112,6 +113,16 @@ export function purgeTrash(photo_ids?: string[]): Promise<{ purged_count: number
 
 export function getBookCandidates(): Promise<BookCandidatesResult> {
   return request('/api/book-candidates')
+}
+
+// ── Novel modes ────────────────────────────────────────────────────────────
+
+export function getDuneFragments(params?: { limit?: number; seed?: number }): Promise<DuneResult> {
+  const q = new URLSearchParams()
+  if (params?.limit != null) q.set('limit', String(params.limit))
+  if (params?.seed  != null) q.set('seed',  String(params.seed))
+  const qs = q.toString()
+  return request(`/api/novel/dune${qs ? `?${qs}` : ''}`)
 }
 
 export function getCalendar(year: number): Promise<CalendarResult> {
