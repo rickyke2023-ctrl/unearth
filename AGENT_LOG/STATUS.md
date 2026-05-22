@@ -1,9 +1,21 @@
 ---
-更新时间：2026-05-22 Scan CLI + Calendar/Time APIs 完成
+更新时间：2026-05-22 BookView + AlmanacView 完成
 
-节点1 ✅  节点2 ✅  节点3 ✅
+节点1 ✅  节点2 ✅  节点3 ✅  节点4 ✅
 
 最近完成（本次 session）：
+  ✅ BookView（精选册候选画廊）
+      - frontend/src/components/BookView/index.tsx
+      - StrataView 加「★ 精选册」金色入口按钮
+      - 展示所有 is_book_candidate 照片，支持 JSON/CSV 导出链接
+      - i18n: book.* 翻译键（中英双语）
+  ✅ AlmanacView（年历 + 时段分布）
+      - frontend/src/components/AlmanacView/index.tsx
+      - StrataView 加「◈ 年历」蓝色入口按钮
+      - Tab 1「拍摄日历」：全年热力图，hover 显示日期/决策/带走计数
+      - Tab 2「时段分布」：48 个半小时柱状图，高亮峰值时段
+      - 数据：GET /api/calendar?year=2023 + GET /api/time-distribution
+      - i18n: almanac.* 翻译键（中英双语）
   ✅ Scan CLI + Calendar/Time APIs（Codex 完成）
       - backend/scripts/scan_cli.py：独立扫描入口，支持 --dry-run，不启动 FastAPI
       - GET /api/calendar?year=XXXX：按日返回 photo/decided/kept 计数

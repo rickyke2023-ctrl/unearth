@@ -310,6 +310,42 @@ export function StrataView() {
               {language === 'zh' ? 'EN' : '中'}
             </button>
 
+            {/* 精选册入口 */}
+            <motion.button
+              onClick={() => setView('book')}
+              whileHover={{ scale: 1.03, opacity: 1 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.15 }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs tracking-wider"
+              style={{
+                background: 'rgba(240,192,96,0.08)',
+                border: '1px solid rgba(240,192,96,0.25)',
+                color: 'rgba(240,192,96,0.75)',
+                opacity: 0.9,
+              }}
+            >
+              <span style={{ fontSize: 14 }}>★</span>
+              {t('book.button')}
+            </motion.button>
+
+            {/* 年历入口 */}
+            <motion.button
+              onClick={() => setView('almanac')}
+              whileHover={{ scale: 1.03, opacity: 1 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.15 }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs tracking-wider"
+              style={{
+                background: 'rgba(160,200,220,0.08)',
+                border: '1px solid rgba(160,200,220,0.25)',
+                color: 'rgba(160,200,220,0.75)',
+                opacity: 0.9,
+              }}
+            >
+              <span style={{ fontSize: 14 }}>◈</span>
+              {t('almanac.button')}
+            </motion.button>
+
             {/* 故事入口 */}
             <motion.button
               onClick={() => setView('story')}

@@ -8,6 +8,8 @@ import { DecisionView } from './components/DecisionView'
 import { ExcavationView } from './components/ExcavationView'
 import { KeptView } from './components/KeptView'
 import { StoryView } from './components/StoryView'
+import { BookView } from './components/BookView'
+import { AlmanacView } from './components/AlmanacView'
 import { StagingConfirmDialog } from './components/shared/StagingConfirmDialog'
 import { ScanSetup, ScanProgressView } from './components/shared/ScanProgress'
 
@@ -48,6 +50,16 @@ function AppContent() {
       {(view === 'story' || view === 'story-theme') && (
         <motion.div key="story" className="h-full" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
           <StoryView />
+        </motion.div>
+      )}
+      {view === 'book' && (
+        <motion.div key="book" className="h-full" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+          <BookView />
+        </motion.div>
+      )}
+      {view === 'almanac' && (
+        <motion.div key="almanac" className="h-full" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+          <AlmanacView />
         </motion.div>
       )}
     </AnimatePresence>

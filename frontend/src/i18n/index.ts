@@ -110,6 +110,31 @@ const translations: Record<string, { zh: string; en: string }> = {
   // entry button on StrataView
   'story.button':                  { zh: '故事',                   en: 'Stories' },
 
+  // ── BookView ─────────────────────────────────────────────────────────────
+  'book.title':               { zh: '精选册候选',              en: 'Book Picks' },
+  'book.nav.strata':          { zh: '← 地层',                 en: '← Strata' },
+  'book.stats.unit':          { zh: '张精选',                  en: 'picks' },
+  'book.empty.title':         { zh: '还没有精选',              en: 'No picks yet' },
+  'book.empty.hint':          { zh: '决策时点击「★ 精选」，精选照片会出现在这里',
+                                en: 'Mark photos as "★ Pick" during review — they\'ll appear here' },
+  'book.empty.back':          { zh: '← 回到地层',              en: '← Back to Strata' },
+  'book.export.btn':          { zh: '导出清单',                en: 'Export list' },
+  'book.button':              { zh: '精选册',                  en: 'Book Picks' },
+
+  // ── AlmanacView ───────────────────────────────────────────────────────────
+  'almanac.title':            { zh: '年历',                   en: 'Almanac' },
+  'almanac.button':           { zh: '年历',                   en: 'Almanac' },
+  'almanac.nav.strata':       { zh: '← 地层',                 en: '← Strata' },
+  'almanac.tab.calendar':     { zh: '拍摄日历',                en: 'Photo Calendar' },
+  'almanac.tab.time':         { zh: '时段分布',                en: 'Time of Day' },
+  'almanac.cal.tooltip.photos':  { zh: '张', en: 'photos' },
+  'almanac.cal.tooltip.decided': { zh: '已决', en: 'decided' },
+  'almanac.cal.tooltip.kept':    { zh: '带走', en: 'kept' },
+  'almanac.cal.no_photos':    { zh: '无拍摄',                  en: 'No photos' },
+  'almanac.time.peak':        { zh: '最多',                   en: 'Peak' },
+  'almanac.time.total':       { zh: '共',                     en: 'Total' },
+  'almanac.error':            { zh: '加载失败',                en: 'Failed to load' },
+
   // ── MilestoneOverlay ────────────────────────────────────────────────────
   'milestone.continue':       { zh: '按任意键继续',            en: 'Press any key to continue' },
 
