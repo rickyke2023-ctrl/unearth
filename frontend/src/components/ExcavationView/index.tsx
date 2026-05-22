@@ -5,6 +5,7 @@ import { useAppStore } from '../../stores/appStore'
 import { useTranslation } from '../../hooks/useTranslation'
 import { ScrubReveal } from '../shared/ScrubReveal'
 import type { ScrubRevealHandle } from '../shared/ScrubReveal'
+import { CameraGestureController } from '../shared/CameraGestureController'
 import { strataColorForYear } from '../../utils'
 import { formatDateShort } from '../../i18n'
 import type { Photo } from '../../types'
@@ -157,8 +158,11 @@ export function ExcavationView() {
   const [left, setLeft] = useState(0)
   const [done, setDone] = useState(false)
 
-  // Ref for CameraGesture integration (future)
   const scrubRef = useRef<ScrubRevealHandle>(null)
+
+  const handleGesture = useCallback((nx: number, ny: number) => {
+    scrubRef.current?.scrubAt(nx, ny)
+  }, [])
 
   useEffect(() => {
     getExcavationToday(20)
@@ -319,6 +323,9 @@ export function ExcavationView() {
           </div>
         </div>
       )}
+
+      {/* Camera gesture overlay — ✋ button fixed to bottom-right */}
+      <CameraGestureController onGesture={handleGesture} />
 
       {/* Main area */}
       <div className="relative z-10 flex-1" style={{ minHeight: 0 }}>
