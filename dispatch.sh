@@ -11,7 +11,11 @@ set -e
 
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 DISPATCH_FILE="$PROJECT_ROOT/CODEX_DISPATCH.md"
-CODEX_BIN="npx @openai/codex"
+CODEX_BIN="${CODEX_BIN:-/opt/homebrew/bin/codex}"
+
+if [ ! -x "$CODEX_BIN" ]; then
+  CODEX_BIN="$(command -v codex || true)"
+fi
 
 echo "════════════════════════════════════════"
 echo "  显影 Unearth · Codex Dispatcher"
@@ -39,7 +43,11 @@ fi
 echo ""
 echo "🚀  启动 Codex..."
 cd "$PROJECT_ROOT"
-$CODEX_BIN exec < "$DISPATCH_FILE"
+if [ -z "$CODEX_BIN" ] || [ ! -x "$CODEX_BIN" ]; then
+  echo "❌  找不到 Codex CLI。请确认 codex 已安装，或设置 CODEX_BIN=/path/to/codex。"
+  exit 1
+fi
+"$CODEX_BIN" exec < "$DISPATCH_FILE"
 
 echo ""
 echo "✅  Codex 任务完成。"

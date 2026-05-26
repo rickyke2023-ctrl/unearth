@@ -111,6 +111,23 @@ def init_db(conn: sqlite3.Connection) -> None:
             confirmed_deleted_at TEXT
         );
 
+        CREATE TABLE IF NOT EXISTS photo_tags (
+            id TEXT PRIMARY KEY,
+            photo_id TEXT NOT NULL,
+            model TEXT NOT NULL,
+            has_people INTEGER,
+            setting TEXT,
+            time_of_day TEXT,
+            mood TEXT,
+            main_subject TEXT,
+            dominant_colors TEXT,
+            composition TEXT,
+            narrative_hint TEXT,
+            inference_time_ms INTEGER,
+            raw_response TEXT,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
         CREATE INDEX IF NOT EXISTS idx_photos_year_month ON photos(year, month);
         CREATE INDEX IF NOT EXISTS idx_photos_event ON photos(event_id);
         CREATE INDEX IF NOT EXISTS idx_photos_event_id ON photos(event_id);
