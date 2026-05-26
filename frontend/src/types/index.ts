@@ -139,7 +139,37 @@ export interface KeptResult {
   photos: Photo[]
 }
 
-export type AppView = 'gateway' | 'strata' | 'site' | 'decision' | 'excavation' | 'kept' | 'story' | 'story-theme' | 'book' | 'almanac' | 'library' | 'dune'
+export type AppView = 'gateway' | 'strata' | 'site' | 'decision' | 'excavation' | 'kept' | 'story' | 'story-theme' | 'book' | 'almanac' | 'library' | 'dune' | 'khazar'
+
+// ── Khazar Dictionary types ────────────────────────────────────────────────
+
+export type KhazarEntryType = 'time' | 'camera' | 'medium' | 'season'
+
+export interface KhazarEntry {
+  entry_id: string
+  title: string
+  type: KhazarEntryType
+  photo_count: number
+  cover_photo_id: string | null
+}
+
+export interface KhazarCrossRef {
+  entry_id: string
+  title: string
+  type: KhazarEntryType
+  overlap_count: number
+}
+
+export interface KhazarEntriesResult {
+  entries: KhazarEntry[]
+  total_count: number
+}
+
+export interface KhazarEntryDetail {
+  entry: KhazarEntry & { cross_refs?: KhazarCrossRef[] }
+  photos: Photo[]
+  total: number
+}
 
 // ── Novel / Library types ──────────────────────────────────────────────────
 

@@ -32,6 +32,7 @@ from .schemas import DecisionsRequest, ScanRequest, StagingConfirmRequest, Stagi
 from .staging import confirm_staging, list_staging, list_trash, purge_trash, restore_photo
 from .story import theme_story, themes, today_story
 from .novel import dune_fragments
+from .novel_khazar import khazar_entries, khazar_entry_photos, khazar_entry_stats
 
 
 @asynccontextmanager
@@ -274,6 +275,42 @@ def api_novel_dune(
     conn=Depends(db),
 ):
     return dune_fragments(conn, limit=limit, seed=seed)
+
+
+@app.get("/api/novel/khazar/entries")
+def api_novel_khazar_entries(
+    entry_type: str | None = Query(default=None, alias="type"),
+    conn=Depends(db),
+):
+    entries = khazar_entries(conn)
+    if entry_type:
+        entries = [entry for entry in entries if entry["type"] == entry_type]
+    return {"entries": entries, "total_count": len(entries)}
+
+
+@app.get("/api/novel/khazar/entry/{entry_id}")
+def api_novel_khazar_entry(
+    entry_id: str,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    conn=Depends(db),
+):
+    try:
+        photo_page = khazar_entry_photos(conn, entry_id, limit=limit, offset=offset)
+        stats = khazar_entry_stats(conn, entry_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail={"error": str(exc), "code": "KHAZAR_ENTRY_NOT_FOUND"}) from exc
+    entry = {key: stats[key] for key in ["entry_id", "title", "type", "photo_count"]}
+    return {"entry": entry, "photos": photo_page["photos"], "total": photo_page["total"]}
+
+
+@app.get("/api/novel/khazar/entry/{entry_id}/cross-refs")
+def api_novel_khazar_entry_cross_refs(entry_id: str, conn=Depends(db)):
+    try:
+        stats = khazar_entry_stats(conn, entry_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail={"error": str(exc), "code": "KHAZAR_ENTRY_NOT_FOUND"}) from exc
+    return {"entry_id": entry_id, "cross_refs": stats["cross_refs"]}
 
 
 @app.post("/api/summary/generate")

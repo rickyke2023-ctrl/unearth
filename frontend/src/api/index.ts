@@ -4,6 +4,7 @@ import type {
   StoryToday, StoryThemes, ThemeDetail,
   BookCandidatesResult, CalendarResult, TimeDistribution,
   DuneResult,
+  KhazarEntriesResult, KhazarEntryDetail, KhazarEntryType,
 } from '../types'
 
 const BASE = ''
@@ -205,6 +206,21 @@ export function getStoryThemes(params?: { min_photos?: number; limit?: number })
 
 export function getThemeDetail(theme_id: string, limit = 200): Promise<ThemeDetail> {
   return request(`/api/story/theme/${encodeURIComponent(theme_id)}?limit=${limit}`)
+}
+
+// ── Khazar Dictionary ──────────────────────────────────────────────────────
+
+export function getKhazarEntries(type?: KhazarEntryType): Promise<KhazarEntriesResult> {
+  const q = type ? `?type=${type}` : ''
+  return request(`/api/novel/khazar/entries${q}`)
+}
+
+export function getKhazarEntry(entry_id: string, limit = 50, offset = 0): Promise<KhazarEntryDetail> {
+  return request(`/api/novel/khazar/entry/${entry_id}?limit=${limit}&offset=${offset}`)
+}
+
+export function getKhazarCrossRefs(entry_id: string): Promise<{ entry_id: string; cross_refs: import('../types').KhazarCrossRef[] }> {
+  return request(`/api/novel/khazar/entry/${entry_id}/cross-refs`)
 }
 
 // ── Preview ────────────────────────────────────────────────────────────────

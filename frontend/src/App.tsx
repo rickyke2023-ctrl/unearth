@@ -13,6 +13,7 @@ import { KeptView } from './components/KeptView'
 import { StoryView } from './components/StoryView'
 import { BookView } from './components/BookView'
 import { AlmanacView } from './components/AlmanacView'
+import { KhazarView } from './components/KhazarView'
 import { StagingConfirmDialog } from './components/shared/StagingConfirmDialog'
 import { ScanSetup, ScanProgressView } from './components/shared/ScanProgress'
 
@@ -85,6 +86,11 @@ function AppContent() {
       {view === 'almanac' && (
         <motion.div key="almanac" className="h-full" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
           <AlmanacView />
+        </motion.div>
+      )}
+      {view === 'khazar' && (
+        <motion.div key="khazar" className="h-full" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+          <KhazarView />
         </motion.div>
       )}
     </AnimatePresence>
