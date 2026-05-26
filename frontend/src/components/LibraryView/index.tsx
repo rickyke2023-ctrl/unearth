@@ -6,6 +6,7 @@
  */
 import { motion } from 'framer-motion'
 import { useAppStore } from '../../stores/appStore'
+import type { AppView } from '../../types'
 
 interface Book {
   id: string
@@ -16,7 +17,7 @@ interface Book {
   glow: string
   available: boolean
   lockedReason?: string
-  view?: string
+  view?: AppView
 }
 
 const BOOKS: Book[] = [
@@ -257,7 +258,7 @@ export function LibraryView() {
             key={book.id}
             book={book}
             index={i}
-            onOpen={() => book.view && setView(book.view as any)}
+            onOpen={() => book.view && setView(book.view)}
           />
         ))}
       </div>

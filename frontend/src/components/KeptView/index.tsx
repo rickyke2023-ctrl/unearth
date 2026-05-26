@@ -156,7 +156,6 @@ export function KeptView() {
   const [error, setError]           = useState('')
 
   const fetchPhotos = (year?: number) => {
-    setLoading(true)
     getKeptPhotos({ limit: 200, year })
       .then((res) => {
         setPhotos(res.photos)
@@ -171,6 +170,7 @@ export function KeptView() {
 
   const handleYearSelect = (year: number | null) => {
     setSelectedYear(year)
+    setLoading(true)
     fetchPhotos(year ?? undefined)
   }
 

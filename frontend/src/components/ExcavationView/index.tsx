@@ -164,6 +164,26 @@ export function ExcavationView() {
     scrubRef.current?.scrubAt(nx, ny)
   }, [])
 
+  const decide = useCallback(async (decision: 'keep' | 'leave') => {
+    const photo = photos[index]
+    if (!photo) return
+    setRevealed(false)
+
+    if (decision === 'keep') setKept((k) => k + 1)
+    else setLeft((l) => l + 1)
+
+    try {
+      await postDecisions([{ photo_id: photo.id, decision }])
+    } catch { /* suppress decision error */ }
+
+    const next = index + 1
+    if (next >= photos.length) {
+      setDone(true)
+    } else {
+      setIndex(next)
+    }
+  }, [photos, index])
+
   useEffect(() => {
     getExcavationToday(20)
       .then((res) => {
@@ -200,26 +220,6 @@ export function ExcavationView() {
   const handleRevealed = useCallback(() => {
     setRevealed(true)
   }, [])
-
-  const decide = useCallback(async (decision: 'keep' | 'leave') => {
-    const photo = photos[index]
-    if (!photo) return
-    setRevealed(false)
-
-    if (decision === 'keep') setKept((k) => k + 1)
-    else setLeft((l) => l + 1)
-
-    try {
-      await postDecisions([{ photo_id: photo.id, decision }])
-    } catch {}
-
-    const next = index + 1
-    if (next >= photos.length) {
-      setDone(true)
-    } else {
-      setIndex(next)
-    }
-  }, [photos, index])
 
   const yearColor = currentPhoto ? strataColorForYear(currentPhoto.year) : 'var(--strata-2022)'
 

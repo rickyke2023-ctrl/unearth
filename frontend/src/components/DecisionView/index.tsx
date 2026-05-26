@@ -29,10 +29,17 @@ function MemoryContextCard({ photo }: { photo: Photo }) {
 
   useEffect(() => {
     if (!dateKey) return
-    if (dayCountCache.has(dateKey)) { setDayCount(dayCountCache.get(dateKey)!); return }
-    getDayPhotoCount(dateKey)
-      .then(({ count }) => { dayCountCache.set(dateKey, count); setDayCount(count) })
-      .catch(() => {})
+    void (async () => {
+      if (dayCountCache.has(dateKey)) {
+        setDayCount(dayCountCache.get(dateKey)!)
+        return
+      }
+      try {
+        const { count } = await getDayPhotoCount(dateKey)
+        dayCountCache.set(dateKey, count)
+        setDayCount(count)
+      } catch { /* suppress */ }
+    })()
   }, [dateKey])
 
   const formattedDate = photo.shot_at ? formatShotAt(photo.shot_at, lang) : null
@@ -326,15 +333,16 @@ export function DecisionView() {
 
   useEffect(() => {
     if (!selectedEventId) return
-    setLoading(true)
-    setPhase('intro')
-    getEventPhotos(selectedEventId)
-      .then(({ photos }) => setEventPhotos(photos))
-      .catch(() => {})
-      .finally(() => {
-        setLoading(false)
-        setTimeout(() => setPhase('deciding'), 800)
-      })
+    void (async () => {
+      setLoading(true)
+      setPhase('intro')
+      try {
+        const { photos } = await getEventPhotos(selectedEventId)
+        setEventPhotos(photos)
+      } catch { /* suppress */ }
+      setLoading(false)
+      setTimeout(() => setPhase('deciding'), 800)
+    })()
   }, [selectedEventId, setEventPhotos])
 
   const hasNextEvent = (() => {
@@ -370,7 +378,7 @@ export function DecisionView() {
       const res = await postDecisions([{ photo_id: currentPhoto.id, decision }])
       if (decision === 'keep') addSessionStats(1, 0, 0)
       else if (decision === 'leave') addSessionStats(0, 1, res.freed_bytes_preview)
-    } catch {}
+    } catch { /* suppress network error */ }
 
     incrementDecisions()
     const nextTotal = totalDecisions + 1
@@ -410,7 +418,7 @@ export function DecisionView() {
     try {
       await undoDecision(item.photo_id)
       updatePhotoDecision(item.photo_id, item.previous_decision)
-    } catch {}
+    } catch { /* suppress undo error */ }
     setIsPending(false)
   }, [isPending, popHistory, updatePhotoDecision])
 
@@ -419,7 +427,7 @@ export function DecisionView() {
     try {
       const { is_book_candidate } = await toggleBookCandidate(currentPhoto.id)
       updatePhotoDecision(currentPhoto.id, currentPhoto.decision, is_book_candidate)
-    } catch {}
+    } catch { /* suppress star error */ }
   }, [currentPhoto, updatePhotoDecision])
 
   const handleLeaveClick = useCallback((e: React.MouseEvent) => decide('leave', e.clientX, e.clientY), [decide])

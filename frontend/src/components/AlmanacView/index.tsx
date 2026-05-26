@@ -340,25 +340,37 @@ export function AlmanacView() {
   // Calendar tab: fetch whenever selected year changes
   useEffect(() => {
     if (year == null) return
-    setCalLoading(true)
-    setCalError('')
-    setCalData(null)
-    getCalendar(year)
-      .then(setCalData)
-      .catch((e) => setCalError(e.message ?? t('almanac.error')))
-      .finally(() => setCalLoading(false))
+    void (async () => {
+      setCalLoading(true)
+      setCalError('')
+      setCalData(null)
+      try {
+        const data = await getCalendar(year)
+        setCalData(data)
+      } catch (e: unknown) {
+        setCalError((e as Error).message ?? t('almanac.error'))
+      } finally {
+        setCalLoading(false)
+      }
+    })()
   }, [year]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Time tab: fetch for the selected year when shown
   useEffect(() => {
     if (tab !== 'time' || year == null) return
-    setTimeLoading(true)
-    setTimeError('')
-    setTimeData(null)
-    getTimeDistribution(year)
-      .then(setTimeData)
-      .catch((e) => setTimeError(e.message ?? t('almanac.error')))
-      .finally(() => setTimeLoading(false))
+    void (async () => {
+      setTimeLoading(true)
+      setTimeError('')
+      setTimeData(null)
+      try {
+        const data = await getTimeDistribution(year)
+        setTimeData(data)
+      } catch (e: unknown) {
+        setTimeError((e as Error).message ?? t('almanac.error'))
+      } finally {
+        setTimeLoading(false)
+      }
+    })()
   }, [tab, year]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const tabs: Array<{ key: Tab; label: string }> = [

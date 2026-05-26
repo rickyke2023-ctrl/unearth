@@ -265,3 +265,60 @@ def test_day_photo_count_counts_matching_shot_at_date(tmp_path: Path):
     conn.commit()
 
     assert day_photo_count(conn, "2023-05-03") == {"date": "2023-05-03", "count": 2}
+
+
+def test_scan_root_scan_state_preserves_cumulative_totals(tmp_path: Path):
+    """scan_state.total_photos is cumulative across all roots;
+    root_path reflects the most recently scanned root."""
+    root_a = tmp_path / "RootA"
+    root_b = tmp_path / "RootB"
+    (root_a / "2023" / "05").mkdir(parents=True)
+    (root_b / "2024" / "06").mkdir(parents=True)
+    (root_a / "2023" / "05" / "A001.JPG").write_bytes(b"a")
+    (root_a / "2023" / "05" / "A002.JPG").write_bytes(b"aa")
+    (root_b / "2024" / "06" / "B001.JPG").write_bytes(b"b")
+
+    conn = make_conn()
+    scan_root(conn, str(root_a))
+    scan_root(conn, str(root_b))
+
+    state = conn.execute("SELECT * FROM scan_state WHERE id = 1").fetchone()
+    assert state["total_photos"] == 3, "total_photos must accumulate across all roots"
+    assert state["root_path"] == str(root_b.resolve()), "root_path must reflect last scanned root"
+    assert state["scan_completed"] == 1
+
+
+def test_confirm_staging_filters_by_root_path(tmp_path: Path):
+    """confirm_staging defaults to the current scan_state.root_path,
+    leaving photos from other roots untouched."""
+    root_a = tmp_path / "RootA"
+    root_b = tmp_path / "RootB"
+    (root_a / "2023" / "05").mkdir(parents=True)
+    (root_b / "2023" / "05").mkdir(parents=True)
+    a_photo = root_a / "2023" / "05" / "A001.JPG"
+    b_photo = root_b / "2023" / "05" / "B001.JPG"
+    a_photo.write_bytes(b"a")
+    b_photo.write_bytes(b"b")
+
+    conn = make_conn()
+    insert_photo(conn, photo_id="a-id", path=a_photo, file_type="JPEG")
+    insert_photo(conn, photo_id="b-id", path=b_photo, file_type="JPEG")
+    apply_decisions(conn, [Item("a-id", "leave"), Item("b-id", "leave")])
+
+    # Simulate: user most recently scanned root_B
+    conn.execute("UPDATE scan_state SET root_path = ? WHERE id = 1", (str(root_b),))
+    conn.commit()
+
+    result = confirm_staging(conn, True)
+
+    # Only root_B's photo should be confirmed
+    assert result["deleted_count"] == 1
+    active = conn.execute(
+        """
+        SELECT p.file_name FROM staging_files sf
+        JOIN photos p ON p.id = sf.photo_id
+        WHERE sf.restored_at IS NULL AND sf.confirmed_deleted_at IS NULL AND sf.trashed_at IS NULL
+        """
+    ).fetchall()
+    assert [row["file_name"] for row in active] == ["A001.JPG"], \
+        "root_A staging must remain untouched after confirming root_B"

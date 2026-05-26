@@ -55,7 +55,10 @@ export function CameraGestureController({ onGesture }: Props) {
   const rafRef       = useRef<number>(0)
   const runningRef   = useRef(false)
   const onGestureRef = useRef(onGesture)
-  onGestureRef.current = onGesture
+
+  useEffect(() => {
+    onGestureRef.current = onGesture
+  }, [onGesture])
 
   const stop = useCallback(() => {
     runningRef.current = false
@@ -148,8 +151,10 @@ export function CameraGestureController({ onGesture }: Props) {
   }, [])
 
   useEffect(() => {
-    if (enabled) { start() }
-    else { stop() }
+    void (async () => {
+      if (enabled) { await start() }
+      else { stop() }
+    })()
     return stop
   }, [enabled, start, stop])
 

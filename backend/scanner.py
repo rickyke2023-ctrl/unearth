@@ -229,6 +229,11 @@ def scan_root(conn, root_path: str) -> dict[str, Any]:
         pair_photos(conn, str(root))
         progress_store.update(phase="clustering")
         cluster_events(conn, str(root))
+        # scan_state semantics (single-row design):
+        #   root_path        — the most recently scanned root (used as the default
+        #                      filter by list_staging / confirm_staging)
+        #   total_photos /   — cumulative across ALL roots; correct global count
+        #   total_size_bytes   for the status API
         total_state = conn.execute(
             "SELECT COUNT(*) AS count, COALESCE(SUM(file_size_bytes), 0) AS size FROM photos"
         ).fetchone()

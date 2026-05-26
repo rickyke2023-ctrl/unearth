@@ -363,11 +363,17 @@ export function StoryView() {
   // Load places when tab switches to places (lazy)
   useEffect(() => {
     if (tab !== 'places' || themes !== null) return
-    setLoadingPlaces(true)
-    getStoryThemes({ min_photos: 3, limit: 40 })
-      .then(setThemes)
-      .catch((e) => setErrorPlaces(e.message ?? t('story.error')))
-      .finally(() => setLoadingPlaces(false))
+    void (async () => {
+      setLoadingPlaces(true)
+      try {
+        const result = await getStoryThemes({ min_photos: 3, limit: 40 })
+        setThemes(result)
+      } catch (e: unknown) {
+        setErrorPlaces((e as Error).message ?? t('story.error'))
+      } finally {
+        setLoadingPlaces(false)
+      }
+    })()
   }, [tab]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSelectTheme = (themeId: string) => {

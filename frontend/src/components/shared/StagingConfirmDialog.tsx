@@ -130,18 +130,19 @@ function StagingTab({ onMoved }: { onMoved: () => void }) {
   const [moving, setMoving] = useState(false)
 
   const load = useCallback(() => {
-    setLoading(true)
     getStaging()
       .then((d) => {
         setPhotos(d.photos)
         setTotalMb(d.total_size_mb)
+        setLoading(false)
       })
-      .finally(() => setLoading(false))
+      .catch(() => setLoading(false))
   }, [])
 
   useEffect(() => { load() }, [load])
 
   const handleRestore = async (photo_id: string) => {
+    setLoading(true)
     await restoreFromStaging(photo_id).catch(() => {})
     load()
   }
@@ -229,18 +230,19 @@ function TrashTab({ onPurged }: { onPurged: () => void }) {
   const [showConfirm, setShowConfirm] = useState(false)
 
   const load = useCallback(() => {
-    setLoading(true)
     getTrash()
       .then((d) => {
         setPhotos(d.photos)
         setTotalMb(d.total_size_mb)
+        setLoading(false)
       })
-      .finally(() => setLoading(false))
+      .catch(() => setLoading(false))
   }, [])
 
   useEffect(() => { load() }, [load])
 
   const handleRestore = async (photo_id: string) => {
+    setLoading(true)
     await restoreFromStaging(photo_id).catch(() => {})
     load()
   }
@@ -397,11 +399,14 @@ export function StagingConfirmDialog() {
 
   useEffect(() => {
     if (!showStagingDialog) return
-    setTab('staging')
-    Promise.all([getStaging(), getTrash()]).then(([s, tr]) => {
-      setStagingCount(s.total_count)
-      setTrashCount(tr.total_count)
-    }).catch(() => {})
+    void (async () => {
+      setTab('staging')
+      try {
+        const [s, tr] = await Promise.all([getStaging(), getTrash()])
+        setStagingCount(s.total_count)
+        setTrashCount(tr.total_count)
+      } catch { /* suppress */ }
+    })()
   }, [showStagingDialog])
 
   const handleClose = () => setShowStagingDialog(false)

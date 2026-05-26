@@ -86,7 +86,7 @@ function playScratch(ctx: AudioContext) {
     gain.gain.value  = 0.048
     src.connect(filt); filt.connect(gain); gain.connect(ctx.destination)
     src.start()
-  } catch {}
+  } catch { /* WebAudio not available */ }
 }
 
 /** Meditative singing bowl: soft onset, long harmonic decay, subtle shimmer */
@@ -119,7 +119,7 @@ function playSingingBowl(ctx: AudioContext) {
       lfo.start(now); lfo.stop(end)
       osc.start(now); osc.stop(end)
     })
-  } catch {}
+  } catch { /* WebAudio not available */ }
 }
 
 // ── Component ─────────────────────────────────────────────────────────────

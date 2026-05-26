@@ -15,8 +15,8 @@ export function ScanSetup() {
     try {
       await startScan(rootPath.trim())
       setScanState(true, 0, 'indexing')
-    } catch (e: any) {
-      setError(e.message ?? '启动扫描失败')
+    } catch (e: unknown) {
+      setError((e as Error).message ?? '启动扫描失败')
     }
   }
 
@@ -69,7 +69,7 @@ export function ScanProgressView() {
         try {
           const status = await getStatus()
           setSystemStatus(status)
-        } catch {}
+        } catch { /* status unavailable, continue */ }
       },
       () => setScanState(false),
     )
