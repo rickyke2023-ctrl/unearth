@@ -20,17 +20,21 @@ from backend.database import get_connection, init_db
 
 
 OLLAMA_URL = "http://localhost:11434"
-PROMPT = """请分析这张照片，只返回一个 JSON 对象，不要任何解释文字，不要 markdown 代码块：
-{"has_people": true或false, "setting": "indoor或outdoor或unknown", "time_of_day": "dawn或morning或afternoon或evening或night或unknown", "mood": ["最多3个标签，从这里选：quiet/intimate/busy/lonely/joyful/melancholic/tense/peaceful/mysterious"], "main_subject": "从这里选一个：landscape/portrait/street/architecture/nature/abstract/other", "dominant_colors": ["最多2个，从这里选：warm/cool/neutral/colorful/monochrome"], "composition": "从这里选一个：minimal/complex/layered/centered/offcenter", "narrative_hint": "不超过15字的中文描述"}"""
+PROMPT = """你是一位有文学审美的影像编辑。分析这张照片，严格按以下 JSON 格式返回，不要输出其他内容，不要 markdown 代码块：
+{"has_people": true或false, "people_count": "none或one或two或group", "people_description": "有人时描述服装颜色、大致年龄、姿态，无人填null", "main_subject": "主体是什么（1-5个字）", "setting": "indoor或outdoor或unknown", "light_quality": "光线质感，如：黄金时刻暖光、阴天漫射光、强逆光、窗边柔光、夜间人工光", "weather": "户外天气如晴/阴/雨后/起雾，室内填null", "time_of_day": "morning或afternoon或dusk或night或unknown", "dominant_colors": ["主色调1", "主色调2", "主色调3"], "color_detail": "最显眼的颜色细节如红色雨伞，无则填null", "mood": ["情绪词1", "情绪词2"], "narrative_hint": "一句话（不超过30字）。必须包含：①主体的外观或颜色细节 ②动作或状态 ③环境中一个具体可见的细节"}"""
 
 TAG_FIELDS = (
     "has_people",
-    "setting",
-    "time_of_day",
-    "mood",
+    "people_count",
+    "people_description",
     "main_subject",
+    "setting",
+    "light_quality",
+    "weather",
+    "time_of_day",
     "dominant_colors",
-    "composition",
+    "color_detail",
+    "mood",
     "narrative_hint",
 )
 
@@ -221,13 +225,18 @@ def encode_preview(photo_id: str) -> str:
 
 def call_ollama(model: str, encoded_image: str) -> str:
     response = requests.post(
-        f"{OLLAMA_URL}/api/generate",
+        f"{OLLAMA_URL}/api/chat",
         json={
             "model": model,
-            "prompt": PROMPT,
-            "images": [encoded_image],
+            "messages": [
+                {
+                    "role": "user",
+                    "content": PROMPT,
+                    "images": [encoded_image],
+                }
+            ],
             "stream": False,
-            "options": {"temperature": 0.1, "num_predict": 200},
+            "options": {"temperature": 0.1, "num_predict": 512},
         },
         timeout=60,
     )
@@ -235,7 +244,7 @@ def call_ollama(model: str, encoded_image: str) -> str:
         print(f"ERROR: Model '{model}' not found. Run: ollama pull {model}", file=sys.stderr)
         raise SystemExit(1)
     response.raise_for_status()
-    return response.json()["response"]
+    return response.json()["message"]["content"]
 
 
 def strip_markdown_fences(text: str) -> str:
@@ -263,20 +272,16 @@ def empty_tags() -> dict[str, Any]:
 
 
 _VALID_SETTING    = {'indoor', 'outdoor', 'unknown'}
-_VALID_TIME       = {'dawn', 'morning', 'afternoon', 'evening', 'night', 'unknown'}
-_VALID_SUBJECT    = {'landscape', 'portrait', 'street', 'architecture', 'nature', 'abstract', 'other'}
-_VALID_COLORS     = {'warm', 'cool', 'neutral', 'colorful', 'monochrome'}
-_VALID_MOODS      = {'quiet', 'intimate', 'busy', 'lonely', 'joyful', 'melancholic', 'tense', 'peaceful', 'mysterious'}
+_VALID_TIME       = {'dawn', 'morning', 'afternoon', 'evening', 'dusk', 'night', 'unknown'}
 _VALID_COMPOSE    = {'minimal', 'complex', 'layered', 'centered', 'offcenter'}
 
+# dominant_colors / mood / main_subject are free-form Chinese text from the prompt —
+# no enum filter; keeping only structural English enums here.
 _LIST_FIELDS      = {'mood', 'dominant_colors'}
 _ENUM_FILTERS: dict[str, set[str]] = {
-    'setting':          _VALID_SETTING,
-    'time_of_day':      _VALID_TIME,
-    'main_subject':     _VALID_SUBJECT,
-    'composition':      _VALID_COMPOSE,
-    'dominant_colors':  _VALID_COLORS,
-    'mood':             _VALID_MOODS,
+    'setting':     _VALID_SETTING,
+    'time_of_day': _VALID_TIME,
+    'composition': _VALID_COMPOSE,
 }
 
 
@@ -296,10 +301,20 @@ def normalized_tags(parsed: dict[str, Any]) -> dict[str, Any]:
     for field in TAG_FIELDS:
         value = parsed.get(field)
 
+        if field == 'has_people':
+            if isinstance(value, bool):
+                tags[field] = value
+            elif isinstance(value, int):
+                tags[field] = bool(value)
+            elif isinstance(value, str):
+                tags[field] = value.lower() not in {'false', 'no', 'none', 'null', '0', ''}
+            else:
+                tags[field] = None
+            continue
+
         # Coerce list fields from string if needed
         if field in _LIST_FIELDS:
             value = _coerce_list(value)
-            # Filter out-of-vocab items
             if field in _ENUM_FILTERS:
                 value = [v for v in value if v in _ENUM_FILTERS[field]]
             tags[field] = value if value else None
