@@ -5,6 +5,8 @@ import base64
 import io
 import json
 import re
+import shutil
+import signal
 import sys
 import time
 import uuid
@@ -492,6 +494,27 @@ def print_progress(done: int, total: int, errors: int, inference_times: list[int
     )
 
 
+def check_disk_space(candidate_count: int) -> None:
+    free_bytes = shutil.disk_usage(".").free
+    estimated_bytes = candidate_count * 2 * 1024
+    min_free_bytes = 500 * 1024 * 1024
+    if free_bytes < min_free_bytes:
+        print(
+            f"ERROR: 剩余磁盘空间低于 500MB，安全退出 "
+            f"(free={free_bytes / 1024 / 1024:.1f}MB)",
+            file=sys.stderr,
+            flush=True,
+        )
+        raise SystemExit(1)
+    if free_bytes < estimated_bytes * 3:
+        print(
+            f"WARN: 剩余磁盘空间可能不足 "
+            f"(free={free_bytes / 1024 / 1024:.1f}MB, "
+            f"estimated={estimated_bytes / 1024 / 1024:.1f}MB, safety_margin=3x)",
+            flush=True,
+        )
+
+
 def write_output(
     output_path: Path,
     model: str,
@@ -539,11 +562,20 @@ def main(argv: list[str] | None = None) -> int:
             f"Quality gate: abort if error>{20}% or null_hint>{25}% in last {args.checkpoint_every} photos",
             flush=True,
         )
+        check_disk_space(total)
 
         results: list[dict[str, Any]] = []
         inference_times: list[int] = []
         errors = 0
         attempted = 0
+
+        def handle_shutdown(signum: int, frame: Any) -> None:
+            write_checkpoint(checkpoint_path, attempted, total, results, errors)
+            print("收到中断信号，已写入 checkpoint，安全退出", flush=True)
+            sys.exit(0)
+
+        signal.signal(signal.SIGINT, handle_shutdown)
+        signal.signal(signal.SIGTERM, handle_shutdown)
 
         for candidate in candidates:
             photo_id = candidate["id"]
