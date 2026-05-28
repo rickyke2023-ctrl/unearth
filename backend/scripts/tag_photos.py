@@ -4,6 +4,7 @@ import argparse
 import base64
 import io
 import json
+import os
 import re
 import shutil
 import signal
@@ -22,6 +23,7 @@ from backend.database import get_connection, init_db
 
 
 OLLAMA_URL = "http://localhost:11434"
+DEFAULT_OMLX_URL = "http://localhost:8000/v1"
 PROMPT = """你是一位有文学审美的视觉观察者。分析这张照片，严格按以下 JSON 格式返回，不要输出其他内容，不要 markdown 代码块：
 {"has_people": true或false, "people_count": "none或one或two或group", "people_description": "有人时描述服装颜色、大致年龄、姿态，无人填null", "main_subject": "主体是什么（1-5个字）", "setting": "indoor或outdoor或unknown", "light_quality": "光线质感，如：黄金时刻暖光、阴天漫射光、强逆光、窗边柔光、夜间人工光", "weather": "户外天气如晴/阴/雨后/起雾，室内填null", "time_of_day": "morning或afternoon或dusk或night或unknown", "dominant_colors": ["主色调1", "主色调2", "主色调3"], "color_detail": "最显眼的颜色细节如红色雨伞，无则填null", "mood": ["情绪词1", "情绪词2"], "composition": "minimal（主体孤立、留白多）或complex（元素密集）或layered（有明显前后景层次）或centered（主体居画面中心）或offcenter（主体明显偏移）", "narrative_hint": "一句话，严格不超过40字。锁定这张照片里最具体、最不可替代的那一个细节——必须有动词，描述它的颜色或材质、在哪里、在做什么或如何存在。不要总结情绪，不要构图分析，只描述这一个细节，让读者能在脑中重建它。"}"""
 
@@ -57,11 +59,33 @@ def model_safe_name(model: str) -> str:
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Tag photo previews with an Ollama vision model.")
+    parser = argparse.ArgumentParser(description="Tag photo previews with a local vision model.")
+    parser.add_argument(
+        "--engine",
+        choices=("ollama", "omlx"),
+        default="ollama",
+        help="Inference engine to use. Defaults to ollama.",
+    )
     parser.add_argument(
         "--model",
         required=True,
-        help='Ollama model name, for example "minicpm-v4.6" or "qwen2.5vl:3b".',
+        help='Model name, for example "minicpm-v4.6", "qwen2.5vl:3b", or an oMLX model id.',
+    )
+    parser.add_argument(
+        "--omlx-url",
+        default=DEFAULT_OMLX_URL,
+        help=f"oMLX OpenAI-compatible base URL. Defaults to {DEFAULT_OMLX_URL}.",
+    )
+    parser.add_argument(
+        "--omlx-api-key",
+        default=os.environ.get("OMLX_API_KEY", "bench"),
+        help="oMLX API key. Defaults to OMLX_API_KEY or 'bench'.",
+    )
+    parser.add_argument(
+        "--num-predict",
+        type=positive_int,
+        default=2048,
+        help="Maximum tokens to generate for oMLX. Defaults to 2048.",
     )
     parser.add_argument(
         "--limit",
@@ -101,6 +125,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def default_output_path(model: str) -> Path:
     return DATA_DIR / f"tags_{model_safe_name(model)}.json"
+
+
+def db_model_name(args: argparse.Namespace) -> str:
+    if args.engine == "omlx":
+        return f"{args.model}-omlx"
+    return args.model
 
 
 def ready_condition(conn) -> str:
@@ -308,6 +338,23 @@ def check_ollama_model(model: str) -> None:
         raise SystemExit(1)
 
 
+def check_omlx_health(args: argparse.Namespace) -> None:
+    url = f"{args.omlx_url.rstrip('/')}/models"
+    try:
+        response = requests.get(url, headers=_omlx_auth_headers(args.omlx_api_key), timeout=5)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        print(f"ERROR: oMLX health check failed: GET {url} — {exc}", file=sys.stderr)
+        raise SystemExit(1)
+
+
+def _omlx_auth_headers(api_key: str) -> dict[str, str]:
+    headers = {"Content-Type": "application/json"}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+    return headers
+
+
 def encode_preview(photo_id: str) -> str:
     path = PREVIEW_DIR / f"{photo_id}.jpg"
     with Image.open(path) as image:
@@ -342,6 +389,58 @@ def call_ollama(model: str, encoded_image: str) -> str:
         raise SystemExit(1)
     response.raise_for_status()
     return response.json()["message"]["content"]
+
+
+def call_omlx(
+    photo_id: str,
+    encoded_image: str,
+    args: argparse.Namespace,
+) -> tuple[str, dict[str, Any]]:
+    url = f"{args.omlx_url.rstrip('/')}/chat/completions"
+    payload = {
+        "model": args.model,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": PROMPT},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{encoded_image}"},
+                    },
+                ],
+            }
+        ],
+        "temperature": 0.1,
+        "max_tokens": args.num_predict,
+        "stream": False,
+    }
+    response = requests.post(
+        url,
+        headers=_omlx_auth_headers(args.omlx_api_key),
+        json=payload,
+        timeout=180,
+    )
+    try:
+        response.raise_for_status()
+    except requests.HTTPError as exc:
+        body = response.text.strip()
+        if len(body) > 1000:
+            body = body[:1000] + "..."
+        raise requests.HTTPError(f"photo_id={photo_id}; {exc}; body={body}") from exc
+
+    data = response.json()
+    choices = data.get("choices") or []
+    if not choices:
+        raise ValueError(f"photo_id={photo_id}; empty choices from oMLX")
+    message = choices[0].get("message") or {}
+    content = message.get("content") or ""
+    if not content.strip():
+        reasoning = message.get("reasoning_content") or ""
+        raise ValueError(
+            f"photo_id={photo_id}; empty response content (reasoning_len={len(reasoning)})"
+        )
+    return content, data
 
 
 def strip_markdown_fences(text: str) -> str:
@@ -538,9 +637,13 @@ def write_output(
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    output_path = Path(args.output) if args.output else default_output_path(args.model)
+    storage_model = db_model_name(args)
+    output_path = Path(args.output) if args.output else default_output_path(storage_model)
 
-    check_ollama_model(args.model)
+    if args.engine == "omlx":
+        check_omlx_health(args)
+    else:
+        check_ollama_model(args.model)
 
     checkpoint_path = DATA_DIR / "tag_checkpoint.json"
 
@@ -549,15 +652,23 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.ids_file:
             candidates = fetch_candidates_from_file(
-                conn, args.ids_file, args.model, args.skip_existing
+                conn, args.ids_file, storage_model, args.skip_existing
             )
             if args.ids_file and args.limit < len(candidates):
                 candidates = candidates[: args.limit]
-            print(f"Model: {args.model} | Source: {args.ids_file}", flush=True)
+            print(
+                f"Model: {args.model} | Engine: {args.engine} | Stored as: {storage_model} | "
+                f"Source: {args.ids_file}",
+                flush=True,
+            )
         else:
-            candidates = fetch_candidates(conn, args.model, args.limit, args.skip_existing)
+            candidates = fetch_candidates(conn, storage_model, args.limit, args.skip_existing)
         total = len(candidates)
-        print(f"Model: {args.model} | Total to process: {total}", flush=True)
+        print(
+            f"Model: {args.model} | Engine: {args.engine} | Stored as: {storage_model} | "
+            f"Total to process: {total}",
+            flush=True,
+        )
         print(
             f"Quality gate: abort if error>{20}% or null_hint>{25}% in last {args.checkpoint_every} photos",
             flush=True,
@@ -585,13 +696,17 @@ def main(argv: list[str] | None = None) -> int:
 
             attempted += 1
             raw_response: str | None = None
+            raw_api_response: dict[str, Any] | None = None
             error: str | None = None
             tags = empty_tags()
             start = time.perf_counter()
 
             try:
                 encoded = encode_preview(photo_id)
-                raw_response = call_ollama(args.model, encoded)
+                if args.engine == "omlx":
+                    raw_response, raw_api_response = call_omlx(photo_id, encoded, args)
+                else:
+                    raw_response = call_ollama(args.model, encoded)
                 parsed = parse_response(raw_response)
                 tags = normalized_tags(parsed)
             except json.JSONDecodeError as exc:
@@ -609,7 +724,7 @@ def main(argv: list[str] | None = None) -> int:
 
             inference_time_ms = int((time.perf_counter() - start) * 1000)
             inference_times.append(inference_time_ms)
-            insert_photo_tag(conn, photo_id, args.model, tags, inference_time_ms, raw_response)
+            insert_photo_tag(conn, photo_id, storage_model, tags, inference_time_ms, raw_response)
 
             result = {
                 "photo_id": photo_id,
@@ -619,6 +734,8 @@ def main(argv: list[str] | None = None) -> int:
                 "inference_time_ms": inference_time_ms,
                 "error": error,
             }
+            if raw_api_response is not None:
+                result["raw_api_response"] = raw_api_response
             results.append(result)
 
             if attempted % 10 == 0 or attempted == total:
@@ -632,14 +749,14 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"ERROR: {msg}", flush=True)
                     _notify_mac("标注 Quality Gate 触发", msg)
                     if not args.no_abort_on_quality_fail:
-                        write_output(output_path, args.model, results, errors, inference_times)
+                        write_output(output_path, storage_model, results, errors, inference_times)
                         return 1
                 else:
                     print(f"[checkpoint {attempted}/{total}] quality gate OK", flush=True)
                     _notify_mac("标注进度", f"{attempted}/{total} 张完成，质量正常")
 
         write_checkpoint(checkpoint_path, attempted, total, results, errors)
-        payload = write_output(output_path, args.model, results, errors, inference_times)
+        payload = write_output(output_path, storage_model, results, errors, inference_times)
         processed = payload["total_processed"]
         avg_seconds = (payload["avg_ms"] / 1000) if inference_times else 0
         min_seconds = (min(inference_times) / 1000) if inference_times else 0
@@ -647,6 +764,8 @@ def main(argv: list[str] | None = None) -> int:
 
         print("=== Summary ===")
         print(f"Model: {args.model}")
+        print(f"Engine: {args.engine}")
+        print(f"Stored model: {storage_model}")
         print(f"Processed: {processed}/{total}")
         print(f"Errors: {errors}")
         print(f"Avg inference: {avg_seconds:.1f}s")
