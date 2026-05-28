@@ -1,0 +1,2758 @@
+{
+  "model": "gemma-4-e4b-it-4bit",
+  "backend": "omlx",
+  "endpoint": "http://localhost:8000/v1/chat/completions",
+  "run_at": "2026-05-29T01:02:29",
+  "total_processed": 30,
+  "total_errors": 0,
+  "json_parse_successes": 30,
+  "avg_ms": 10255,
+  "avg_s": 10.3,
+  "results": [
+    {
+      "photo_id": "48420678-0af7-5085-9df1-f3c11a570dab",
+      "tags": {
+        "has_people": true,
+        "people_count": "one",
+        "people_description": "一位中年人，深色衣物，抱着相机，站在古迹旁小路上，面带微笑。",
+        "main_subject": "古迹小径",
+        "setting": "outdoor",
+        "light_quality": "阴天漫射光",
+        "weather": "阴",
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "黑",
+          "灰",
+          "白"
+        ],
+        "color_detail": null,
+        "mood": [
+          "沉静",
+          "怀旧"
+        ],
+        "composition": "layered",
+        "narrative_hint": "嶙峋的古迹残垣高耸在人物的身后，构成厚重的背景墙。"
+      },
+      "narrative_hint": "嶙峋的古迹残垣高耸在人物的身后，构成厚重的背景墙。",
+      "raw": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位中年人，深色衣物，抱着相机，站在古迹旁小路上，面带微笑。\", \"main_subject\": \"古迹小径\", \"setting\": \"outdoor\", \"light_quality\": \"阴天漫射光\", \"weather\": \"阴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"黑\", \"灰\", \"白\"], \"color_detail\": null, \"mood\": [\"沉静\", \"怀旧\"], \"composition\": \"layered\", \"narrative_hint\": \"嶙峋的古迹残垣高耸在人物的身后，构成厚重的背景墙。\"}",
+      "raw_api": {
+        "id": "chatcmpl-d1547e23",
+        "object": "chat.completion",
+        "created": 1779987448,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位中年人，深色衣物，抱着相机，站在古迹旁小路上，面带微笑。\", \"main_subject\": \"古迹小径\", \"setting\": \"outdoor\", \"light_quality\": \"阴天漫射光\", \"weather\": \"阴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"黑\", \"灰\", \"白\"], \"color_detail\": null, \"mood\": [\"沉静\", \"怀旧\"], \"composition\": \"layered\", \"narrative_hint\": \"嶙峋的古迹残垣高耸在人物的身后，构成厚重的背景墙。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 156,
+          "total_tokens": 786,
+          "input_tokens": 630,
+          "output_tokens": 156,
+          "prompt_tokens_details": {
+            "cached_tokens": 512
+          },
+          "total_time": 5.95
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 6090,
+      "ms": 6090,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 12
+    },
+    {
+      "photo_id": "a2b183e1-7788-55eb-963b-ebfe7a0bd2f2",
+      "tags": {
+        "has_people": true,
+        "people_count": "two",
+        "people_description": "两位人物，其中一位身着浅色长袍，另一位身着深色外套，两人在小路上行走，背对镜头。",
+        "main_subject": "小径上的身影",
+        "setting": "outdoor",
+        "light_quality": "散射光",
+        "weather": "晴",
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "绿色",
+          "棕色",
+          "灰色"
+        ],
+        "color_detail": null,
+        "mood": [
+          "沉思",
+          "孤独"
+        ],
+        "composition": "layered",
+        "narrative_hint": "他们沿着被灌木环绕的土路缓缓前行，远处的地平线在他们身后展开。"
+      },
+      "narrative_hint": "他们沿着被灌木环绕的土路缓缓前行，远处的地平线在他们身后展开。",
+      "raw": "{\"has_people\": true, \"people_count\": \"two\", \"people_description\": \"两位人物，其中一位身着浅色长袍，另一位身着深色外套，两人在小路上行走，背对镜头。\", \"main_subject\": \"小径上的身影\", \"setting\": \"outdoor\", \"light_quality\": \"散射光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"绿色\", \"棕色\", \"灰色\"], \"color_detail\": null, \"mood\": [\"沉思\", \"孤独\"], \"composition\": \"layered\", \"narrative_hint\": \"他们沿着被灌木环绕的土路缓缓前行，远处的地平线在他们身后展开。\"}",
+      "raw_api": {
+        "id": "chatcmpl-eb7ee0fb",
+        "object": "chat.completion",
+        "created": 1779987455,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"two\", \"people_description\": \"两位人物，其中一位身着浅色长袍，另一位身着深色外套，两人在小路上行走，背对镜头。\", \"main_subject\": \"小径上的身影\", \"setting\": \"outdoor\", \"light_quality\": \"散射光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"绿色\", \"棕色\", \"灰色\"], \"color_detail\": null, \"mood\": [\"沉思\", \"孤独\"], \"composition\": \"layered\", \"narrative_hint\": \"他们沿着被灌木环绕的土路缓缓前行，远处的地平线在他们身后展开。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 164,
+          "total_tokens": 794,
+          "input_tokens": 630,
+          "output_tokens": 164,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 7.73
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 7764,
+      "ms": 7764,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 12
+    },
+    {
+      "photo_id": "f23dede2-cb57-5685-83e9-6a7c88432787",
+      "tags": {
+        "has_people": true,
+        "people_count": "one",
+        "people_description": "一位深色长发女子，身着深色大衣，侧身站立，凝视远方。",
+        "main_subject": "都市建筑",
+        "setting": "outdoor",
+        "light_quality": "均匀的日光",
+        "weather": "晴",
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "蓝灰",
+          "棕色",
+          "米色"
+        ],
+        "color_detail": "远景高楼的玻璃幕墙反射着天空的颜色。",
+        "mood": [
+          "沉思",
+          "都市感"
+        ],
+        "composition": "layered",
+        "narrative_hint": "女子身后的现代建筑群占据了画面的中景，背景是高耸的城市天际线。"
+      },
+      "narrative_hint": "女子身后的现代建筑群占据了画面的中景，背景是高耸的城市天际线。",
+      "raw": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位深色长发女子，身着深色大衣，侧身站立，凝视远方。\", \"main_subject\": \"都市建筑\", \"setting\": \"outdoor\", \"light_quality\": \"均匀的日光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"蓝灰\", \"棕色\", \"米色\"], \"color_detail\": \"远景高楼的玻璃幕墙反射着天空的颜色。\", \"mood\": [\"沉思\", \"都市感\"], \"composition\": \"layered\", \"narrative_hint\": \"女子身后的现代建筑群占据了画面的中景，背景是高耸的城市天际线。\"}",
+      "raw_api": {
+        "id": "chatcmpl-4fe60263",
+        "object": "chat.completion",
+        "created": 1779987463,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位深色长发女子，身着深色大衣，侧身站立，凝视远方。\", \"main_subject\": \"都市建筑\", \"setting\": \"outdoor\", \"light_quality\": \"均匀的日光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"蓝灰\", \"棕色\", \"米色\"], \"color_detail\": \"远景高楼的玻璃幕墙反射着天空的颜色。\", \"mood\": [\"沉思\", \"都市感\"], \"composition\": \"layered\", \"narrative_hint\": \"女子身后的现代建筑群占据了画面的中景，背景是高耸的城市天际线。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 172,
+          "total_tokens": 802,
+          "input_tokens": 630,
+          "output_tokens": 172,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 7.91
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 7933,
+      "ms": 7933,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 13
+    },
+    {
+      "photo_id": "8313d7f7-a715-5df7-8390-40b19beaebc1",
+      "tags": {
+        "has_people": true,
+        "people_count": "one",
+        "people_description": "一位深色长款上衣搭配浅色阔腿裤的黑发女性，背对镜头，行走在草地上。",
+        "main_subject": "行走身影",
+        "setting": "outdoor",
+        "light_quality": "晴朗的日光",
+        "weather": "晴",
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "绿色",
+          "米色",
+          "深灰"
+        ],
+        "color_detail": "浅色裤子在阳光下显得蓬松柔软。",
+        "mood": [
+          "宁静",
+          "沉思"
+        ],
+        "composition": "layered",
+        "narrative_hint": "她迈着步伐，踏在广阔的绿色草地上，走向远方。"
+      },
+      "narrative_hint": "她迈着步伐，踏在广阔的绿色草地上，走向远方。",
+      "raw": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位深色长款上衣搭配浅色阔腿裤的黑发女性，背对镜头，行走在草地上。\", \"main_subject\": \"行走身影\", \"setting\": \"outdoor\", \"light_quality\": \"晴朗的日光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"绿色\", \"米色\", \"深灰\"], \"color_detail\": \"浅色裤子在阳光下显得蓬松柔软。\", \"mood\": [\"宁静\", \"沉思\"], \"composition\": \"layered\", \"narrative_hint\": \"她迈着步伐，踏在广阔的绿色草地上，走向远方。\"}",
+      "raw_api": {
+        "id": "chatcmpl-ebcbedfb",
+        "object": "chat.completion",
+        "created": 1779987471,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位深色长款上衣搭配浅色阔腿裤的黑发女性，背对镜头，行走在草地上。\", \"main_subject\": \"行走身影\", \"setting\": \"outdoor\", \"light_quality\": \"晴朗的日光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"绿色\", \"米色\", \"深灰\"], \"color_detail\": \"浅色裤子在阳光下显得蓬松柔软。\", \"mood\": [\"宁静\", \"沉思\"], \"composition\": \"layered\", \"narrative_hint\": \"她迈着步伐，踏在广阔的绿色草地上，走向远方。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 168,
+          "total_tokens": 798,
+          "input_tokens": 630,
+          "output_tokens": 168,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 7.74
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 7765,
+      "ms": 7765,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 13
+    },
+    {
+      "photo_id": "a3fdd10d-2312-52c8-be07-1b4f73dc61cd",
+      "tags": {
+        "has_people": true,
+        "people_count": "one",
+        "people_description": "一位年轻女性，戴着灰色毛线帽，身穿深蓝色羽绒服，表情专注地看着篮子里的东西。",
+        "main_subject": "菌菇拾取",
+        "setting": "outdoor",
+        "light_quality": "阴天漫射光",
+        "weather": "晴",
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "深蓝",
+          "棕色",
+          "灰色"
+        ],
+        "color_detail": "篮子里菌菇的棕色菌盖",
+        "mood": [
+          "专注",
+          "自然"
+        ],
+        "composition": "centered",
+        "narrative_hint": "她捧着一个编织篮子，里面装满了湿润的菌菇菌盖。"
+      },
+      "narrative_hint": "她捧着一个编织篮子，里面装满了湿润的菌菇菌盖。",
+      "raw": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位年轻女性，戴着灰色毛线帽，身穿深蓝色羽绒服，表情专注地看着篮子里的东西。\", \"main_subject\": \"菌菇拾取\", \"setting\": \"outdoor\", \"light_quality\": \"阴天漫射光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"深蓝\", \"棕色\", \"灰色\"], \"color_detail\": \"篮子里菌菇的棕色菌盖\", \"mood\": [\"专注\", \"自然\"], \"composition\": \"centered\", \"narrative_hint\": \"她捧着一个编织篮子，里面装满了湿润的菌菇菌盖。\"}",
+      "raw_api": {
+        "id": "chatcmpl-f6738e62",
+        "object": "chat.completion",
+        "created": 1779987479,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位年轻女性，戴着灰色毛线帽，身穿深蓝色羽绒服，表情专注地看着篮子里的东西。\", \"main_subject\": \"菌菇拾取\", \"setting\": \"outdoor\", \"light_quality\": \"阴天漫射光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"深蓝\", \"棕色\", \"灰色\"], \"color_detail\": \"篮子里菌菇的棕色菌盖\", \"mood\": [\"专注\", \"自然\"], \"composition\": \"centered\", \"narrative_hint\": \"她捧着一个编织篮子，里面装满了湿润的菌菇菌盖。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 170,
+          "total_tokens": 800,
+          "input_tokens": 630,
+          "output_tokens": 170,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 7.91
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 7932,
+      "ms": 7932,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 13
+    },
+    {
+      "photo_id": "8ddba63a-5de1-542d-90f4-8132db264da1",
+      "tags": {
+        "has_people": false,
+        "people_count": null,
+        "people_description": null,
+        "main_subject": "日落圆窗",
+        "setting": "outdoor",
+        "light_quality": "黄金时刻暖光",
+        "weather": "晴",
+        "time_of_day": "unknown",
+        "dominant_colors": [
+          "橙色",
+          "深蓝",
+          "黑色"
+        ],
+        "color_detail": "地平线上橙色的太阳圆盘",
+        "mood": [
+          "宁静",
+          "壮阔"
+        ],
+        "composition": "minimal",
+        "narrative_hint": "橙色的太阳球悬挂在圆形的窗格中央，映照着暮色。"
+      },
+      "narrative_hint": "橙色的太阳球悬挂在圆形的窗格中央，映照着暮色。",
+      "raw": "{\"has_people\": false, \"people_count\": null, \"people_description\": null, \"main_subject\": \"日落圆窗\", \"setting\": \"outdoor\", \"light_quality\": \"黄金时刻暖光\", \"weather\": \"晴\", \"time_of_day\": \"sunset\", \"dominant_colors\": [\"橙色\", \"深蓝\", \"黑色\"], \"color_detail\": \"地平线上橙色的太阳圆盘\", \"mood\": [\"宁静\", \"壮阔\"], \"composition\": \"minimal\", \"narrative_hint\": \"橙色的太阳球悬挂在圆形的窗格中央，映照着暮色。\"\n}",
+      "raw_api": {
+        "id": "chatcmpl-e8d650ce",
+        "object": "chat.completion",
+        "created": 1779987486,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": false, \"people_count\": null, \"people_description\": null, \"main_subject\": \"日落圆窗\", \"setting\": \"outdoor\", \"light_quality\": \"黄金时刻暖光\", \"weather\": \"晴\", \"time_of_day\": \"sunset\", \"dominant_colors\": [\"橙色\", \"深蓝\", \"黑色\"], \"color_detail\": \"地平线上橙色的太阳圆盘\", \"mood\": [\"宁静\", \"壮阔\"], \"composition\": \"minimal\", \"narrative_hint\": \"橙色的太阳球悬挂在圆形的窗格中央，映照着暮色。\"\n}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 141,
+          "total_tokens": 771,
+          "input_tokens": 630,
+          "output_tokens": 141,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 6.8
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 6836,
+      "ms": 6836,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 11
+    },
+    {
+      "photo_id": "48d45897-0971-5698-8e9e-b0761fb9d3f2",
+      "tags": {
+        "has_people": false,
+        "people_count": null,
+        "people_description": null,
+        "main_subject": "白狗",
+        "setting": "outdoor",
+        "light_quality": "阴天漫射光",
+        "weather": "阴",
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "绿",
+          "棕",
+          "白"
+        ],
+        "color_detail": null,
+        "mood": [
+          "宁静",
+          "平和"
+        ],
+        "composition": "layered",
+        "narrative_hint": "一只白色的狗安静地走在前景的草地上。"
+      },
+      "narrative_hint": "一只白色的狗安静地走在前景的草地上。",
+      "raw": "{\"has_people\": false, \"people_count\": null, \"people_description\": null, \"main_subject\": \"白狗\", \"setting\": \"outdoor\", \"light_quality\": \"阴天漫射光\", \"weather\": \"阴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"绿\", \"棕\", \"白\"], \"color_detail\": null, \"mood\": [\"宁静\", \"平和\"], \"composition\": \"layered\", \"narrative_hint\": \"一只白色的狗安静地走在前景的草地上。\"}",
+      "raw_api": {
+        "id": "chatcmpl-6cc05992",
+        "object": "chat.completion",
+        "created": 1779987492,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": false, \"people_count\": null, \"people_description\": null, \"main_subject\": \"白狗\", \"setting\": \"outdoor\", \"light_quality\": \"阴天漫射光\", \"weather\": \"阴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"绿\", \"棕\", \"白\"], \"color_detail\": null, \"mood\": [\"宁静\", \"平和\"], \"composition\": \"layered\", \"narrative_hint\": \"一只白色的狗安静地走在前景的草地上。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 123,
+          "total_tokens": 753,
+          "input_tokens": 630,
+          "output_tokens": 123,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 6.21
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 6256,
+      "ms": 6256,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 10
+    },
+    {
+      "photo_id": "c7ae980d-73bd-5fb1-9e60-ed2eef860ada",
+      "tags": {
+        "has_people": false,
+        "people_count": "none",
+        "people_description": null,
+        "main_subject": "树木与田野",
+        "setting": "outdoor",
+        "light_quality": "晴朗的日光",
+        "weather": "晴",
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "绿色",
+          "棕色",
+          "土黄色"
+        ],
+        "color_detail": null,
+        "mood": [
+          "宁静",
+          "广阔"
+        ],
+        "composition": "layered",
+        "narrative_hint": "巨大的树干占据画面左侧，投下长长的阴影覆盖在前景的草地上。"
+      },
+      "narrative_hint": "巨大的树干占据画面左侧，投下长长的阴影覆盖在前景的草地上。",
+      "raw": "{\"has_people\": false, \"people_count\": \"none\", \"people_description\": null, \"main_subject\": \"树木与田野\", \"setting\": \"outdoor\", \"light_quality\": \"晴朗的日光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"绿色\", \"棕色\", \"土黄色\"], \"color_detail\": null, \"mood\": [\"宁静\", \"广阔\"], \"composition\": \"layered\", \"narrative_hint\": \"巨大的树干占据画面左侧，投下长长的阴影覆盖在前景的草地上。\"}",
+      "raw_api": {
+        "id": "chatcmpl-9d71f8e5",
+        "object": "chat.completion",
+        "created": 1779987499,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": false, \"people_count\": \"none\", \"people_description\": null, \"main_subject\": \"树木与田野\", \"setting\": \"outdoor\", \"light_quality\": \"晴朗的日光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"绿色\", \"棕色\", \"土黄色\"], \"color_detail\": null, \"mood\": [\"宁静\", \"广阔\"], \"composition\": \"layered\", \"narrative_hint\": \"巨大的树干占据画面左侧，投下长长的阴影覆盖在前景的草地上。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 137,
+          "total_tokens": 767,
+          "input_tokens": 630,
+          "output_tokens": 137,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 6.69
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 6717,
+      "ms": 6717,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 11
+    },
+    {
+      "photo_id": "ad16176b-f3b3-52b9-a895-6c2813e84cdc",
+      "tags": {
+        "has_people": false,
+        "people_count": null,
+        "people_description": null,
+        "main_subject": "建筑立面",
+        "setting": "outdoor",
+        "light_quality": "均匀的日光",
+        "weather": "晴",
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "米色",
+          "棕色",
+          "灰色"
+        ],
+        "color_detail": null,
+        "mood": [
+          "秩序感",
+          "宏大"
+        ],
+        "composition": "layered",
+        "narrative_hint": "无数规则的窗格排列在米色的砖石结构中，构成几何韵律。"
+      },
+      "narrative_hint": "无数规则的窗格排列在米色的砖石结构中，构成几何韵律。",
+      "raw": "{\"has_people\": false, \"people_count\": null, \"people_description\": null, \"main_subject\": \"建筑立面\", \"setting\": \"outdoor\", \"light_quality\": \"均匀的日光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"米色\", \"棕色\", \"灰色\"], \"color_detail\": null, \"mood\": [\"秩序感\", \"宏大\"], \"composition\": \"layered\", \"narrative_hint\": \"无数规则的窗格排列在米色的砖石结构中，构成几何韵律。\"}",
+      "raw_api": {
+        "id": "chatcmpl-a5533c17",
+        "object": "chat.completion",
+        "created": 1779987505,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": false, \"people_count\": null, \"people_description\": null, \"main_subject\": \"建筑立面\", \"setting\": \"outdoor\", \"light_quality\": \"均匀的日光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"米色\", \"棕色\", \"灰色\"], \"color_detail\": null, \"mood\": [\"秩序感\", \"宏大\"], \"composition\": \"layered\", \"narrative_hint\": \"无数规则的窗格排列在米色的砖石结构中，构成几何韵律。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 131,
+          "total_tokens": 761,
+          "input_tokens": 630,
+          "output_tokens": 131,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 6.53
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 6562,
+      "ms": 6562,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 10
+    },
+    {
+      "photo_id": "1ca5babf-3a39-51c4-91d3-d55b75220d5d",
+      "tags": {
+        "has_people": false,
+        "people_count": null,
+        "people_description": null,
+        "main_subject": "教堂与花树",
+        "setting": "outdoor",
+        "light_quality": "晴朗的日光",
+        "weather": "晴",
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "白",
+          "灰",
+          "绿"
+        ],
+        "color_detail": null,
+        "mood": [
+          "宁静",
+          "生机"
+        ],
+        "composition": "layered",
+        "narrative_hint": "繁花簇拥着古老的石砌教堂，在蓝天下静静矗立。"
+      },
+      "narrative_hint": "繁花簇拥着古老的石砌教堂，在蓝天下静静矗立。",
+      "raw": "{\"has_people\": false, \"people_count\": null, \"people_description\": null, \"main_subject\": \"教堂与花树\", \"setting\": \"outdoor\", \"light_quality\": \"晴朗的日光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"白\", \"灰\", \"绿\"], \"color_detail\": null, \"mood\": [\"宁静\", \"生机\"], \"composition\": \"layered\", \"narrative_hint\": \"繁花簇拥着古老的石砌教堂，在蓝天下静静矗立。\"}",
+      "raw_api": {
+        "id": "chatcmpl-c51d2e6c",
+        "object": "chat.completion",
+        "created": 1779987512,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": false, \"people_count\": null, \"people_description\": null, \"main_subject\": \"教堂与花树\", \"setting\": \"outdoor\", \"light_quality\": \"晴朗的日光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"白\", \"灰\", \"绿\"], \"color_detail\": null, \"mood\": [\"宁静\", \"生机\"], \"composition\": \"layered\", \"narrative_hint\": \"繁花簇拥着古老的石砌教堂，在蓝天下静静矗立。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 131,
+          "total_tokens": 761,
+          "input_tokens": 630,
+          "output_tokens": 131,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 6.88
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 6910,
+      "ms": 6910,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 10
+    },
+    {
+      "photo_id": "c145f126-96ec-57f7-952c-8aaeef0f48d1",
+      "tags": {
+        "has_people": true,
+        "people_count": "two",
+        "people_description": "前景一位戴眼镜的年轻男性，深灰色T恤，低头沉思；中景一位年轻女性，浅蓝色T恤，坐着。",
+        "main_subject": "两位人物",
+        "setting": "indoor",
+        "light_quality": "均匀室内光",
+        "weather": null,
+        "time_of_day": "unknown",
+        "dominant_colors": [
+          "灰",
+          "蓝",
+          "白"
+        ],
+        "color_detail": "前景T恤上的白色印花文字",
+        "mood": [
+          "沉思",
+          "日常"
+        ],
+        "composition": "layered",
+        "narrative_hint": "前景人物的肩膀占据了画面的大部分前景区域。"
+      },
+      "narrative_hint": "前景人物的肩膀占据了画面的大部分前景区域。",
+      "raw": "{\"has_people\": true, \"people_count\": \"two\", \"people_description\": \"前景一位戴眼镜的年轻男性，深灰色T恤，低头沉思；中景一位年轻女性，浅蓝色T恤，坐着。\", \"main_subject\": \"两位人物\", \"setting\": \"indoor\", \"light_quality\": \"均匀室内光\", \"weather\": null, \"time_of_day\": \"unknown\", \"dominant_colors\": [\"灰\", \"蓝\", \"白\"], \"color_detail\": \"前景T恤上的白色印花文字\", \"mood\": [\"沉思\", \"日常\"], \"composition\": \"layered\", \"narrative_hint\": \"前景人物的肩膀占据了画面的大部分前景区域。\"}",
+      "raw_api": {
+        "id": "chatcmpl-e5060be3",
+        "object": "chat.completion",
+        "created": 1779987521,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"two\", \"people_description\": \"前景一位戴眼镜的年轻男性，深灰色T恤，低头沉思；中景一位年轻女性，浅蓝色T恤，坐着。\", \"main_subject\": \"两位人物\", \"setting\": \"indoor\", \"light_quality\": \"均匀室内光\", \"weather\": null, \"time_of_day\": \"unknown\", \"dominant_colors\": [\"灰\", \"蓝\", \"白\"], \"color_detail\": \"前景T恤上的白色印花文字\", \"mood\": [\"沉思\", \"日常\"], \"composition\": \"layered\", \"narrative_hint\": \"前景人物的肩膀占据了画面的大部分前景区域。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 158,
+          "total_tokens": 788,
+          "input_tokens": 630,
+          "output_tokens": 158,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 8.31
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 8325,
+      "ms": 8325,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 12
+    },
+    {
+      "photo_id": "89e2cb24-9839-5acc-845b-cda1871515ae",
+      "tags": {
+        "has_people": true,
+        "people_count": "one",
+        "people_description": "一位深色长发女性，身着黑色衣物，躺在床上，面部表情沉静",
+        "main_subject": "沉睡的女子",
+        "setting": "indoor",
+        "light_quality": "低照度柔光",
+        "weather": null,
+        "time_of_day": "night",
+        "dominant_colors": [
+          "黑",
+          "白",
+          "棕"
+        ],
+        "color_detail": null,
+        "mood": [
+          "沉静",
+          "慵懒"
+        ],
+        "composition": "offcenter",
+        "narrative_hint": "她黑色的衣物在床单上形成深色的轮廓"
+      },
+      "narrative_hint": "她黑色的衣物在床单上形成深色的轮廓",
+      "raw": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位深色长发女性，身着黑色衣物，躺在床上，面部表情沉静\", \"main_subject\": \"沉睡的女子\", \"setting\": \"indoor\", \"light_quality\": \"低照度柔光\", \"weather\": null, \"time_of_day\": \"night\", \"dominant_colors\": [\"黑\", \"白\", \"棕\"], \"color_detail\": null, \"mood\": [\"沉静\", \"慵懒\"], \"composition\": \"offcenter\", \"narrative_hint\": \"她黑色的衣物在床单上形成深色的轮廓\"}",
+      "raw_api": {
+        "id": "chatcmpl-c47ceb80",
+        "object": "chat.completion",
+        "created": 1779987529,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位深色长发女性，身着黑色衣物，躺在床上，面部表情沉静\", \"main_subject\": \"沉睡的女子\", \"setting\": \"indoor\", \"light_quality\": \"低照度柔光\", \"weather\": null, \"time_of_day\": \"night\", \"dominant_colors\": [\"黑\", \"白\", \"棕\"], \"color_detail\": null, \"mood\": [\"沉静\", \"慵懒\"], \"composition\": \"offcenter\", \"narrative_hint\": \"她黑色的衣物在床单上形成深色的轮廓\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 149,
+          "total_tokens": 779,
+          "input_tokens": 630,
+          "output_tokens": 149,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 7.9
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 7972,
+      "ms": 7972,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "time_of_day",
+        "dominant_colors",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 11
+    },
+    {
+      "photo_id": "3fd9cdbb-8c2b-501a-8e6b-f85c6ec0c578",
+      "tags": {
+        "has_people": true,
+        "people_count": "one",
+        "people_description": "一位深色厚款大衣的中年左右的个体，低着头，似乎在看手中的小物件，姿态沉静。",
+        "main_subject": "沉思的个体",
+        "setting": "outdoor",
+        "light_quality": "夜间人工光",
+        "weather": "null",
+        "time_of_day": "night",
+        "dominant_colors": [
+          "棕色",
+          "黑色",
+          "琥珀色"
+        ],
+        "color_detail": "背景中温暖的琥珀色灯光映衬着人物的深色衣物。",
+        "mood": [
+          "沉静",
+          "都市感"
+        ],
+        "composition": "layered",
+        "narrative_hint": "温暖的室内灯光透过玻璃窗，勾勒出这位在都市夜色中驻足的行人身影。"
+      },
+      "narrative_hint": "温暖的室内灯光透过玻璃窗，勾勒出这位在都市夜色中驻足的行人身影。",
+      "raw": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位深色厚款大衣的中年左右的个体，低着头，似乎在看手中的小物件，姿态沉静。\", \"main_subject\": \"沉思的个体\", \"setting\": \"outdoor\", \"light_quality\": \"夜间人工光\", \"weather\": \"null\", \"time_of_day\": \"night\", \"dominant_colors\": [\"棕色\", \"黑色\", \"琥珀色\"], \"color_detail\": \"背景中温暖的琥珀色灯光映衬着人物的深色衣物。\", \"mood\": [\"沉静\", \"都市感\"], \"composition\": \"layered\", \"narrative_hint\": \"温暖的室内灯光透过玻璃窗，勾勒出这位在都市夜色中驻足的行人身影。\"}",
+      "raw_api": {
+        "id": "chatcmpl-8ff10976",
+        "object": "chat.completion",
+        "created": 1779987538,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位深色厚款大衣的中年左右的个体，低着头，似乎在看手中的小物件，姿态沉静。\", \"main_subject\": \"沉思的个体\", \"setting\": \"outdoor\", \"light_quality\": \"夜间人工光\", \"weather\": \"null\", \"time_of_day\": \"night\", \"dominant_colors\": [\"棕色\", \"黑色\", \"琥珀色\"], \"color_detail\": \"背景中温暖的琥珀色灯光映衬着人物的深色衣物。\", \"mood\": [\"沉静\", \"都市感\"], \"composition\": \"layered\", \"narrative_hint\": \"温暖的室内灯光透过玻璃窗，勾勒出这位在都市夜色中驻足的行人身影。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 185,
+          "total_tokens": 815,
+          "input_tokens": 630,
+          "output_tokens": 185,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 9.56
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 9651,
+      "ms": 9651,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 13
+    },
+    {
+      "photo_id": "abd2558d-b0f3-516b-9af6-1a01db561c99",
+      "tags": {
+        "has_people": true,
+        "people_count": "one",
+        "people_description": "一位深棕色长发女性，身着芥末黄连衣裙，坐在鹅卵石滩上，双腿并拢跪坐。",
+        "main_subject": "海岸沉思",
+        "setting": "outdoor",
+        "light_quality": "自然光",
+        "weather": "晴",
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "棕色",
+          "黄色",
+          "灰色"
+        ],
+        "color_detail": "芥末黄连衣裙的材质在阳光下显露出柔软的褶皱。",
+        "mood": [
+          "沉思",
+          "宁静"
+        ],
+        "composition": "layered",
+        "narrative_hint": "她那双脚踝上露出白色的高跟鞋，轻轻触碰着散落的鹅卵石滩。"
+      },
+      "narrative_hint": "她那双脚踝上露出白色的高跟鞋，轻轻触碰着散落的鹅卵石滩。",
+      "raw": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位深棕色长发女性，身着芥末黄连衣裙，坐在鹅卵石滩上，双腿并拢跪坐。\", \"main_subject\": \"海岸沉思\", \"setting\": \"outdoor\", \"light_quality\": \"自然光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"棕色\", \"黄色\", \"灰色\"], \"color_detail\": \"芥末黄连衣裙的材质在阳光下显露出柔软的褶皱。\", \"mood\": [\"沉思\", \"宁静\"], \"composition\": \"layered\", \"narrative_hint\": \"她那双脚踝上露出白色的高跟鞋，轻轻触碰着散落的鹅卵石滩。\"}",
+      "raw_api": {
+        "id": "chatcmpl-5bbf798d",
+        "object": "chat.completion",
+        "created": 1779987547,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位深棕色长发女性，身着芥末黄连衣裙，坐在鹅卵石滩上，双腿并拢跪坐。\", \"main_subject\": \"海岸沉思\", \"setting\": \"outdoor\", \"light_quality\": \"自然光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"棕色\", \"黄色\", \"灰色\"], \"color_detail\": \"芥末黄连衣裙的材质在阳光下显露出柔软的褶皱。\", \"mood\": [\"沉思\", \"宁静\"], \"composition\": \"layered\", \"narrative_hint\": \"她那双脚踝上露出白色的高跟鞋，轻轻触碰着散落的鹅卵石滩。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 179,
+          "total_tokens": 809,
+          "input_tokens": 630,
+          "output_tokens": 179,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 9.18
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 9204,
+      "ms": 9204,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 13
+    },
+    {
+      "photo_id": "e84f4493-176c-5b9e-a41a-96a48b5b0d1b",
+      "tags": {
+        "has_people": true,
+        "people_count": "group",
+        "people_description": "多位模糊的观众，面部在黑暗中若隐若现，姿态沉浸于观看之中",
+        "main_subject": "圆形装置",
+        "setting": "indoor",
+        "light_quality": "夜间人工光",
+        "weather": null,
+        "time_of_day": "night",
+        "dominant_colors": [
+          "黑",
+          "蓝",
+          "黄"
+        ],
+        "color_detail": "中央的圆形装置散发出幽蓝色的光芒",
+        "mood": [
+          "沉浸",
+          "神秘"
+        ],
+        "composition": "layered",
+        "narrative_hint": "幽蓝色的圆形装置悬浮在黑暗的中央，吸引着下方所有凝视的目光。"
+      },
+      "narrative_hint": "幽蓝色的圆形装置悬浮在黑暗的中央，吸引着下方所有凝视的目光。",
+      "raw": "{\"has_people\": true, \"people_count\": \"group\", \"people_description\": \"多位模糊的观众，面部在黑暗中若隐若现，姿态沉浸于观看之中\", \"main_subject\": \"圆形装置\", \"setting\": \"indoor\", \"light_quality\": \"夜间人工光\", \"weather\": null, \"time_of_day\": \"night\", \"dominant_colors\": [\"黑\", \"蓝\", \"黄\"], \"color_detail\": \"中央的圆形装置散发出幽蓝色的光芒\", \"mood\": [\"沉浸\", \"神秘\"], \"composition\": \"layered\", \"narrative_hint\": \"幽蓝色的圆形装置悬浮在黑暗的中央，吸引着下方所有凝视的目光。\"}",
+      "raw_api": {
+        "id": "chatcmpl-3e1173fa",
+        "object": "chat.completion",
+        "created": 1779987556,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"group\", \"people_description\": \"多位模糊的观众，面部在黑暗中若隐若现，姿态沉浸于观看之中\", \"main_subject\": \"圆形装置\", \"setting\": \"indoor\", \"light_quality\": \"夜间人工光\", \"weather\": null, \"time_of_day\": \"night\", \"dominant_colors\": [\"黑\", \"蓝\", \"黄\"], \"color_detail\": \"中央的圆形装置散发出幽蓝色的光芒\", \"mood\": [\"沉浸\", \"神秘\"], \"composition\": \"layered\", \"narrative_hint\": \"幽蓝色的圆形装置悬浮在黑暗的中央，吸引着下方所有凝视的目光。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 163,
+          "total_tokens": 793,
+          "input_tokens": 630,
+          "output_tokens": 163,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 8.64
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 8681,
+      "ms": 8681,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 12
+    },
+    {
+      "photo_id": "e3467e4e-f1e5-5ae8-887b-c0563091157c",
+      "tags": {
+        "has_people": true,
+        "people_count": "one",
+        "people_description": "一位穿着黑色长袖上衣的年轻女性，仰卧在木地板上，头部转向右侧。",
+        "main_subject": "猫与人",
+        "setting": "indoor",
+        "light_quality": "均匀柔光",
+        "weather": null,
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "棕色",
+          "黑色",
+          "木色"
+        ],
+        "color_detail": null,
+        "mood": [
+          "宁静",
+          "慵懒"
+        ],
+        "composition": "offcenter",
+        "narrative_hint": "一只深色猫咪的头部低垂在木地板上，凝视着躺着的女性手臂。"
+      },
+      "narrative_hint": "一只深色猫咪的头部低垂在木地板上，凝视着躺着的女性手臂。",
+      "raw": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位穿着黑色长袖上衣的年轻女性，仰卧在木地板上，头部转向右侧。\", \"main_subject\": \"猫与人\", \"setting\": \"indoor\", \"light_quality\": \"均匀柔光\", \"weather\": null, \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"棕色\", \"黑色\", \"木色\"], \"color_detail\": null, \"mood\": [\"宁静\", \"慵懒\"], \"composition\": \"offcenter\", \"narrative_hint\": \"一只深色猫咪的头部低垂在木地板上，凝视着躺着的女性手臂。\"}",
+      "raw_api": {
+        "id": "chatcmpl-8f466de7",
+        "object": "chat.completion",
+        "created": 1779987565,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位穿着黑色长袖上衣的年轻女性，仰卧在木地板上，头部转向右侧。\", \"main_subject\": \"猫与人\", \"setting\": \"indoor\", \"light_quality\": \"均匀柔光\", \"weather\": null, \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"棕色\", \"黑色\", \"木色\"], \"color_detail\": null, \"mood\": [\"宁静\", \"慵懒\"], \"composition\": \"offcenter\", \"narrative_hint\": \"一只深色猫咪的头部低垂在木地板上，凝视着躺着的女性手臂。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 157,
+          "total_tokens": 787,
+          "input_tokens": 630,
+          "output_tokens": 157,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 8.95
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 9038,
+      "ms": 9038,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "time_of_day",
+        "dominant_colors",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 11
+    },
+    {
+      "photo_id": "b1cf2861-0215-5b20-9415-169995aeee48",
+      "tags": {
+        "has_people": true,
+        "people_count": "group",
+        "people_description": "多人，穿着深色衣物，各自站立或行走，身影在玻璃上投射或叠加。",
+        "main_subject": "玻璃上的倒影",
+        "setting": "indoor",
+        "light_quality": "均匀的室内光线，穿透玻璃的漫射光",
+        "weather": null,
+        "time_of_day": "unknown",
+        "dominant_colors": [
+          "白",
+          "灰",
+          "透明"
+        ],
+        "color_detail": null,
+        "mood": [
+          "空灵",
+          "疏离"
+        ],
+        "composition": "layered",
+        "narrative_hint": "玻璃幕墙上，模糊的影像叠加着，构成多重存在的幻象。"
+      },
+      "narrative_hint": "玻璃幕墙上，模糊的影像叠加着，构成多重存在的幻象。",
+      "raw": "{\"has_people\": true, \"people_count\": \"group\", \"people_description\": \"多人，穿着深色衣物，各自站立或行走，身影在玻璃上投射或叠加。\", \"main_subject\": \"玻璃上的倒影\", \"setting\": \"indoor\", \"light_quality\": \"均匀的室内光线，穿透玻璃的漫射光\", \"weather\": null, \"time_of_day\": \"unknown\", \"dominant_colors\": [\"白\", \"灰\", \"透明\"], \"color_detail\": null, \"mood\": [\"空灵\", \"疏离\"], \"composition\": \"layered\", \"narrative_hint\": \"玻璃幕墙上，模糊的影像叠加着，构成多重存在的幻象。\"}",
+      "raw_api": {
+        "id": "chatcmpl-f2243e1f",
+        "object": "chat.completion",
+        "created": 1779987576,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"group\", \"people_description\": \"多人，穿着深色衣物，各自站立或行走，身影在玻璃上投射或叠加。\", \"main_subject\": \"玻璃上的倒影\", \"setting\": \"indoor\", \"light_quality\": \"均匀的室内光线，穿透玻璃的漫射光\", \"weather\": null, \"time_of_day\": \"unknown\", \"dominant_colors\": [\"白\", \"灰\", \"透明\"], \"color_detail\": null, \"mood\": [\"空灵\", \"疏离\"], \"composition\": \"layered\", \"narrative_hint\": \"玻璃幕墙上，模糊的影像叠加着，构成多重存在的幻象。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 160,
+          "total_tokens": 790,
+          "input_tokens": 630,
+          "output_tokens": 160,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 10.72
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 10854,
+      "ms": 10854,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "time_of_day",
+        "dominant_colors",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 11
+    },
+    {
+      "photo_id": "daa021a6-de24-51a0-b8a8-88ed3203adf2",
+      "tags": {
+        "has_people": true,
+        "people_count": "one",
+        "people_description": "一位深色T恤的女性，身体前倾，低头观察",
+        "main_subject": "猫咪互动",
+        "setting": "indoor",
+        "light_quality": "室内均匀光线",
+        "weather": null,
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "黑色",
+          "棕色",
+          "米色"
+        ],
+        "color_detail": "猫咪的灰褐色皮毛",
+        "mood": [
+          "专注",
+          "宁静"
+        ],
+        "composition": "layered",
+        "narrative_hint": "一只灰褐色的猫咪蹲在黑色柜台前，凝视着面前的物品。"
+      },
+      "narrative_hint": "一只灰褐色的猫咪蹲在黑色柜台前，凝视着面前的物品。",
+      "raw": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位深色T恤的女性，身体前倾，低头观察\", \"main_subject\": \"猫咪互动\", \"setting\": \"indoor\", \"light_quality\": \"室内均匀光线\", \"weather\": null, \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"黑色\", \"棕色\", \"米色\"], \"color_detail\": \"猫咪的灰褐色皮毛\", \"mood\": [\"专注\", \"宁静\"], \"composition\": \"layered\", \"narrative_hint\": \"一只灰褐色的猫咪蹲在黑色柜台前，凝视着面前的物品。\"}",
+      "raw_api": {
+        "id": "chatcmpl-7aa6c3bc",
+        "object": "chat.completion",
+        "created": 1779987589,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位深色T恤的女性，身体前倾，低头观察\", \"main_subject\": \"猫咪互动\", \"setting\": \"indoor\", \"light_quality\": \"室内均匀光线\", \"weather\": null, \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"黑色\", \"棕色\", \"米色\"], \"color_detail\": \"猫咪的灰褐色皮毛\", \"mood\": [\"专注\", \"宁静\"], \"composition\": \"layered\", \"narrative_hint\": \"一只灰褐色的猫咪蹲在黑色柜台前，凝视着面前的物品。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 154,
+          "total_tokens": 784,
+          "input_tokens": 630,
+          "output_tokens": 154,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 12.56
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 12589,
+      "ms": 12589,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 12
+    },
+    {
+      "photo_id": "c7164f5a-99b7-5932-80eb-7aa61dc36a07",
+      "tags": {
+        "has_people": true,
+        "people_count": "one",
+        "people_description": "一位亚洲男性，黑色T恤，表情平静，坐在书本旁",
+        "main_subject": "图书馆借书证",
+        "setting": "indoor",
+        "light_quality": "均匀的室内光",
+        "weather": null,
+        "time_of_day": "unknown",
+        "dominant_colors": [
+          "白",
+          "黑",
+          "红"
+        ],
+        "color_detail": "借书证上的红色LSE标志",
+        "mood": [
+          "正式",
+          "有序"
+        ],
+        "composition": "centered",
+        "narrative_hint": "借书证上的黑色条形码横跨在白色卡片底部。"
+      },
+      "narrative_hint": "借书证上的黑色条形码横跨在白色卡片底部。",
+      "raw": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位亚洲男性，黑色T恤，表情平静，坐在书本旁\", \"main_subject\": \"图书馆借书证\", \"setting\": \"indoor\", \"light_quality\": \"均匀的室内光\", \"weather\": null, \"time_of_day\": \"unknown\", \"dominant_colors\": [\"白\", \"黑\", \"红\"], \"color_detail\": \"借书证上的红色LSE标志\", \"mood\": [\"正式\", \"有序\"], \"composition\": \"centered\", \"narrative_hint\": \"借书证上的黑色条形码横跨在白色卡片底部。\"}",
+      "raw_api": {
+        "id": "chatcmpl-3eb9d91c",
+        "object": "chat.completion",
+        "created": 1779987604,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一位亚洲男性，黑色T恤，表情平静，坐在书本旁\", \"main_subject\": \"图书馆借书证\", \"setting\": \"indoor\", \"light_quality\": \"均匀的室内光\", \"weather\": null, \"time_of_day\": \"unknown\", \"dominant_colors\": [\"白\", \"黑\", \"红\"], \"color_detail\": \"借书证上的红色LSE标志\", \"mood\": [\"正式\", \"有序\"], \"composition\": \"centered\", \"narrative_hint\": \"借书证上的黑色条形码横跨在白色卡片底部。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 636,
+          "completion_tokens": 148,
+          "total_tokens": 784,
+          "input_tokens": 636,
+          "output_tokens": 148,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 15.34
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 15372,
+      "ms": 15372,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 12
+    },
+    {
+      "photo_id": "900f993d-cf3b-51b5-b184-2bd686d160c4",
+      "tags": {
+        "has_people": true,
+        "people_count": "group",
+        "people_description": "一群人聚集在展厅内，衣着各异，年龄跨度较大，部分人站立，部分人坐着，姿态各异。",
+        "main_subject": "展览参观",
+        "setting": "indoor",
+        "light_quality": "均匀的室内照明",
+        "weather": null,
+        "time_of_day": "unknown",
+        "dominant_colors": [
+          "黄",
+          "棕色",
+          "米色"
+        ],
+        "color_detail": null,
+        "mood": [
+          "沉浸",
+          "好奇"
+        ],
+        "composition": "layered",
+        "narrative_hint": "背景墙上的文字信息框占据了画面中央的背景区域。"
+      },
+      "narrative_hint": "背景墙上的文字信息框占据了画面中央的背景区域。",
+      "raw": "{\"has_people\": true, \"people_count\": \"group\", \"people_description\": \"一群人聚集在展厅内，衣着各异，年龄跨度较大，部分人站立，部分人坐着，姿态各异。\", \"main_subject\": \"展览参观\", \"setting\": \"indoor\", \"light_quality\": \"均匀的室内照明\", \"weather\": null, \"time_of_day\": \"unknown\", \"dominant_colors\": [\"黄\", \"棕色\", \"米色\"], \"color_detail\": null, \"mood\": [\"沉浸\", \"好奇\"], \"composition\": \"layered\", \"narrative_hint\": \"背景墙上的文字信息框占据了画面中央的背景区域。\"}",
+      "raw_api": {
+        "id": "chatcmpl-d6d78ada",
+        "object": "chat.completion",
+        "created": 1779987619,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"group\", \"people_description\": \"一群人聚集在展厅内，衣着各异，年龄跨度较大，部分人站立，部分人坐着，姿态各异。\", \"main_subject\": \"展览参观\", \"setting\": \"indoor\", \"light_quality\": \"均匀的室内照明\", \"weather\": null, \"time_of_day\": \"unknown\", \"dominant_colors\": [\"黄\", \"棕色\", \"米色\"], \"color_detail\": null, \"mood\": [\"沉浸\", \"好奇\"], \"composition\": \"layered\", \"narrative_hint\": \"背景墙上的文字信息框占据了画面中央的背景区域。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 156,
+          "total_tokens": 786,
+          "input_tokens": 630,
+          "output_tokens": 156,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 15.32
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 15352,
+      "ms": 15352,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "time_of_day",
+        "dominant_colors",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 11
+    },
+    {
+      "photo_id": "999f1283-973f-50c7-b929-229b5fc2a455",
+      "tags": {
+        "has_people": false,
+        "people_count": null,
+        "people_description": null,
+        "main_subject": "猫",
+        "setting": "indoor",
+        "light_quality": "人工光",
+        "weather": null,
+        "time_of_day": "unknown",
+        "dominant_colors": [
+          "棕色",
+          "米色",
+          "木色"
+        ],
+        "color_detail": null,
+        "mood": [
+          "宁静",
+          "慵懒"
+        ],
+        "composition": "layered",
+        "narrative_hint": "橘色猫躺在木箱上，身体舒展地占据了画面中央的木质表面。"
+      },
+      "narrative_hint": "橘色猫躺在木箱上，身体舒展地占据了画面中央的木质表面。",
+      "raw": "{\"has_people\": false, \"people_count\": null, \"people_description\": null, \"main_subject\": \"猫\", \"setting\": \"indoor\", \"light_quality\": \"人工光\", \"weather\": null, \"time_of_day\": \"unknown\", \"dominant_colors\": [\"棕色\", \"米色\", \"木色\"], \"color_detail\": null, \"mood\": [\"宁静\", \"慵懒\"], \"composition\": \"layered\", \"narrative_hint\": \"橘色猫躺在木箱上，身体舒展地占据了画面中央的木质表面。\"}",
+      "raw_api": {
+        "id": "chatcmpl-0f460342",
+        "object": "chat.completion",
+        "created": 1779987634,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": false, \"people_count\": null, \"people_description\": null, \"main_subject\": \"猫\", \"setting\": \"indoor\", \"light_quality\": \"人工光\", \"weather\": null, \"time_of_day\": \"unknown\", \"dominant_colors\": [\"棕色\", \"米色\", \"木色\"], \"color_detail\": null, \"mood\": [\"宁静\", \"慵懒\"], \"composition\": \"layered\", \"narrative_hint\": \"橘色猫躺在木箱上，身体舒展地占据了画面中央的木质表面。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 130,
+          "total_tokens": 760,
+          "input_tokens": 630,
+          "output_tokens": 130,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 14.33
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 14358,
+      "ms": 14358,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "time_of_day",
+        "dominant_colors",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 9
+    },
+    {
+      "photo_id": "1ad12acd-0a8d-5043-933d-330c9eca3716",
+      "tags": {
+        "has_people": true,
+        "people_count": "group",
+        "people_description": "人群散落在地面上，部分仰望，部分坐着，衣着各异，年龄不一，姿态放松或专注。",
+        "main_subject": "人群聚集",
+        "setting": "unknown",
+        "light_quality": "人工光",
+        "weather": "null",
+        "time_of_day": "night",
+        "dominant_colors": [
+          "蓝",
+          "青",
+          "红"
+        ],
+        "color_detail": "中央的巨大红色圆环占据了视觉焦点。",
+        "mood": [
+          "沉浸",
+          "观察"
+        ],
+        "composition": "layered",
+        "narrative_hint": "无数人散落在广阔的蓝色地面上，仰望着上方的信息或景象。"
+      },
+      "narrative_hint": "无数人散落在广阔的蓝色地面上，仰望着上方的信息或景象。",
+      "raw": "{\"has_people\": true, \"people_count\": \"group\", \"people_description\": \"人群散落在地面上，部分仰望，部分坐着，衣着各异，年龄不一，姿态放松或专注。\", \"main_subject\": \"人群聚集\", \"setting\": \"unknown\", \"light_quality\": \"人工光\", \"weather\": \"null\", \"time_of_day\": \"night\", \"dominant_colors\": [\"蓝\", \"青\", \"红\"], \"color_detail\": \"中央的巨大红色圆环占据了视觉焦点。\", \"mood\": [\"沉浸\", \"观察\"], \"composition\": \"layered\", \"narrative_hint\": \"无数人散落在广阔的蓝色地面上，仰望着上方的信息或景象。\"}",
+      "raw_api": {
+        "id": "chatcmpl-f7b01157",
+        "object": "chat.completion",
+        "created": 1779987648,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"group\", \"people_description\": \"人群散落在地面上，部分仰望，部分坐着，衣着各异，年龄不一，姿态放松或专注。\", \"main_subject\": \"人群聚集\", \"setting\": \"unknown\", \"light_quality\": \"人工光\", \"weather\": \"null\", \"time_of_day\": \"night\", \"dominant_colors\": [\"蓝\", \"青\", \"红\"], \"color_detail\": \"中央的巨大红色圆环占据了视觉焦点。\", \"mood\": [\"沉浸\", \"观察\"], \"composition\": \"layered\", \"narrative_hint\": \"无数人散落在广阔的蓝色地面上，仰望着上方的信息或景象。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 163,
+          "total_tokens": 793,
+          "input_tokens": 630,
+          "output_tokens": 163,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 14.6
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 14627,
+      "ms": 14627,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 13
+    },
+    {
+      "photo_id": "821749ae-0f4b-5c80-b598-b9f4e79892ef",
+      "tags": {
+        "has_people": false,
+        "people_count": null,
+        "people_description": null,
+        "main_subject": "猫",
+        "setting": "indoor",
+        "light_quality": "温暖的室内光",
+        "weather": null,
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "棕色",
+          "白色",
+          "绿色"
+        ],
+        "color_detail": null,
+        "mood": [
+          "慵懒",
+          "宁静"
+        ],
+        "composition": "layered",
+        "narrative_hint": "猫咪的头部占据了前景，模糊地凝视着远处的物体。"
+      },
+      "narrative_hint": "猫咪的头部占据了前景，模糊地凝视着远处的物体。",
+      "raw": "{\"has_people\": false, \"people_count\": null, \"people_description\": null, \"main_subject\": \"猫\", \"setting\": \"indoor\", \"light_quality\": \"温暖的室内光\", \"weather\": null, \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"棕色\", \"白色\", \"绿色\"], \"color_detail\": null, \"mood\": [\"慵懒\", \"宁静\"], \"composition\": \"layered\", \"narrative_hint\": \"猫咪的头部占据了前景，模糊地凝视着远处的物体。\"}",
+      "raw_api": {
+        "id": "chatcmpl-fe314914",
+        "object": "chat.completion",
+        "created": 1779987661,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": false, \"people_count\": null, \"people_description\": null, \"main_subject\": \"猫\", \"setting\": \"indoor\", \"light_quality\": \"温暖的室内光\", \"weather\": null, \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"棕色\", \"白色\", \"绿色\"], \"color_detail\": null, \"mood\": [\"慵懒\", \"宁静\"], \"composition\": \"layered\", \"narrative_hint\": \"猫咪的头部占据了前景，模糊地凝视着远处的物体。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 126,
+          "total_tokens": 756,
+          "input_tokens": 630,
+          "output_tokens": 126,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 12.36
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 12388,
+      "ms": 12388,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "time_of_day",
+        "dominant_colors",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 9
+    },
+    {
+      "photo_id": "24623df4-57a2-5be2-ae9a-372067cd3145",
+      "tags": {
+        "has_people": false,
+        "people_count": null,
+        "people_description": null,
+        "main_subject": "猫",
+        "setting": "indoor",
+        "light_quality": "窗边柔光",
+        "weather": null,
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "灰",
+          "白",
+          "木色"
+        ],
+        "color_detail": null,
+        "mood": [
+          "沉思",
+          "安静"
+        ],
+        "composition": "offcenter",
+        "narrative_hint": "灰色的猫咪端坐在浅色木地板上，凝视着远方。"
+      },
+      "narrative_hint": "灰色的猫咪端坐在浅色木地板上，凝视着远方。",
+      "raw": "{\"has_people\": false, \"people_count\": null, \"people_description\": null, \"main_subject\": \"猫\", \"setting\": \"indoor\", \"light_quality\": \"窗边柔光\", \"weather\": null, \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"灰\", \"白\", \"木色\"], \"color_detail\": null, \"mood\": [\"沉思\", \"安静\"], \"composition\": \"offcenter\", \"narrative_hint\": \"灰色的猫咪端坐在浅色木地板上，凝视着远方。\"}",
+      "raw_api": {
+        "id": "chatcmpl-c5d52033",
+        "object": "chat.completion",
+        "created": 1779987672,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": false, \"people_count\": null, \"people_description\": null, \"main_subject\": \"猫\", \"setting\": \"indoor\", \"light_quality\": \"窗边柔光\", \"weather\": null, \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"灰\", \"白\", \"木色\"], \"color_detail\": null, \"mood\": [\"沉思\", \"安静\"], \"composition\": \"offcenter\", \"narrative_hint\": \"灰色的猫咪端坐在浅色木地板上，凝视着远方。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 127,
+          "total_tokens": 757,
+          "input_tokens": 630,
+          "output_tokens": 127,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 11.34
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 11359,
+      "ms": 11359,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "time_of_day",
+        "dominant_colors",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 9
+    },
+    {
+      "photo_id": "41ee8911-982f-51a9-8563-b3556de47d3d",
+      "tags": {
+        "has_people": false,
+        "people_count": null,
+        "people_description": null,
+        "main_subject": "猫",
+        "setting": "indoor",
+        "light_quality": "窗边柔光",
+        "weather": null,
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "棕色",
+          "灰色",
+          "白色"
+        ],
+        "color_detail": null,
+        "mood": [
+          "宁静",
+          "沉思"
+        ],
+        "composition": "layered",
+        "narrative_hint": "猫咪静卧在黑色底座上，背景是干燥的棉花簇拥着枝叶。"
+      },
+      "narrative_hint": "猫咪静卧在黑色底座上，背景是干燥的棉花簇拥着枝叶。",
+      "raw": "{\"has_people\": false, \"people_count\": null, \"people_description\": null, \"main_subject\": \"猫\", \"setting\": \"indoor\", \"light_quality\": \"窗边柔光\", \"weather\": null, \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"棕色\", \"灰色\", \"白色\"], \"color_detail\": null, \"mood\": [\"宁静\", \"沉思\"], \"composition\": \"layered\", \"narrative_hint\": \"猫咪静卧在黑色底座上，背景是干燥的棉花簇拥着枝叶。\"}",
+      "raw_api": {
+        "id": "chatcmpl-5cd901aa",
+        "object": "chat.completion",
+        "created": 1779987683,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": false, \"people_count\": null, \"people_description\": null, \"main_subject\": \"猫\", \"setting\": \"indoor\", \"light_quality\": \"窗边柔光\", \"weather\": null, \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"棕色\", \"灰色\", \"白色\"], \"color_detail\": null, \"mood\": [\"宁静\", \"沉思\"], \"composition\": \"layered\", \"narrative_hint\": \"猫咪静卧在黑色底座上，背景是干燥的棉花簇拥着枝叶。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 131,
+          "total_tokens": 761,
+          "input_tokens": 630,
+          "output_tokens": 131,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 11.17
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 11200,
+      "ms": 11200,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "time_of_day",
+        "dominant_colors",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 9
+    },
+    {
+      "photo_id": "9ea002a6-a46a-5303-92e9-cdc14dc2fec3",
+      "tags": {
+        "has_people": true,
+        "people_count": "one",
+        "people_description": "骑自行车的人，深色衣物，在街道中央",
+        "main_subject": "街道景象",
+        "setting": "outdoor",
+        "light_quality": "晴朗的日光",
+        "weather": "晴",
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "棕色",
+          "白色",
+          "灰色"
+        ],
+        "color_detail": "橙色邮筒",
+        "mood": [
+          "宁静",
+          "日常"
+        ],
+        "composition": "layered",
+        "narrative_hint": "橙色的邮筒矗立在人行道旁，映衬着街道的延伸。"
+      },
+      "narrative_hint": "橙色的邮筒矗立在人行道旁，映衬着街道的延伸。",
+      "raw": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"骑自行车的人，深色衣物，在街道中央\", \"main_subject\": \"街道景象\", \"setting\": \"outdoor\", \"light_quality\": \"晴朗的日光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"棕色\", \"白色\", \"灰色\"], \"color_detail\": \"橙色邮筒\", \"mood\": [\"宁静\", \"日常\"], \"composition\": \"layered\", \"narrative_hint\": \"橙色的邮筒矗立在人行道旁，映衬着街道的延伸。\"}",
+      "raw_api": {
+        "id": "chatcmpl-1ac810e8",
+        "object": "chat.completion",
+        "created": 1779987695,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"骑自行车的人，深色衣物，在街道中央\", \"main_subject\": \"街道景象\", \"setting\": \"outdoor\", \"light_quality\": \"晴朗的日光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"棕色\", \"白色\", \"灰色\"], \"color_detail\": \"橙色邮筒\", \"mood\": [\"宁静\", \"日常\"], \"composition\": \"layered\", \"narrative_hint\": \"橙色的邮筒矗立在人行道旁，映衬着街道的延伸。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 146,
+          "total_tokens": 776,
+          "input_tokens": 630,
+          "output_tokens": 146,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 12.02
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 12043,
+      "ms": 12043,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 13
+    },
+    {
+      "photo_id": "421e92c0-c865-58ce-aff2-e6c02fa094f1",
+      "tags": {
+        "has_people": false,
+        "people_count": "none",
+        "people_description": null,
+        "main_subject": "通道尽头",
+        "setting": "outdoor",
+        "light_quality": "晴朗的日光",
+        "weather": "晴",
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "棕色",
+          "灰色",
+          "绿色"
+        ],
+        "color_detail": null,
+        "mood": [
+          "宁静",
+          "沉思"
+        ],
+        "composition": "layered",
+        "narrative_hint": "远处的车停在中央的柏油路上，映衬着两侧高耸的砖墙。"
+      },
+      "narrative_hint": "远处的车停在中央的柏油路上，映衬着两侧高耸的砖墙。",
+      "raw": "{\"has_people\": false, \"people_count\": \"none\", \"people_description\": null, \"main_subject\": \"通道尽头\", \"setting\": \"outdoor\", \"light_quality\": \"晴朗的日光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"棕色\", \"灰色\", \"绿色\"], \"color_detail\": null, \"mood\": [\"宁静\", \"沉思\"], \"composition\": \"layered\", \"narrative_hint\": \"远处的车停在中央的柏油路上，映衬着两侧高耸的砖墙。\"}",
+      "raw_api": {
+        "id": "chatcmpl-66b6a67d",
+        "object": "chat.completion",
+        "created": 1779987707,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": false, \"people_count\": \"none\", \"people_description\": null, \"main_subject\": \"通道尽头\", \"setting\": \"outdoor\", \"light_quality\": \"晴朗的日光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"棕色\", \"灰色\", \"绿色\"], \"color_detail\": null, \"mood\": [\"宁静\", \"沉思\"], \"composition\": \"layered\", \"narrative_hint\": \"远处的车停在中央的柏油路上，映衬着两侧高耸的砖墙。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 134,
+          "total_tokens": 764,
+          "input_tokens": 630,
+          "output_tokens": 134,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 11.77
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 11799,
+      "ms": 11799,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 11
+    },
+    {
+      "photo_id": "91ae729a-6ce2-57b6-a0d4-e79e769f59ab",
+      "tags": {
+        "has_people": true,
+        "people_count": "group",
+        "people_description": "前景有三位背对镜头的人，一位穿着浅绿色上衣，一位穿着黑色连帽衫，一位穿着黑色上衣的女士占据了画面主体；远景有几位小人在旁观。",
+        "main_subject": "观察者群像",
+        "setting": "outdoor",
+        "light_quality": "晴朗白日光",
+        "weather": "多云",
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "蓝",
+          "白",
+          "黑"
+        ],
+        "color_detail": "远处建筑的米黄色砖墙",
+        "mood": [
+          "沉思",
+          "观察"
+        ],
+        "composition": "layered",
+        "narrative_hint": "远景的信号灯柱高耸在多云的蓝天下，矗立在轨道旁。"
+      },
+      "narrative_hint": "远景的信号灯柱高耸在多云的蓝天下，矗立在轨道旁。",
+      "raw": "{\"has_people\": true, \"people_count\": \"group\", \"people_description\": \"前景有三位背对镜头的人，一位穿着浅绿色上衣，一位穿着黑色连帽衫，一位穿着黑色上衣的女士占据了画面主体；远景有几位小人在旁观。\", \"main_subject\": \"观察者群像\", \"setting\": \"outdoor\", \"light_quality\": \"晴朗白日光\", \"weather\": \"多云\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"蓝\", \"白\", \"黑\"], \"color_detail\": \"远处建筑的米黄色砖墙\", \"mood\": [\"沉思\", \"观察\"], \"composition\": \"layered\", \"narrative_hint\": \"远景的信号灯柱高耸在多云的蓝天下，矗立在轨道旁。\"}",
+      "raw_api": {
+        "id": "chatcmpl-7dd424da",
+        "object": "chat.completion",
+        "created": 1779987721,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"group\", \"people_description\": \"前景有三位背对镜头的人，一位穿着浅绿色上衣，一位穿着黑色连帽衫，一位穿着黑色上衣的女士占据了画面主体；远景有几位小人在旁观。\", \"main_subject\": \"观察者群像\", \"setting\": \"outdoor\", \"light_quality\": \"晴朗白日光\", \"weather\": \"多云\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"蓝\", \"白\", \"黑\"], \"color_detail\": \"远处建筑的米黄色砖墙\", \"mood\": [\"沉思\", \"观察\"], \"composition\": \"layered\", \"narrative_hint\": \"远景的信号灯柱高耸在多云的蓝天下，矗立在轨道旁。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 186,
+          "total_tokens": 816,
+          "input_tokens": 630,
+          "output_tokens": 186,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 14.37
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 14405,
+      "ms": 14405,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 13
+    },
+    {
+      "photo_id": "50f31331-8fdf-59b3-a6e5-16a0a6578079",
+      "tags": {
+        "has_people": true,
+        "people_count": "one",
+        "people_description": "一名穿着荧光黄夹克的人，蹲在店面旁，抱着包裹箱。",
+        "main_subject": "店面招牌",
+        "setting": "outdoor",
+        "light_quality": "日照充足的户外光线",
+        "weather": "晴",
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "蓝",
+          "白",
+          "灰"
+        ],
+        "color_detail": "店面招牌上的蓝色占据了视觉主体。",
+        "mood": [
+          "忙碌",
+          "日常"
+        ],
+        "composition": "offcenter",
+        "narrative_hint": "堆放在店门口的白色麻袋旁，蹲着一个人抱着箱子。"
+      },
+      "narrative_hint": "堆放在店门口的白色麻袋旁，蹲着一个人抱着箱子。",
+      "raw": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一名穿着荧光黄夹克的人，蹲在店面旁，抱着包裹箱。\", \"main_subject\": \"店面招牌\", \"setting\": \"outdoor\", \"light_quality\": \"日照充足的户外光线\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"蓝\", \"白\", \"灰\"], \"color_detail\": \"店面招牌上的蓝色占据了视觉主体。\", \"mood\": [\"忙碌\", \"日常\"], \"composition\": \"offcenter\", \"narrative_hint\": \"堆放在店门口的白色麻袋旁，蹲着一个人抱着箱子。\"}",
+      "raw_api": {
+        "id": "chatcmpl-d4c00001",
+        "object": "chat.completion",
+        "created": 1779987735,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"one\", \"people_description\": \"一名穿着荧光黄夹克的人，蹲在店面旁，抱着包裹箱。\", \"main_subject\": \"店面招牌\", \"setting\": \"outdoor\", \"light_quality\": \"日照充足的户外光线\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"蓝\", \"白\", \"灰\"], \"color_detail\": \"店面招牌上的蓝色占据了视觉主体。\", \"mood\": [\"忙碌\", \"日常\"], \"composition\": \"offcenter\", \"narrative_hint\": \"堆放在店门口的白色麻袋旁，蹲着一个人抱着箱子。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 161,
+          "total_tokens": 791,
+          "input_tokens": 630,
+          "output_tokens": 161,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 13.35
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 13376,
+      "ms": 13376,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 13
+    },
+    {
+      "photo_id": "267695ba-02da-5009-ac1d-5b9a50677e13",
+      "tags": {
+        "has_people": true,
+        "people_count": "two",
+        "people_description": "两位男士，其中一人身穿深色大衣，低头沉思；另一位身穿深色夹克，手持白色袋子，面向街道。",
+        "main_subject": "街景人物",
+        "setting": "outdoor",
+        "light_quality": "晴朗的午后阳光",
+        "weather": "晴",
+        "time_of_day": "afternoon",
+        "dominant_colors": [
+          "灰色",
+          "黑色",
+          "棕色"
+        ],
+        "color_detail": "地面上的深色阴影投射在街道上",
+        "mood": [
+          "沉思",
+          "都市感"
+        ],
+        "composition": "layered",
+        "narrative_hint": "两位男士伫立在街道旁，背景是现代建筑与公交车流线构成画面。"
+      },
+      "narrative_hint": "两位男士伫立在街道旁，背景是现代建筑与公交车流线构成画面。",
+      "raw": "{\"has_people\": true, \"people_count\": \"two\", \"people_description\": \"两位男士，其中一人身穿深色大衣，低头沉思；另一位身穿深色夹克，手持白色袋子，面向街道。\", \"main_subject\": \"街景人物\", \"setting\": \"outdoor\", \"light_quality\": \"晴朗的午后阳光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"灰色\", \"黑色\", \"棕色\"], \"color_detail\": \"地面上的深色阴影投射在街道上\", \"mood\": [\"沉思\", \"都市感\"], \"composition\": \"layered\", \"narrative_hint\": \"两位男士伫立在街道旁，背景是现代建筑与公交车流线构成画面。\"}",
+      "raw_api": {
+        "id": "chatcmpl-db7bc752",
+        "object": "chat.completion",
+        "created": 1779987749,
+        "model": "gemma-4-e4b-it-4bit",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"has_people\": true, \"people_count\": \"two\", \"people_description\": \"两位男士，其中一人身穿深色大衣，低头沉思；另一位身穿深色夹克，手持白色袋子，面向街道。\", \"main_subject\": \"街景人物\", \"setting\": \"outdoor\", \"light_quality\": \"晴朗的午后阳光\", \"weather\": \"晴\", \"time_of_day\": \"afternoon\", \"dominant_colors\": [\"灰色\", \"黑色\", \"棕色\"], \"color_detail\": \"地面上的深色阴影投射在街道上\", \"mood\": [\"沉思\", \"都市感\"], \"composition\": \"layered\", \"narrative_hint\": \"两位男士伫立在街道旁，背景是现代建筑与公交车流线构成画面。\"}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 630,
+          "completion_tokens": 182,
+          "total_tokens": 812,
+          "input_tokens": 630,
+          "output_tokens": 182,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_time": 14.29
+        }
+      },
+      "error": null,
+      "json_parse_ok": true,
+      "inference_time_ms": 14313,
+      "ms": 14313,
+      "tag_fields_present": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "missing_tag_fields": [],
+      "tag_fields_present_count": 13,
+      "tag_fields_total": 13,
+      "all_tag_fields_present": true,
+      "tag_fields_non_null": [
+        "has_people",
+        "people_count",
+        "people_description",
+        "main_subject",
+        "setting",
+        "light_quality",
+        "weather",
+        "time_of_day",
+        "dominant_colors",
+        "color_detail",
+        "mood",
+        "composition",
+        "narrative_hint"
+      ],
+      "tag_fields_non_null_count": 13
+    }
+  ]
+}
