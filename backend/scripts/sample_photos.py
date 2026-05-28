@@ -12,7 +12,7 @@ from backend.database import get_connection
 
 YEARS = (2021, 2022, 2023, 2024, 2025, 2026)
 TIME_SLOTS = ("morning", "afternoon", "evening", "night")
-PER_CELL = 83
+PER_CELL = 100
 DEFAULT_OUTPUT = DATA_DIR / "sample_photos.json"
 
 
