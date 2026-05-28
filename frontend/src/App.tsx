@@ -14,6 +14,7 @@ import { StoryView } from './components/StoryView'
 import { BookView } from './components/BookView'
 import { AlmanacView } from './components/AlmanacView'
 import { KhazarView } from './components/KhazarView'
+import { PoemView } from './components/PoemView'
 import { StagingConfirmDialog } from './components/shared/StagingConfirmDialog'
 import { ScanSetup, ScanProgressView } from './components/shared/ScanProgress'
 
@@ -91,6 +92,13 @@ function AppContent() {
       {view === 'khazar' && (
         <motion.div key="khazar" className="h-full" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
           <KhazarView />
+        </motion.div>
+      )}
+
+      {/* ── 诗集打字机 ───────────────────────────────────────── */}
+      {view === 'poem' && (
+        <motion.div key="poem" className="h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
+          <PoemView />
         </motion.div>
       )}
     </AnimatePresence>

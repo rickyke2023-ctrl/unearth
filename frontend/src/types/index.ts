@@ -139,7 +139,7 @@ export interface KeptResult {
   photos: Photo[]
 }
 
-export type AppView = 'gateway' | 'strata' | 'site' | 'decision' | 'excavation' | 'kept' | 'story' | 'story-theme' | 'book' | 'almanac' | 'library' | 'dune' | 'khazar'
+export type AppView = 'gateway' | 'strata' | 'site' | 'decision' | 'excavation' | 'kept' | 'story' | 'story-theme' | 'book' | 'almanac' | 'library' | 'dune' | 'khazar' | 'poem'
 
 // ── Khazar Dictionary types ────────────────────────────────────────────────
 

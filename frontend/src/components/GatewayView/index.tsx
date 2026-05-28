@@ -335,6 +335,29 @@ export function GatewayView() {
               </motion.button>
             </div>
 
+            {/* 诗集模式入口 */}
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.0, duration: 0.6 }}
+              onClick={() => setView('poem')}
+              style={{
+                background: 'transparent',
+                border: '1px solid rgba(232,200,120,0.15)',
+                borderRadius: 3,
+                padding: '6px 16px',
+                color: 'rgba(232,200,120,0.45)',
+                fontSize: 10,
+                letterSpacing: '0.18em',
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(232,200,120,0.85)', e.currentTarget.style.borderColor = 'rgba(232,200,120,0.4)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(232,200,120,0.45)', e.currentTarget.style.borderColor = 'rgba(232,200,120,0.15)')}
+            >
+              诗集 · POEM
+            </motion.button>
+
             {/* Footer hint */}
             <motion.div
               initial={{ opacity: 0 }}
