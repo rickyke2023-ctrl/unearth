@@ -10,15 +10,14 @@ from backend.config import DATA_DIR
 from backend.database import get_connection
 
 
-YEARS = (2021, 2022, 2023, 2024, 2025, 2026)
+TARGET = 2000
 TIME_SLOTS = ("morning", "afternoon", "evening", "night")
-PER_CELL = 100
 DEFAULT_OUTPUT = DATA_DIR / "sample_photos.json"
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Sample a VLM labeling workset with MECE year/time-slot strata."
+        description="Sample a VLM labeling workset with equal year quotas and proportional time slots."
     )
     parser.add_argument(
         "--output",
@@ -70,24 +69,89 @@ def classified_cte() -> str:
     """
 
 
-def sample_pre_2021(conn) -> list[dict[str, Any]]:
+def get_year_counts(conn) -> list[dict[str, Any]]:
     rows = conn.execute(
         f"""
         {classified_cte()}
         SELECT
-            photo_id,
             year,
-            time_slot,
-            shot_at
+            COUNT(*) AS available
         FROM slotted
-        WHERE year < 2021
-        ORDER BY shot_at, photo_id
+        WHERE year IS NOT NULL
+        GROUP BY year
+        HAVING available > 0
+        ORDER BY year
         """
     ).fetchall()
     return [dict(row) for row in rows]
 
 
-def sample_cell(conn, year: int, time_slot: str) -> list[dict[str, Any]]:
+def get_time_slot_counts(conn, year: int) -> dict[str, int]:
+    rows = conn.execute(
+        f"""
+        {classified_cte()}
+        SELECT
+            time_slot,
+            COUNT(*) AS available
+        FROM slotted
+        WHERE year = ?
+        GROUP BY time_slot
+        """,
+        (year,),
+    ).fetchall()
+    counts = {time_slot: 0 for time_slot in TIME_SLOTS}
+    counts.update({row["time_slot"]: row["available"] for row in rows})
+    return counts
+
+
+def calculate_year_quotas(year_counts: list[dict[str, Any]]) -> tuple[int, int, dict[int, int]]:
+    if not year_counts:
+        return 0, 0, {}
+
+    base_quota = TARGET // len(year_counts)
+    sparse_years = [row for row in year_counts if row["available"] < base_quota]
+    large_years = [row for row in year_counts if row["available"] >= base_quota]
+    remaining = sum(base_quota - row["available"] for row in sparse_years)
+    extra = remaining // len(large_years) if large_years else 0
+
+    quotas: dict[int, int] = {}
+    for row in year_counts:
+        year = row["year"]
+        available = row["available"]
+        quotas[year] = available if available < base_quota else base_quota + extra
+    return base_quota, extra, quotas
+
+
+def proportional_time_slot_quotas(slot_counts: dict[str, int], target: int) -> dict[str, int]:
+    available = sum(slot_counts.values())
+    target = min(target, available)
+    if available == 0 or target == 0:
+        return {time_slot: 0 for time_slot in TIME_SLOTS}
+
+    quotas: dict[str, int] = {}
+    remainders: list[tuple[float, int, str]] = []
+    for time_slot in TIME_SLOTS:
+        count = slot_counts[time_slot]
+        exact = target * count / available
+        quota = int(exact)
+        quotas[time_slot] = quota
+        if quota < count:
+            remainders.append((exact - quota, -TIME_SLOTS.index(time_slot), time_slot))
+
+    remaining = target - sum(quotas.values())
+    for _fraction, _slot_order, time_slot in sorted(remainders, reverse=True):
+        if remaining <= 0:
+            break
+        quotas[time_slot] += 1
+        remaining -= 1
+
+    return quotas
+
+
+def sample_time_slot(conn, year: int, time_slot: str, limit: int) -> list[dict[str, Any]]:
+    if limit <= 0:
+        return []
+
     rows = conn.execute(
         f"""
         {classified_cte()}
@@ -102,7 +166,7 @@ def sample_cell(conn, year: int, time_slot: str) -> list[dict[str, Any]]:
         ORDER BY RANDOM()
         LIMIT ?
         """,
-        (year, time_slot, PER_CELL),
+        (year, time_slot, limit),
     ).fetchall()
     return [dict(row) for row in rows]
 
@@ -119,23 +183,31 @@ def main(argv: list[str] | None = None) -> int:
     conn = get_connection()
     try:
         result: list[dict[str, Any]] = []
-        counts: dict[tuple[int, str], int] = {}
+        actual_counts: dict[int, int] = {}
+        year_counts = get_year_counts(conn)
+        base_quota, extra, year_quotas = calculate_year_quotas(year_counts)
 
-        pre_2021 = sample_pre_2021(conn)
-        result.extend(pre_2021)
-
-        for year in YEARS:
+        for year in year_quotas:
+            slot_counts = get_time_slot_counts(conn, year)
+            slot_quotas = proportional_time_slot_quotas(slot_counts, year_quotas[year])
+            actual_counts[year] = 0
             for time_slot in TIME_SLOTS:
-                rows = sample_cell(conn, year, time_slot)
-                counts[(year, time_slot)] = len(rows)
+                rows = sample_time_slot(conn, year, time_slot, slot_quotas[time_slot])
+                actual_counts[year] += len(rows)
                 result.extend(rows)
 
         write_output(output_path, result)
 
-        print(f"pre_2021: {len(pre_2021)}")
-        for year in YEARS:
-            for time_slot in TIME_SLOTS:
-                print(f"{year} {time_slot}: {counts[(year, time_slot)]}")
+        print(f"target: {TARGET}")
+        print(f"base_quota: {base_quota}")
+        print(f"extra: {extra}")
+        for row in year_counts:
+            year = row["year"]
+            print(
+                f"{year}: quota={year_quotas[year]} "
+                f"(base={base_quota}, extra={extra if row['available'] >= base_quota else 0}), "
+                f"actual={actual_counts.get(year, 0)}, available={row['available']}"
+            )
         print(f"total: {len(result)}")
         print(f"output: {output_path}")
         return 0
