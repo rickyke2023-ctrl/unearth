@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import asyncio
+import base64
+import io
 import json
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import requests
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
+from PIL import Image, ImageOps
 
 from .database import get_connection, init_db
 from .decisions import apply_decisions, toggle_book_candidate, undo_decision
@@ -35,6 +39,13 @@ from .novel import dune_fragments
 from .novel_khazar import khazar_entries, khazar_entry_photos, khazar_entry_stats
 
 
+OLLAMA_GENERATE_URL = "http://localhost:11434/api/generate"
+POEM_MODEL = "gemma4:e4b"
+POEM_PROMPT = """你是一位有散文诗才华的作家。这是我生活中的一张照片。请用120-150字，为这张照片写一段散文诗。
+要求：有具体的感官细节（颜色、质感、光线），有时间感，文字本身要值得被读。
+不要描述这张照片，直接进入场景。不要标题，直接正文。"""
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     conn = get_connection()
@@ -56,6 +67,17 @@ app.add_middleware(
 
 def db(request: Request):
     return request.app.state.db
+
+
+def encode_poem_preview(preview_path: Path) -> str:
+    with Image.open(preview_path) as image:
+        image = ImageOps.exif_transpose(image)
+        image.thumbnail((512, 512))
+        if image.mode not in ("RGB", "L"):
+            image = image.convert("RGB")
+        buffer = io.BytesIO()
+        image.save(buffer, format="JPEG", quality=85, optimize=True)
+    return base64.b64encode(buffer.getvalue()).decode("ascii")
 
 
 @app.exception_handler(UnearthError)
@@ -311,6 +333,51 @@ def api_novel_khazar_entry_cross_refs(entry_id: str, conn=Depends(db)):
     except ValueError as exc:
         raise HTTPException(status_code=404, detail={"error": str(exc), "code": "KHAZAR_ENTRY_NOT_FOUND"}) from exc
     return {"entry_id": entry_id, "cross_refs": stats["cross_refs"]}
+
+
+@app.get("/api/poem/stream/{photo_id}")
+def api_poem_stream(photo_id: str, conn=Depends(db)):
+    row = conn.execute("SELECT preview_path FROM photos WHERE id = ?", (photo_id,)).fetchone()
+    if not row or not row.get("preview_path"):
+        return JSONResponse(
+            status_code=400,
+            content={"error": "photo_id 不存在或没有 preview", "code": "PHOTO_PREVIEW_NOT_FOUND"},
+        )
+
+    preview_path = Path(row["preview_path"])
+    if not preview_path.exists():
+        return JSONResponse(
+            status_code=400,
+            content={"error": "photo_id 不存在或没有 preview", "code": "PHOTO_PREVIEW_NOT_FOUND"},
+        )
+
+    encoded_image = encode_poem_preview(preview_path)
+
+    def stream():
+        with requests.post(
+            OLLAMA_GENERATE_URL,
+            json={
+                "model": POEM_MODEL,
+                "prompt": POEM_PROMPT,
+                "images": [encoded_image],
+                "stream": True,
+            },
+            stream=True,
+            timeout=(5, 120),
+        ) as response:
+            response.raise_for_status()
+            for line in response.iter_lines(decode_unicode=True):
+                if not line:
+                    continue
+                chunk = json.loads(line)
+                token = chunk.get("response")
+                if token:
+                    yield f"data: {json.dumps({'token': token}, ensure_ascii=False)}\n\n"
+                if chunk.get("done"):
+                    break
+        yield f"data: {json.dumps({'done': True}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(stream(), media_type="text/event-stream")
 
 
 @app.post("/api/summary/generate")
