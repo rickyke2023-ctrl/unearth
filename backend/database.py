@@ -125,6 +125,7 @@ def init_db(conn: sqlite3.Connection) -> None:
             narrative_hint TEXT,
             inference_time_ms INTEGER,
             raw_response TEXT,
+            prompt_version TEXT,
             created_at TEXT DEFAULT (datetime('now'))
         );
 
@@ -142,6 +143,11 @@ def init_db(conn: sqlite3.Connection) -> None:
     ensure_column(conn, "events", "root_path", "TEXT NOT NULL DEFAULT ''")
     ensure_column(conn, "events", "photo_count", "INTEGER NOT NULL DEFAULT 0")
     ensure_column(conn, "staging_files", "trashed_at", "TEXT")
+    try:
+        conn.execute("ALTER TABLE photo_tags ADD COLUMN prompt_version TEXT")
+    except sqlite3.OperationalError as exc:
+        if "duplicate column name" not in str(exc).lower():
+            raise
     conn.execute(
         """
         UPDATE events

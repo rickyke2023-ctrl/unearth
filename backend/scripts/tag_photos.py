@@ -120,6 +120,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Log quality gate failures but do not abort the run.",
     )
+    parser.add_argument(
+        "--prompt-version",
+        default=None,
+        help="Prompt version to store with each tag row, for example v1.3. Defaults to NULL.",
+    )
     return parser.parse_args(argv)
 
 
@@ -544,17 +549,18 @@ def insert_photo_tag(
     tags: dict[str, Any],
     inference_time_ms: int,
     raw_response: str | None,
+    prompt_version: str | None = None,
 ) -> None:
     conn.execute(
         """
         INSERT INTO photo_tags (
             id, photo_id, model, has_people, setting, time_of_day, mood,
             main_subject, dominant_colors, composition, narrative_hint,
-            inference_time_ms, raw_response
+            inference_time_ms, raw_response, prompt_version
         ) VALUES (
             :id, :photo_id, :model, :has_people, :setting, :time_of_day, :mood,
             :main_subject, :dominant_colors, :composition, :narrative_hint,
-            :inference_time_ms, :raw_response
+            :inference_time_ms, :raw_response, :prompt_version
         )
         """,
         {
@@ -571,6 +577,7 @@ def insert_photo_tag(
             "narrative_hint": tags.get("narrative_hint"),
             "inference_time_ms": inference_time_ms,
             "raw_response": raw_response,
+            "prompt_version": prompt_version,
         },
     )
     conn.commit()
@@ -724,7 +731,15 @@ def main(argv: list[str] | None = None) -> int:
 
             inference_time_ms = int((time.perf_counter() - start) * 1000)
             inference_times.append(inference_time_ms)
-            insert_photo_tag(conn, photo_id, storage_model, tags, inference_time_ms, raw_response)
+            insert_photo_tag(
+                conn,
+                photo_id,
+                storage_model,
+                tags,
+                inference_time_ms,
+                raw_response,
+                args.prompt_version,
+            )
 
             result = {
                 "photo_id": photo_id,
