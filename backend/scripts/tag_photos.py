@@ -20,8 +20,8 @@ from backend.database import get_connection, init_db
 
 
 OLLAMA_URL = "http://localhost:11434"
-PROMPT = """你是一位有文学审美的影像编辑。分析这张照片，严格按以下 JSON 格式返回，不要输出其他内容，不要 markdown 代码块：
-{"has_people": true或false, "people_count": "none或one或two或group", "people_description": "有人时描述服装颜色、大致年龄、姿态，无人填null", "main_subject": "主体是什么（1-5个字）", "setting": "indoor或outdoor或unknown", "light_quality": "光线质感，如：黄金时刻暖光、阴天漫射光、强逆光、窗边柔光、夜间人工光", "weather": "户外天气如晴/阴/雨后/起雾，室内填null", "time_of_day": "morning或afternoon或dusk或night或unknown", "dominant_colors": ["主色调1", "主色调2", "主色调3"], "color_detail": "最显眼的颜色细节如红色雨伞，无则填null", "mood": ["情绪词1", "情绪词2"], "composition": "minimal或complex或layered或centered或offcenter", "narrative_hint": "一句话（不超过30字）。必须包含：①主体的外观或颜色细节 ②动作或状态 ③环境中一个具体可见的细节"}"""
+PROMPT = """你是一位有文学审美的视觉观察者。分析这张照片，严格按以下 JSON 格式返回，不要输出其他内容，不要 markdown 代码块：
+{"has_people": true或false, "people_count": "none或one或two或group", "people_description": "有人时描述服装颜色、大致年龄、姿态，无人填null", "main_subject": "主体是什么（1-5个字）", "setting": "indoor或outdoor或unknown", "light_quality": "光线质感，如：黄金时刻暖光、阴天漫射光、强逆光、窗边柔光、夜间人工光", "weather": "户外天气如晴/阴/雨后/起雾，室内填null", "time_of_day": "morning或afternoon或dusk或night或unknown", "dominant_colors": ["主色调1", "主色调2", "主色调3"], "color_detail": "最显眼的颜色细节如红色雨伞，无则填null", "mood": ["情绪词1", "情绪词2"], "composition": "minimal（主体孤立、留白多）或complex（元素密集）或layered（有明显前后景层次）或centered（主体居画面中心）或offcenter（主体明显偏移）", "narrative_hint": "一句话，严格不超过40字。锁定这张照片里最具体、最不可替代的那一个细节——必须有动词，描述它的颜色或材质、在哪里、在做什么或如何存在。不要总结情绪，不要构图分析，只描述这一个细节，让读者能在脑中重建它。"}"""
 
 TAG_FIELDS = (
     "has_people",
