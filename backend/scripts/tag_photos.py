@@ -77,6 +77,23 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Skip photos already tagged with this model in photo_tags.",
     )
+    parser.add_argument(
+        "--ids-file",
+        default=None,
+        help="JSON file with a list of objects containing photo_id (e.g. data/sample_photos.json). "
+             "When combined with --limit, truncates to the first N photos from the file.",
+    )
+    parser.add_argument(
+        "--checkpoint-every",
+        type=positive_int,
+        default=100,
+        help="Write a checkpoint file and run quality gate every N photos. Defaults to 100.",
+    )
+    parser.add_argument(
+        "--no-abort-on-quality-fail",
+        action="store_true",
+        help="Log quality gate failures but do not abort the run.",
+    )
     return parser.parse_args(argv)
 
 
@@ -194,6 +211,83 @@ def fill_random(
         camera_counts[key] = camera_counts.get(key, 0) + 1
 
 
+def fetch_candidates_from_file(
+    conn, ids_file: str, model: str, skip_existing: bool
+) -> list[dict[str, Any]]:
+    with open(ids_file, encoding="utf-8") as f:
+        entries = json.load(f)
+    photo_ids = [e["photo_id"] for e in entries if "photo_id" in e]
+    if not photo_ids:
+        return []
+
+    placeholders = ",".join("?" * len(photo_ids))
+    rows = [
+        dict(row)
+        for row in conn.execute(
+            f"SELECT id, year, camera_model FROM photos WHERE id IN ({placeholders})",
+            photo_ids,
+        ).fetchall()
+    ]
+
+    if skip_existing:
+        already_tagged = {
+            row["photo_id"]
+            for row in conn.execute(
+                f"SELECT photo_id FROM photo_tags WHERE model = ? AND photo_id IN ({placeholders})",
+                [model] + photo_ids,
+            ).fetchall()
+        }
+        rows = [r for r in rows if r["id"] not in already_tagged]
+
+    return rows
+
+
+def _notify_mac(title: str, message: str) -> None:
+    import subprocess
+    try:
+        subprocess.run(
+            ["osascript", "-e", f'display notification "{message}" with title "{title}"'],
+            capture_output=True, timeout=5,
+        )
+    except Exception:
+        pass
+
+
+def check_quality_gate(results: list[dict[str, Any]], window: int = 100) -> tuple[bool, str]:
+    recent = results[-window:]
+    if len(recent) < 10:
+        return True, ""
+    errors = sum(1 for r in recent if r.get("error"))
+    null_hints = sum(1 for r in recent if not r.get("narrative_hint"))
+    error_rate = errors / len(recent)
+    null_rate = null_hints / len(recent)
+    if error_rate > 0.20:
+        return False, f"error rate {error_rate:.0%} in last {len(recent)} photos (threshold 20%)"
+    if null_rate > 0.25:
+        return False, f"narrative_hint null rate {null_rate:.0%} in last {len(recent)} photos (threshold 25%)"
+    return True, ""
+
+
+def write_checkpoint(path: Path, done: int, total: int, results: list[dict[str, Any]], errors: int) -> None:
+    recent = results[-100:]
+    null_hints = sum(1 for r in recent if not r.get("narrative_hint"))
+    recent_errors = sum(1 for r in recent if r.get("error"))
+    payload = {
+        "updated_at": datetime.now().isoformat(timespec="seconds"),
+        "completed": done,
+        "total": total,
+        "errors_total": errors,
+        "recent_window": len(recent),
+        "recent_errors": recent_errors,
+        "recent_null_narrative_hints": null_hints,
+        "recent_error_rate": round(recent_errors / len(recent), 3) if recent else 0,
+        "recent_null_rate": round(null_hints / len(recent), 3) if recent else 0,
+        "sample_hints": [r.get("narrative_hint") for r in results[-5:] if r.get("narrative_hint")],
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 def check_ollama_model(model: str) -> None:
     try:
         response = requests.get(f"{OLLAMA_URL}/api/tags", timeout=5)
@@ -237,9 +331,9 @@ def call_ollama(model: str, encoded_image: str) -> str:
                 }
             ],
             "stream": False,
-            "options": {"temperature": 0.1, "num_predict": 512},
+            "options": {"temperature": 0.1, "num_predict": 2048 if "gemma4" in model else 512},
         },
-        timeout=60,
+        timeout=180,
     )
     if response.status_code == 404:
         print(f"ERROR: Model '{model}' not found. Run: ollama pull {model}", file=sys.stderr)
@@ -425,12 +519,26 @@ def main(argv: list[str] | None = None) -> int:
 
     check_ollama_model(args.model)
 
+    checkpoint_path = DATA_DIR / "tag_checkpoint.json"
+
     conn = get_connection()
     init_db(conn)
     try:
-        candidates = fetch_candidates(conn, args.model, args.limit, args.skip_existing)
+        if args.ids_file:
+            candidates = fetch_candidates_from_file(
+                conn, args.ids_file, args.model, args.skip_existing
+            )
+            if args.ids_file and args.limit < len(candidates):
+                candidates = candidates[: args.limit]
+            print(f"Model: {args.model} | Source: {args.ids_file}", flush=True)
+        else:
+            candidates = fetch_candidates(conn, args.model, args.limit, args.skip_existing)
         total = len(candidates)
         print(f"Model: {args.model} | Total to process: {total}", flush=True)
+        print(
+            f"Quality gate: abort if error>{20}% or null_hint>{25}% in last {args.checkpoint_every} photos",
+            flush=True,
+        )
 
         results: list[dict[str, Any]] = []
         inference_times: list[int] = []
@@ -484,6 +592,21 @@ def main(argv: list[str] | None = None) -> int:
             if attempted % 10 == 0 or attempted == total:
                 print_progress(attempted, total, errors, inference_times)
 
+            if attempted % args.checkpoint_every == 0:
+                write_checkpoint(checkpoint_path, attempted, total, results, errors)
+                ok, reason = check_quality_gate(results, window=args.checkpoint_every)
+                if not ok:
+                    msg = f"Quality gate failed at {attempted}/{total}: {reason}"
+                    print(f"ERROR: {msg}", flush=True)
+                    _notify_mac("标注 Quality Gate 触发", msg)
+                    if not args.no_abort_on_quality_fail:
+                        write_output(output_path, args.model, results, errors, inference_times)
+                        return 1
+                else:
+                    print(f"[checkpoint {attempted}/{total}] quality gate OK", flush=True)
+                    _notify_mac("标注进度", f"{attempted}/{total} 张完成，质量正常")
+
+        write_checkpoint(checkpoint_path, attempted, total, results, errors)
         payload = write_output(output_path, args.model, results, errors, inference_times)
         processed = payload["total_processed"]
         avg_seconds = (payload["avg_ms"] / 1000) if inference_times else 0
@@ -492,11 +615,12 @@ def main(argv: list[str] | None = None) -> int:
 
         print("=== Summary ===")
         print(f"Model: {args.model}")
-        print(f"Processed: {processed}/{args.limit}")
+        print(f"Processed: {processed}/{total}")
         print(f"Errors: {errors}")
         print(f"Avg inference: {avg_seconds:.1f}s")
         print(f"Min: {min_seconds:.1f}s / Max: {max_seconds:.1f}s")
         print(f"Output: {output_path}")
+        _notify_mac("标注完成", f"{processed} 张标注完成，errors={errors}")
         return 0
     finally:
         conn.close()
