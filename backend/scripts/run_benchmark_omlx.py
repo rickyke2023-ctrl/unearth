@@ -29,8 +29,14 @@ from backend.scripts.tag_photos import (
 )
 
 BENCHMARK_FILE = Path("data/benchmark_set.json")
-OUTPUT_PATH = Path("data/benchmark_results/omlx_gemma4.json")
+OUTPUT_DIR = Path("data/benchmark_results")
 DEFAULT_BASE_URL = "http://localhost:8000/v1"
+DEFAULT_PROMPT_VERSION = "v1.2"
+COMPOSITION_WORDS = ("画面", "构图", "占据", "构成", "显得", "形成")
+ANIMAL_WORDS = ("狗", "猫", "鹿", "鸟", "马")
+PERSON_WORDS = ("人", "男人", "女人", "男孩", "女孩", "小孩", "孩子", "儿童", "老人")
+ENDING_POS_CHARS = tuple("的地着然寞郁静美")
+TRAILING_PUNCTUATION = " \t\r\n。！？!?，,；;：:“”\"'‘’、）)]}】》"
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -40,9 +46,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--api-key", default=os.environ.get("OMLX_API_KEY", "bench"))
     parser.add_argument("--num-predict", type=int, default=2048)
     parser.add_argument("--timeout", type=int, default=180)
-    parser.add_argument("--output", default=str(OUTPUT_PATH))
+    parser.add_argument("--prompt-version", default=DEFAULT_PROMPT_VERSION)
+    parser.add_argument("--output", default=None)
     parser.add_argument("--limit", type=int, default=None, help="Optional smoke-test limit.")
     return parser.parse_args(argv)
+
+
+def _default_output_path(prompt_version: str, run_at: datetime) -> Path:
+    timestamp = run_at.strftime("%Y%m%d_%H%M%S")
+    return OUTPUT_DIR / f"omlx_{prompt_version}_{timestamp}.json"
 
 
 def _auth_headers(api_key: str) -> dict[str, str]:
@@ -109,6 +121,73 @@ def _field_stats(parsed: dict[str, Any] | None, tags: dict[str, Any]) -> dict[st
     }
 
 
+def _is_non_empty(value: Any) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, (list, tuple, dict, set)):
+        return bool(value)
+    return True
+
+
+def _mentions_any(text: str | None, terms: tuple[str, ...]) -> bool:
+    if not text:
+        return False
+    return any(term in text for term in terms)
+
+
+def _has_ending_pos_violation(narrative_hint: str | None) -> bool:
+    if not narrative_hint:
+        return False
+    cleaned = narrative_hint.rstrip(TRAILING_PUNCTUATION)
+    return bool(cleaned) and cleaned.endswith(ENDING_POS_CHARS)
+
+
+def _quality_analysis(results: list[dict[str, Any]]) -> dict[str, Any]:
+    composition_hits: list[bool] = []
+    subject_missing: list[str] = []
+    ending_pos_violation: list[str] = []
+    field_totals = {field: 0 for field in TAG_FIELDS}
+
+    for result in results:
+        photo_id = result["photo_id"]
+        tags = result.get("tags") or {}
+        narrative_hint = tags.get("narrative_hint") or result.get("narrative_hint")
+        main_subject = tags.get("main_subject")
+
+        composition_hit = _mentions_any(narrative_hint, COMPOSITION_WORDS)
+        composition_hits.append(composition_hit)
+
+        has_people = tags.get("has_people") is True
+        subject_has_animal = _mentions_any(main_subject, ANIMAL_WORDS)
+        hint_mentions_subject = _mentions_any(narrative_hint, PERSON_WORDS + ANIMAL_WORDS)
+        if (has_people or subject_has_animal) and not hint_mentions_subject:
+            subject_missing.append(photo_id)
+
+        if _has_ending_pos_violation(narrative_hint):
+            ending_pos_violation.append(photo_id)
+
+        for field in TAG_FIELDS:
+            if _is_non_empty(tags.get(field)):
+                field_totals[field] += 1
+
+    total = len(results)
+    return {
+        "composition_word_hits": {
+            "terms": list(COMPOSITION_WORDS),
+            "hits": composition_hits,
+            "total_hits": sum(1 for hit in composition_hits if hit),
+        },
+        "subject_missing": subject_missing,
+        "ending_pos_violation": ending_pos_violation,
+        "field_completeness": {
+            field: {"non_empty": count, "total": total}
+            for field, count in field_totals.items()
+        },
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     if not BENCHMARK_FILE.exists():
@@ -118,7 +197,8 @@ def main(argv: list[str] | None = None) -> int:
     photo_ids: list[str] = json.loads(BENCHMARK_FILE.read_text(encoding="utf-8"))
     if args.limit is not None:
         photo_ids = photo_ids[: args.limit]
-    output_path = Path(args.output)
+    run_at = datetime.now()
+    output_path = Path(args.output) if args.output else _default_output_path(args.prompt_version, run_at)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     print(f"Model: {args.model} | Backend: oMLX | Photos: {len(photo_ids)}", flush=True)
@@ -178,22 +258,49 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  ✓ [{index}/{len(photo_ids)}] {photo_id[:8]} {inference_time_ms}ms | {hint}", flush=True)
 
     avg_ms = int(sum(inference_times) / len(inference_times)) if inference_times else 0
+    endpoint = f"{args.base_url.rstrip('/')}/chat/completions"
+    quality_analysis = _quality_analysis(results)
+    total_processed = len(results)
+    json_compliance_rate = (parse_successes / total_processed) if total_processed else 0
     payload = {
+        "meta": {
+            "prompt_version": args.prompt_version,
+            "model": args.model,
+            "backend": "omlx",
+            "endpoint": endpoint,
+            "run_at": run_at.isoformat(timespec="seconds"),
+            "benchmark_file": str(BENCHMARK_FILE),
+            "total_processed": total_processed,
+            "total_errors": errors,
+            "json_parse_successes": parse_successes,
+            "json_compliance_rate": json_compliance_rate,
+            "avg_ms": avg_ms,
+            "avg_s": round(avg_ms / 1000, 1) if avg_ms else 0,
+        },
         "model": args.model,
         "backend": "omlx",
-        "endpoint": f"{args.base_url.rstrip('/')}/chat/completions",
-        "run_at": datetime.now().isoformat(timespec="seconds"),
-        "total_processed": len(results),
+        "endpoint": endpoint,
+        "run_at": run_at.isoformat(timespec="seconds"),
+        "prompt_version": args.prompt_version,
+        "total_processed": total_processed,
         "total_errors": errors,
         "json_parse_successes": parse_successes,
+        "json_compliance_rate": json_compliance_rate,
         "avg_ms": avg_ms,
         "avg_s": round(avg_ms / 1000, 1) if avg_ms else 0,
+        "quality_analysis": quality_analysis,
         "results": results,
     }
     output_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     print(
-        f"\n=== Done === errors:{errors}/{len(photo_ids)} "
-        f"json:{parse_successes}/{len(photo_ids)} avg:{avg_ms / 1000:.1f}s -> {output_path}",
+        "\n=== Summary ===\n"
+        f"JSON compliance: {parse_successes}/{total_processed} ({json_compliance_rate:.1%})\n"
+        f"Avg latency: {avg_ms / 1000:.1f}s\n"
+        "Quality hits: "
+        f"composition_word_hits={quality_analysis['composition_word_hits']['total_hits']}, "
+        f"subject_missing={len(quality_analysis['subject_missing'])}, "
+        f"ending_pos_violation={len(quality_analysis['ending_pos_violation'])}\n"
+        f"Output: {output_path}",
         flush=True,
     )
     return 0
