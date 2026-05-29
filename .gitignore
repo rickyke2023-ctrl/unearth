@@ -1,9 +1,17 @@
 data/
 frontend/node_modules/
-backend/__pycache__/
-backend/*.pyc
-backend/scripts/__pycache__/
 **/__pycache__/
 **/*.pyc
 .DS_Store
+
+# 内部开发工作流（不对外）
 AGENT_LOG/
+logs/
+.claude/
+
+# 数据库（运行时生成）
+*.db
+*.sqlite
+
+# 敏感文档
+docs/agent_prompts_v1.md
