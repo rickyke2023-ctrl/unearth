@@ -2,4 +2,8 @@ data/
 frontend/node_modules/
 backend/__pycache__/
 backend/*.pyc
+backend/scripts/__pycache__/
+**/__pycache__/
+**/*.pyc
 .DS_Store
+AGENT_LOG/

@@ -32,9 +32,14 @@ BENCHMARK_FILE = Path("data/benchmark_set.json")
 OUTPUT_DIR = Path("data/benchmark_results")
 DEFAULT_BASE_URL = "http://localhost:8000/v1"
 DEFAULT_PROMPT_VERSION = "v1.2"
-COMPOSITION_WORDS = ("画面", "构图", "占据", "构成", "显得", "形成")
-ANIMAL_WORDS = ("狗", "猫", "鹿", "鸟", "马")
-PERSON_WORDS = ("人", "男人", "女人", "男孩", "女孩", "小孩", "孩子", "儿童", "老人")
+COMPOSITION_WORDS = ("画面", "构图", "占据", "构成", "显得", "形成", "前景", "背景", "中景", "左侧", "右侧")
+ANIMAL_WORDS = ("狗", "猫", "鹿", "鸟", "马", "牛", "羊", "兔", "熊", "虎")
+PERSON_WORDS = (
+    "人", "男人", "女人", "男孩", "女孩", "小孩", "孩子", "儿童", "老人",
+    "他", "她", "他们", "她们", "男", "女",
+    "行人", "旅人", "骑行者", "游客", "参观者", "行者", "少女", "少年",
+    "老者", "女子", "男子", "人物", "身影", "身形",
+)
 ENDING_POS_CHARS = tuple("的地着然寞郁静美")
 TRAILING_PUNCTUATION = " \t\r\n。！？!?，,；;：:“”\"'‘’、）)]}】》"
 
@@ -49,6 +54,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--prompt-version", default=DEFAULT_PROMPT_VERSION)
     parser.add_argument("--output", default=None)
     parser.add_argument("--limit", type=int, default=None, help="Optional smoke-test limit.")
+    parser.add_argument("--ids-file", default=None, help="JSON file with list of photo IDs to use instead of benchmark_set.json.")
     return parser.parse_args(argv)
 
 
@@ -190,11 +196,14 @@ def _quality_analysis(results: list[dict[str, Any]]) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    if not BENCHMARK_FILE.exists():
-        print("ERROR: data/benchmark_set.json not found.", file=sys.stderr)
-        return 1
 
-    photo_ids: list[str] = json.loads(BENCHMARK_FILE.read_text(encoding="utf-8"))
+    if args.ids_file:
+        photo_ids = json.loads(Path(args.ids_file).read_text(encoding="utf-8"))
+    elif BENCHMARK_FILE.exists():
+        photo_ids = json.loads(BENCHMARK_FILE.read_text(encoding="utf-8"))
+    else:
+        print("ERROR: data/benchmark_set.json not found and --ids-file not specified.", file=sys.stderr)
+        return 1
     if args.limit is not None:
         photo_ids = photo_ids[: args.limit]
     run_at = datetime.now()
