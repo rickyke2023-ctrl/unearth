@@ -8,6 +8,7 @@ frontend/node_modules/
 AGENT_LOG/
 logs/
 .claude/
+docs/
 
 # 数据库（运行时生成）
 *.db
